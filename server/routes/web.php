@@ -14,3 +14,6 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->get('/offer/{id}', 'OfferController@getOffer');
+$router->get('/offers',     'OfferController@getOffers');
