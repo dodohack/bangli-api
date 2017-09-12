@@ -42,11 +42,40 @@ class FeController extends Controller
     public function getArrayEntitiesByKey($inputs, $relations, $columns,
                                           $pagination)
     {
+        // TODO: should always query entity with 'publish' status.
         $result = $this->getArrayEntities($inputs['etype'], $inputs,
             $relations, $columns, $pagination);
 
         $result['key'] = $inputs['key'];
 
         return $result;
+    }
+
+    /**
+     * Overload parent function, return frontend specific models
+     * @param $etype
+     */
+    protected function getEntityTable($etype)
+    {
+        // TODO: Add more frontend only models
+        switch ($etype) {
+            case ETYPE_OFFER:       return new Offer;
+            default:
+                return parent::getEntityTable($etype);
+        }
+    }
+
+    /**
+     * Overload parent function, returns table name in literal string
+     * @param $etype
+     * @return string
+     */
+    protected function getTableName($etype)
+    {
+        switch ($etype) {
+            case ETYPE_OFFER:        return 'offers';
+            default:
+                return parent::getTableName($etype);
+        }
     }
 }

@@ -157,7 +157,7 @@ class EntityController extends Controller
         } else {
             $ret = [
                 "etype" => $etype,
-                "entities" => $entities->toArray();
+                "entities" => $entities->toArray()
             ];
         }
 
@@ -181,7 +181,7 @@ class EntityController extends Controller
                                  $table = null,
                                  $relations = null, $columns = null,$count = null)
     {
-        $entity = $this->getEntityObj($etype, $inputs, $key, $id,
+        $entity = $this->getEntityObj($etype, $key, $id,
             $table, $relations, $columns, $count);
 
         $ret = [
@@ -196,7 +196,6 @@ class EntityController extends Controller
     /**
      * Get an entity object with it's relations
      * @param $etype - entity type
-     * @param $inputs - request inputs
      * @param $key - 'id' for post or 'guid' topic
      * @param $table - table to query, optional
      * @param $relations - entity relation tables to be queried
@@ -204,7 +203,7 @@ class EntityController extends Controller
      * @return string
      */
     protected function getEntityObj($etype,
-                                    $inputs, $key, $id,
+                                    $key, $id,
                                     $table = null,
                                     $relations = null, $columns = null, $count=null)
     {
@@ -248,23 +247,24 @@ class EntityController extends Controller
                                        $relations = null, $columns = null)
     {
         $inputs = $request->all();
-        return $this->getEntityObj($inputs['etype'], $inputs, $key, $id,
+        return $this->getEntityObj($inputs['etype'], $key, $id,
             $table, $relations, $columns);
     }
 
     /**
-     * Create a new cms entity
+     * Create a new entity
      * @param $etype  - entity type
      * @param $inputs - request inputs
      * @return object
      */
     protected function postEntity($etype, $inputs)
     {
+        // TODO: update column name
         unset($inputs['created_at'], $inputs['updated_at']);
 
         $table = $this->getEntityTable($etype);
 
-        // Normalize HTML and add Angular2 specific tags
+        // Normalize HTML and add Angular specific tags
         if (isset($inputs['content']))
             $inputs['content'] = $this->htmlFilter($inputs['content'], $this->www);
 
@@ -295,7 +295,7 @@ class EntityController extends Controller
     }
 
     /**
-     * Update post by given id
+     * Update entity by given id
      * @param $etype - entity type
      * @param $inputs - request inputs
      * @param $id - post id to be updated
@@ -344,6 +344,15 @@ class EntityController extends Controller
         }
     }
 
+    /**
+     * Same as putEntity, but with different parameters
+     * @param Request $request
+     * @param $key
+     * @param $id
+     * @param null $relations
+     * @param null $columns
+     * @return object
+     */
     protected function putEntityReq(Request $request, $key, $id,
                                     $relations = null, $columns = null)
     {
@@ -384,6 +393,13 @@ class EntityController extends Controller
         }
     }
 
+    /**
+     * Same as deleteEntity but with different parameters
+     * @param Request $request
+     * @param $key
+     * @param $id
+     * @return Post
+     */
     protected function deleteEntityReq(Request $request, $key, $id)
     {
         $inputs = $request->all();
@@ -391,9 +407,7 @@ class EntityController extends Controller
     }
 
     /**
-     * Update cms entity relations include 'tags', 'categories', 'posts',
-     * 'topics', 'statistics' etc
-     * E.g: a entity has relations include all except itself.
+     * Update entity relations.
      * @param $etype
      * @param $inputs
      * @param $entity
@@ -442,7 +456,7 @@ class EntityController extends Controller
 
 
     /**
-     * Check if current user has permission to edit a cms entity, topic and page
+     * Check if current user has permission to edit a entity.
      * can be edited by editor and above, post can be edited by author and above
      * @param $etype  - entity type
      * @param $record - a cms record
@@ -451,25 +465,27 @@ class EntityController extends Controller
      */
     protected function canUserEditEntity($etype, $record, $user)
     {
-        if ($etype == ETYPE_CMS_POST && $user->hasRole('author'))
+        assert(0 && "TODO: canUserEditEntity");
+        /*
+        if ($etype == ETYPE_PAGE && $user->hasRole('author'))
             return $record->author_id == $user->id ? true: false;
 
         if ($user->hasRole(['editor', 'shop_manager', 'administrator']))
             return true;
 
         return false;
+        */
     }
 
 
     /**
-     * Get state and occurrence of a cms table (topic, post or page)
+     * Get status and occurrence of a entity
      * @param $request
      * @param $table
      * @return object
      */
-    protected function getEntityStates($request, $table)
+    protected function getEntityStatus($request, $table)
     {
-        /* Get post statuses and occurrences */
         $states = DB::table($table)
             ->select(DB::raw('state, COUNT(*) as count'))
             ->groupBy('state')->get();
@@ -488,8 +504,8 @@ class EntityController extends Controller
      */
     private function getEntitiesInternal($db)
     {
-        // Query with state, request from frontend always set this to 'publish'
-        if ($this->state) $db = $db->where('state', $this->state);
+        // Query with status, frontend request always sets this to 'publish'
+        if ($this->status) $db = $db->where('status', $this->status);
 
         // Get total count for pagination where every filter is applied
         if ($this->pagination == 'full') $total = $db->count();
@@ -528,20 +544,20 @@ class EntityController extends Controller
                 [$this->date['from'], $this->date['to']]);
 
         // Query with channel, channel can be ether channel id or slug
-        if ($this->channel)
-            $db = $this->filterByChannel($db, $tableName, $this->channel);
+        //if ($this->channel)
+        //    $db = $this->filterByChannel($db, $tableName, $this->channel);
 
-        if($this->cType && $this->cId){
-            $db = $this->filterByCommentAble($db, $tableName, $this->cType, $this->cId);
-        }
+        //if($this->cType && $this->cId){
+        //    $db = $this->filterByCommentAble($db, $tableName, $this->cType, $this->cId);
+        //}
 
         // Query with category
         if ($this->category)
             $db = $this->filterByCategory($db, $tableName, $this->editor);
 
         // TOPIC ENTITY ONLY: Query with topic type
-        if ($this->topicType)
-            $db = $this->filterTopicByType($db, $tableName, $this->topicType);
+        //if ($this->topicType)
+        //    $db = $this->filterTopicByType($db, $tableName, $this->topicType);
 
         // Query with author
         if ($this->author)
@@ -660,17 +676,8 @@ class EntityController extends Controller
     protected function getEntityTable($etype)
     {
         switch ($etype) {
-            case ETYPE_CMS_POST:     return new Post;
-            case ETYPE_DEAL_TOPIC:   return new Topic;
-            case ETYPE_CMS_TOPIC:    return new Topic;
-            case ETYPE_CMS_PAGE:     return new Page;
-            case ETYPE_CMS_DEAL:     return new Deal;
-            case ETYPE_ADVERTISE:    return new Advertise;
-            case ETYPE_SHOP_ORDER:   return new Order;
-            case ETYPE_SHOP_PRODUCT: return new Product;
-            case ETYPE_SHOP_VOUCHER: return new Voucher;
-            case ETYPE_NEWSLETTER:   return new Newsletter;
-            case ETYPE_ATTACHMENT:   return new Attachment;
+            case ETYPE_OFFER:        return new Offer;
+            case ETYPE_PAGE:         return new Page;
             case ETYPE_COMMENT:      return new Comment;
             default:                 return null;
         }
@@ -686,17 +693,8 @@ class EntityController extends Controller
     {
 
         switch ($etype) {
-            case ETYPE_CMS_POST:      return 'cms_posts';
-            case ETYPE_DEAL_TOPIC:    return 'cms_topics';
-            case ETYPE_CMS_TOPIC:     return 'cms_topics';
-            case ETYPE_CMS_PAGE:      return 'cms_pages';
-            case ETYPE_CMS_DEAL:      return 'cms_deals';
-            case ETYPE_ADVERTISE:     return 'advertises';
-            case ETYPE_SHOP_ORDER:    return 'shop_orders';
-            case ETYPE_SHOP_PRODUCT:  return 'shop_products';
-            case ETYPE_SHOP_VOUCHER:  return 'shop_vouchers';
-            case ETYPE_NEWSLETTER:    return 'newsletters';
-            case ETYPE_ATTACHMENT:    return 'attachments';
+            case ETYPE_PAGE:          return 'pages';
+            case ETYPE_OFFER:         return 'offers';
             case ETYPE_COMMENT:       return 'comments';
             default:                  return null;
         }
@@ -709,16 +707,10 @@ class EntityController extends Controller
     protected function supportRevision($etype)
     {
         switch ($etype) {
-            case ETYPE_CMS_POST:
-            case ETYPE_CMS_TOPIC:
-            case ETYPE_CMS_PAGE:
-            case ETYPE_SHOP_PRODUCT:
-            case ETYPE_NEWSLETTER:
+            case ETYPE_PAGE:
                 return true;
             default:
                 return false;
         }
     }
-}
-
 }
