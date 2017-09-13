@@ -15,10 +15,18 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->get('/offer/{id}', 'OfferController@getOffer');
-$router->get('/offers',     'OfferController@getOffers');
+$router->group(
+    ['namespace' => '\App\Http\Controllers\Frontend'], function () use ($router) {
 
+    $router->get('/offer/{id}', 'OfferController@getOffer');
+    $router->get('/offers', 'OfferController@getOffers');
+
+});
 
 /////////////////////////////////////////////////////////////////
 // Test
-$router->get('/awin-get-offer', 'AffiliateWindowController@getOffers');
+$router->group(
+    ['namespace' => '\App\Http\Controllers\Backend'], function () use ($router) {
+
+    $router->get('/awin-get-offer', 'AffiliateWindowController@getOffers');
+});

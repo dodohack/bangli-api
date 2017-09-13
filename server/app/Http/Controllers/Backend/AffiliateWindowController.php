@@ -20,9 +20,9 @@ class AffiliateWindowController extends Controller
     public function __construct()
     {
         // Read Affiliate Window configuration from file .env.
-        $awin_id      = env('AWIN_ID');
-        $awin_pro_api = env('AWIN_PROMOTION_API');
-        $awin_pro_id  = env('AWIN_PROMOTION_ID');
+        $this->awin_id      = env('AWIN_ID');
+        $this->awin_pro_api = env('AWIN_PROMOTION_API');
+        $this->awin_pro_id  = env('AWIN_PROMOTION_ID');
     }
 
     public function getOffers()
