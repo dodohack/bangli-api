@@ -17,3 +17,8 @@ $router->get('/', function () use ($router) {
 
 $router->get('/offer/{id}', 'OfferController@getOffer');
 $router->get('/offers',     'OfferController@getOffers');
+
+
+/////////////////////////////////////////////////////////////////
+// Test
+$router->get('/awin-get-offer', 'AffiliateWindowController@getOffers');
