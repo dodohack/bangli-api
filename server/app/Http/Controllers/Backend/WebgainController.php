@@ -1,0 +1,5 @@
+<?php
+
+/**
+ * Webgain API client
+ */
