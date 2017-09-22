@@ -1,9 +1,6 @@
 <?php
-/**
- *
- */
 
-namespace App\Models\Frontend;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,13 +12,31 @@ class Offer extends Model
         'exclusive', 'code', 'description', 'starts', 'ends', 'region_id',
         'tracking_link', 'deeplink', 'modified_at', 'published_at', 'featured'];
 
-    /**
-     * Get the region the offer applicable
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function region()
+    public function editor()
     {
-        return $this->belongsTo('App\Models\Region', 'region_id');
+        return $this->belongsTo('App\Models\User', 'editor_id');
+    }
+
+    /**
+     * The channel this offer belongs to
+     */
+    public function channel()
+    {
+        return $this->belongsTo('App\Models\Channel', 'channel_id');
+    }
+
+    public function categories()
+    {
+        // TODO: Do we need to support this?
+    }
+
+    /**
+     * Get the topics this offer belongs to
+     */
+    public function topics()
+    {
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_offer', 'offer_id', 'topic_id');
     }
 
     /**

@@ -10,12 +10,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use App\Http\Controllers\Traits\EntityFilterTrait;
 use App\Http\Controllers\Traits\PaginatorTrait;
+use App\Models\Post;
+use App\Models\Page;
+use App\Models\Topic;
+use App\Models\Offer;
+use App\Models\Advertise;
+use App\Models\Newsletter;
+use App\Models\Attachment;
+use App\Models\Comment;
 
 
 class EntityController extends Controller
 {
-    use PaginatorTrait;
+    use EntityFilterTrait, PaginatorTrait;
 
     // Table relations and columns to be retrieved
     protected $relations;
@@ -434,7 +443,7 @@ class EntityController extends Controller
         if (isset($inputs['topics'])) {
             $topicIds = array_column($inputs['topics'], 'id');
 
-            if ($etype == ETYPE_CMS_TOPIC) {
+            if ($etype == ETYPE_TOPIC) {
                 // Update topic_has_topic relations in 2 directions
 
                 // The relationship
@@ -676,8 +685,13 @@ class EntityController extends Controller
     protected function getEntityTable($etype)
     {
         switch ($etype) {
+            case ETYPE_POST:         return new Post;
             case ETYPE_OFFER:        return new Offer;
             case ETYPE_PAGE:         return new Page;
+            case ETYPE_TOPIC:        return new Topic;
+            case ETYPE_ADVERTISE:    return new Advertise;
+            case ETYPE_NEWSLETTER:   return new Newsletter;
+            case ETYPE_ATTACHMENT:   return new Attachment;
             case ETYPE_COMMENT:      return new Comment;
             default:                 return null;
         }
@@ -693,21 +707,29 @@ class EntityController extends Controller
     {
 
         switch ($etype) {
-            case ETYPE_PAGE:          return 'pages';
+            case ETYPE_POST:          return 'posts';
             case ETYPE_OFFER:         return 'offers';
+            case ETYPE_PAGE:          return 'pages';
+            case ETYPE_TOPIC:         return 'topics';
+            case ETYPE_ADVERTISE:     return 'advertises';
+            case ETYPE_NEWSLETTER:    return 'newsletters';
+            case ETYPE_ATTACHMENT:    return 'attachments';
             case ETYPE_COMMENT:       return 'comments';
             default:                  return null;
         }
     }
 
     /**
-     * If current entity support revision
+     * If given entity type support revisions
      * @return bool
      */
     protected function supportRevision($etype)
     {
         switch ($etype) {
+            case ETYPE_POST:
+            case ETYPE_TOPIC:
             case ETYPE_PAGE:
+            case ETYPE_NEWSLETTER:
                 return true;
             default:
                 return false;

@@ -5,12 +5,11 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\EntityController;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
-
-class AffiliateWindowController extends Controller
+class AffiliateWindowController extends EntityController
 {
     private $awin_id;      // Affiliate Window ID
     private $awin_pro_api; // Affiliate Window promotion API endpoint
@@ -96,19 +95,20 @@ class AffiliateWindowController extends Controller
     /**
      * Loop the list of advertisers' metadata, store them into database
      */
-    private function putAdvertisers($res)
+    private function putMerchants($res)
     {
         // Explode the string into lines
         $lines = explode('\n', $res);
         foreach ($lines as $line) {
             // Convert CSV string into array
             $metadata = str_getcsv($line, ',', '"');
-            $this->putAdvertiser($metadata);
+            $this->putMerchant($metadata);
         }
     }
 
     /**
-     * Convert advertiser's metadata to the record that can be stored into db
+     * Convert advertiser's metadata to the record that can be stored into table
+     * 'topic'.
      * The fields we need to collect from metadata are:
      * Merchant ID:   metadata[0]
      * Merchant Name: metadata[1]
@@ -122,26 +122,44 @@ class AffiliateWindowController extends Controller
      * Merchant Region: metadata[15]
      *
      */
-    private function putAdvertiser(Array $metadata)
+    private function putMerchant(Array $metadata)
     {
         // Skip in-active merchants
         if ($metadata[3] != 'yes') return;
 
         $merchant = [
-            'slug'   => slugfy(metadata[1]),
-            'name'   => metadata[1],
-            'aff_id' => metadata[0],
+            'guid'   => $this->urlfy($metadata[1]),
+            'title'   => $metadata[1],
+            // TODO: Need to create an editor for auto-content
+            'editor_id' => 1,
+            // TODO: Need to support different channels: shopping, travel
+            'channel_id' => 1,
+            // topic type 2: merchant
+            'type_id' => 2,
+            // TODO:
+            'location_id' => 1, // $metadata[15]
+            'logo'   => $metadata[2],
+            'status' => 'draft',
+            'aff_id' => $metadata[0],
             'aff_platform' => 'AWIN',
-            'logo'   => metadata[2],
-            'description' => metadata[5],
-            'content' => metadata[6],
-            'tracking_url' => metadata[7],
-            //'category'
-            'display_url'  => metadata[14],
-            'region'       => metadata[15]
+            'description' => $metadata[5],
+            'content' => $metadata[6],
+            'tracking_url' => $metadata[7],
+            'display_url'  => $metadata[14]
         ];
 
+        // Check if we have already had this merchant
+        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $count = $table->where('aff_id', $merchant->aff_id)
+            ->where('aff_platform', $merchant->aff_platform)->count();
 
+        if ($count != 0) {
+            // Update the entry only when the editor is still the auto-created,
+            // Otherwise we don't update the topic which may be modified manually.
+        } else {
+            // Create the entry
+            $this->postEntity(ETYPE_TOPIC, $merchant);
+        }
     }
 
     private function putOffers($res)
@@ -151,6 +169,14 @@ class AffiliateWindowController extends Controller
 
     private function putOffer()
     {
+    }
 
+    /**
+     * Convert a string into url friendly one
+     */
+    private function urlfy($name)
+    {
+        // Remove specially characters and lowercase the string
+        return mb_strtolower(preg_replace('/[^a-zA-Z0-9]/','-', $name));
     }
 }
