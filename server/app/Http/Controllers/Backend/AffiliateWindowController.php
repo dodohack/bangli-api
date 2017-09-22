@@ -5,11 +5,11 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\EntityController;
+use App\Http\Controllers\Backend\AffiliateController;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
-class AffiliateWindowController extends EntityController
+class AffiliateWindowController extends AffiliateController
 {
     private $awin_id;      // Affiliate Window ID
     private $awin_pro_api; // Affiliate Window promotion API endpoint
@@ -29,46 +29,28 @@ class AffiliateWindowController extends EntityController
         $this->awin_ads_pwd = env('AWIN_ADVERTISER_API_PWD');
     }
 
-    /**
-     *
-     */
-    public function updateAdvertisers()
+    public function updateMerchants()
     {
-        $res = $this->getAllAdvertisers();
-        if (!$res) return "TODO: FAILED TO UPDATE ADVERTISERS!";
-
-        $this->putAdvertisers($res);
+        $res = $this->getAllMerchants();
+        if (!$res) return "TODO: FAILED TO UPDATE MERCHANTS!";
+        $this->putMerchants($res);
     }
 
-    /**
-     *
-     */
     public function updateOffers()
     {
         $res = $this->getAllOffers();
         if (!$res) return "TODO: FAILED TO UPDATE OFFERS!";
-
         $this->putOffers($res);
     }
 
     /**
      * Return a list of advertisers' metadata we have subscribed in CSV
      */
-    private function getAllAdvertisers()
+    private function getAllMerchants()
     {
-        $client = new Client();
-
-        try {
-            $ep = $this->awin_ads_api . '?user=' . $this->awin_id .
-                '&password=' . $this->awin_ads_pwd . '&' . $this->awin_ads_filters;
-            $res = $client->request('GET', $ep);
-        } catch (ServerException $e) {
-            // TODO: handle network exception
-            return false;
-        }
-
-        // Read up to 10M data from returned stream should be enough
-        return $res->getBody()->read(1024*1024*10);
+        $api = $this->awin_ads_api . '?user=' . $this->awin_id .
+            '&password=' . $this->awin_ads_pwd . '&' . $this->awin_ads_filters;
+        return $this->retrieveData($api);
     }
 
     /**
@@ -77,19 +59,9 @@ class AffiliateWindowController extends EntityController
      */
     private function getAllOffers()
     {
-        $client = new Client();
-
-        try {
-            $ep = $this->awin_pro_api . '/' . $this->awin_id . '/' .
-                $this->awin_pro_id . '?' . $this->awin_offer_filters;
-            $res = $client->request('GET', $ep);
-        } catch (ServerException $e) {
-            // TODO: handle server exception
-            return false;
-        }
-
-        // Read up to 10M data from returned stream should be enough
-        return $res->getBody()->read(1024*1024*10);
+        $api = $this->awin_pro_api . '/' . $this->awin_id . '/' .
+            $this->awin_pro_id . '?' . $this->awin_offer_filters;
+        return $this->retrieveData($api);
     }
 
     /**
@@ -169,14 +141,5 @@ class AffiliateWindowController extends EntityController
 
     private function putOffer()
     {
-    }
-
-    /**
-     * Convert a string into url friendly one
-     */
-    private function urlfy($name)
-    {
-        // Remove specially characters and lowercase the string
-        return mb_strtolower(preg_replace('/[^a-zA-Z0-9]/','-', $name));
     }
 }

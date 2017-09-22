@@ -1,6 +1,6 @@
 {
-    "name": "laravel/lumen",
-    "description": "The Laravel Lumen Framework.",
+    "name": "bangli.uk api server",
+    "description": "Backend server for bangli.uk",
     "keywords": ["framework", "laravel", "lumen"],
     "license": "MIT",
     "type": "project",
@@ -8,6 +8,7 @@
         "php": ">=7.0",
         "laravel/lumen-framework": "5.5.*",
         "vlucas/phpdotenv": "~2.2",
+        "tymon/jwt-auth": "^1.0@dev",
         "guzzlehttp/guzzle": "~6.3"
     },
     "require-dev": {
