@@ -7,9 +7,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AttrCategoryView extends Model
+class ViewAttrCategory extends Model
 {
-    protected $table = 'attr_categories_view';
+    protected $table = 'view_attr_categories';
     /* Do not return these field when not querying it explicitly */
     protected $hidden = ['pivot'];
     public $timestamps = false;

@@ -18,6 +18,12 @@ $router->get('/', function () use ($router) {
 $router->group(
     ['namespace' => '\App\Http\Controllers\Frontend'], function () use ($router) {
 
+    // Topic
+    $router->get('/topics',         'TopicController@getTopics');
+    $router->get('/topics/group',   'TopicController@getGroupTopics');
+    $router->get('/topics/{guid}',  'TopicController@getTopic');
+
+    // Offer
     $router->get('/offer/{id}', 'OfferController@getOffer');
     $router->get('/offers', 'OfferController@getOffers');
 

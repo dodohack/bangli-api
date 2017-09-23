@@ -9,31 +9,30 @@ class Topic extends Model
     protected $table = 'topics';
     // Make all attributes mass assignable
     protected $fillable = ['id', 'author_id', 'editor_id', 'channel_id',
-        'type_id', 'location_id', 'lock', 'logo', 'ranking', 'status', 'guid',
-        'aff_id', 'aff_platform',
-        'display_url', 'tracking_url', 'title', 'title_cn', 'description',
-        'content', 'published_at'];
+        'type_id', 'location_id', 'lock', 'logo', 'ranking', 'featured',
+        'status', 'guid', 'aff_id', 'aff_platform', 'display_url',
+        'tracking_url', 'title', 'title_cn', 'description', 'content', 'published_at'];
 
     protected $hidden = ['pivot'];
 
     public function editor()
     {
-        return $this->belongsTo('App\Models\EditorView', 'editor_id');
+        return $this->belongsTo('App\Models\ViewEditor', 'editor_id');
     }
 
     public function channel()
     {
-        return $this->belongsTo('App\Models\AttrChannelView', 'channel_id');
+        return $this->belongsTo('App\Models\ViewAttrChannel', 'channel_id');
     }
 
     public function type()
     {
-        return $this->belongsTo('App\Models\AttrTopicTypeView', 'type_id');
+        return $this->belongsTo('App\Models\ViewAttrTopicType', 'type_id');
     }
 
     public function location()
     {
-        return $this->belongsTo('App\Models\AttrLocationView', 'location_id');
+        return $this->belongsTo('App\Models\ViewAttrLocation', 'location_id');
     }
 
     public function images()
@@ -44,7 +43,7 @@ class Topic extends Model
 
     public function categories()
     {
-        return $this->belongsToMany('App\Models\AttrCategoryView',
+        return $this->belongsToMany('App\Models\ViewAttrCategory',
             'topic_has_category', 'topic_id', 'cat_id');
     }
 
@@ -56,7 +55,7 @@ class Topic extends Model
 
     public function topics()
     {
-        return $this->belongsToMany('App\Models\AttrTopicView',
+        return $this->belongsToMany('App\Models\ViewAttrTopic',
             'topic_has_topic', 'topic2_id', 'topic1_id');
     }
 

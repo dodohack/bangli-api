@@ -8,7 +8,7 @@ class Page extends Model
 {
     protected $table = 'pages';
     // Make all attributes mass assignable.
-    protected $fillable = ['id', 'editor_id', 'lock', 'state', 'page_type',
+    protected $fillable = ['id', 'editor_id', 'lock', 'status', 'page_type',
         'title', 'content'];
     protected $hidden = ['pivot'];
 

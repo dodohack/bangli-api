@@ -211,10 +211,9 @@ class EntityController extends Controller
      * @param $columns - entity table columns to be queried
      * @return string
      */
-    protected function getEntityObj($etype,
-                                    $key, $id,
-                                    $table = null,
-                                    $relations = null, $columns = null, $count=null)
+    protected function getEntityObj($etype, $key, $id,
+                                    $table = null, $relations = null,
+                                    $columns = null, $count=null)
     {
         if (!$table) {
             $db = $this->getEntityTable($etype);
@@ -226,10 +225,11 @@ class EntityController extends Controller
 
         $db = $db->where($key, $id);
 
-        if($relations) $db = $db->with($relations);
-        if($count) $db = $db->withCount($count);
-        if ($columns)    $entity = $db->first($columns);
-        else             $entity = $db->first();
+        if ($relations) $db = $db->with($relations);
+        if ($count)     $db = $db->withCount($count);
+
+        if ($columns)   $entity = $db->first($columns);
+        else            $entity = $db->first();
 
         return $entity;
     }

@@ -6,8 +6,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AttrChannelView extends Model
+class ViewAttrChannel extends Model
 {
-    protected $table = 'attr_channels_view';
+    protected $table = 'view_attr_channels';
     public $timestamps = false;
 }

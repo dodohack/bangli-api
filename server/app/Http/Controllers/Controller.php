@@ -57,4 +57,22 @@ class Controller extends BaseController
     {
         $value = filter_var($value, FILTER_SANITIZE_STRING);
     }
+
+    /**
+     * Decode parameter string into MySQL query parameter key-value array
+     * @param $paramStr - http request parameter string: [key:value;]*
+     * @return array - key-value parameter array
+     */
+    public function decodeParams($paramStr)
+    {
+        $params = [];
+        $pairs = explode(';', $paramStr);
+
+        foreach ($pairs as $pair) {
+            $kv = explode(':', $pair);
+            $params[$kv[0]] = $kv[1];
+        }
+
+        return $params;
+    }
 }

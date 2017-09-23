@@ -8,9 +8,8 @@ class Post extends Model
     protected $table = 'post';
     // Make all attributes mass assignable.
     protected $fillable = ['id', 'editor_id', 'author_id', 'image_id',
-        'channel_id', 'location_id', 'lock', 'status',
-        'title', 'excerpt', 'content', 'extra',
-        'published_at'];
+        'channel_id', 'location_id', 'lock', 'featured', 'status',
+        'title', 'excerpt', 'content', 'extra', 'published_at'];
     protected $hidden = ['pivot'];
 
     /*
@@ -20,7 +19,7 @@ class Post extends Model
     public function simpleColumns()
     {
         return ['post.id', 'editor_id', 'author_id', 'image_id',
-            'channel_id', 'location_id', 'lock', 'status',
+            'channel_id', 'location_id', 'lock', 'featured', 'status',
             'title', 'published_at', 'created_at', 'updated_at'];
     }
 
@@ -54,7 +53,7 @@ class Post extends Model
      */
     public function author()
     {
-        return $this->belongsTo('App\Models\AuthorView', 'author_id');
+        return $this->belongsTo('App\Models\ViewAuthor', 'author_id');
     }
 
     /*
@@ -62,7 +61,7 @@ class Post extends Model
      */
     public function editor()
     {
-        return $this->belongsTo('App\Models\EditorView', 'editor_id');
+        return $this->belongsTo('App\Models\ViewEditor', 'editor_id');
     }
 
     /*
@@ -70,7 +69,7 @@ class Post extends Model
      */
     public function channel()
     {
-        return $this->belongsTo('App\Models\AttrChannelView', 'channel_id');
+        return $this->belongsTo('App\Models\ViewAttrChannel', 'channel_id');
     }
 
     /*
@@ -78,7 +77,7 @@ class Post extends Model
      */
     public function location()
     {
-        return $this->belongsTo('App\Models\AttrLocationView', 'location_id');
+        return $this->belongsTo('App\Models\ViewAttrLocation', 'location_id');
     }
 
     /*
@@ -94,7 +93,7 @@ class Post extends Model
      */
     public function categories()
     {
-        return $this->belongsToMany('App\Models\AttrCategoryView',
+        return $this->belongsToMany('App\Models\ViewAttrCategory',
             'post_has_category', 'post_id', 'cat_id');
     }
 
@@ -103,7 +102,7 @@ class Post extends Model
      */
     public function topics()
     {
-        return $this->belongsToMany('App\Models\AttrTopicView',
+        return $this->belongsToMany('App\Models\ViewAttrTopic',
             'topic_has_post', 'post_id', 'topic_id');
     }
 

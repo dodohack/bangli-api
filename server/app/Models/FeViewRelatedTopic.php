@@ -1,15 +1,15 @@
 <?php
 /**
- * View of Cms topic type model
+ * Frontend view of topics with extra categories info joined
  */
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AttrTopicTypeView extends Model
+class FeViewRelatedTopic extends Model
 {
-    protected $table = 'attr_topic_types_view';
+    protected $table = 'fe_view_related_topic';
     protected $hidden = ['pivot'];
     public $timestamps = false;
 }

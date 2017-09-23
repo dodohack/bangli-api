@@ -114,7 +114,8 @@ class AffiliateWindowController extends AffiliateController
             // TODO:
             'location_id' => 1, // $metadata[15]
             'logo'   => $metadata[2],
-            'status' => 'draft',
+            // TODO: After introducing more criteria, we can safely set this to 'publish'
+            'status' => 'publish',
             'aff_id' => $metadata[0],
             'aff_platform' => 'AWIN',
             'description' => $metadata[5],
@@ -196,7 +197,8 @@ class AffiliateWindowController extends AffiliateController
 
         $input = array(
             'channel_id' => 1,
-            'status'     => 'draft',
+            // TODO: After introducing more criteria, we can safely set this to 'publish'
+            'status'     => 'publish',
             'title'      => substr($offer[5], 0, 1024),
             'vouchers'   => $offer[4],
             'aff_offer_id' => $offer[0],
