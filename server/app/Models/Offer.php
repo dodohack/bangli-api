@@ -8,9 +8,10 @@ class Offer extends Model
 {
     protected $table    = 'offers';
     protected $hidden   = ['pivot'];
-    protected $fillable = ['id', 'merchant_id', 'author_id', 'status', 'type',
-        'exclusive', 'code', 'description', 'starts', 'ends', 'region_id',
-        'tracking_link', 'deeplink', 'modified_at', 'published_at', 'featured'];
+    protected $fillable = ['id', 'author_id', 'channel_id', 'status', 'featured',
+        'title', 'content', 'tracking_url', 'display_url', 'vouchers',
+        'aff_offer_id', 'starts', 'ends',
+        'created_at', 'updated_at', 'published_at'];
 
     public function editor()
     {

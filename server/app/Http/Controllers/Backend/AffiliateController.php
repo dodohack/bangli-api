@@ -22,7 +22,6 @@ class AffiliateController extends EntityController
         assert("Child class must implement");
     }
 
-
     protected function retrieveData($api)
     {
         $client = new Client();

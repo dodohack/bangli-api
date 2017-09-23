@@ -16,52 +16,44 @@ class AffiliateWindowController extends AffiliateController
     private $awin_pro_id;  // Affiliate Window promotional ID
     private $awin_ads_api; // Affiliate Window advertiser metadata API
     private $awin_ads_pwd; // Affiliate Window advertiser metadata API password
-    private $awin_offer_filters="promotionType=&categoryIds=&regionIds=&advertiserIds=&membershipStatus=joined&promotionStatus=";
-    private $awin_ads_filters="format=CSV&filter=SUBSCRIBED_ALL";
 
     public function __construct()
     {
         // Read Affiliate Window configuration from file .env.
         $this->awin_id      = env('AWIN_ID');
-        $this->awin_pro_api = env('AWIN_PROMOTION_API');
         $this->awin_pro_id  = env('AWIN_PROMOTION_ID');
-        $this->awin_ads_api = env('AWIN_ADVERTISER_API');
         $this->awin_ads_pwd = env('AWIN_ADVERTISER_API_PWD');
+
+        $this->awin_pro_api = env('AWIN_PROMOTION_API') . '/' .
+            $this->awin_id . '/' . $this->awin_pro_id .
+            '?promotionType=&categoryIds=&regionIds=&advertiserIds=&membershipStatus=joined&promotionStatus=';
+
+        $this->awin_ads_api = env('AWIN_ADVERTISER_API') . '?user=' .
+            $this->awin_id . '&password=' . $this->awin_ads_pwd .
+            '&format=CSV&filter=SUBSCRIBED_ALL';
     }
 
     public function updateMerchants()
     {
-        $res = $this->getAllMerchants();
-        if (!$res) return "TODO: FAILED TO UPDATE MERCHANTS!";
-        $this->putMerchants($res);
+        $count = 0;
+
+        $res = $this->retrieveData($this->awin_ads_api);
+        if ($res) {
+            $count = $this->putMerchants($res);
+        }
+
+        return response($count);
     }
 
     public function updateOffers()
     {
-        $res = $this->getAllOffers();
-        if (!$res) return "TODO: FAILED TO UPDATE OFFERS!";
-        $this->putOffers($res);
-    }
+        $count = 0;
+        $res = $this->retrieveData($this->awin_pro_api);
+        if ($res) {
+            $count = $this->putOffers($res);
+        }
 
-    /**
-     * Return a list of advertisers' metadata we have subscribed in CSV
-     */
-    private function getAllMerchants()
-    {
-        $api = $this->awin_ads_api . '?user=' . $this->awin_id .
-            '&password=' . $this->awin_ads_pwd . '&' . $this->awin_ads_filters;
-        return $this->retrieveData($api);
-    }
-
-    /**
-     * Return a list of promotions of subscribed advertisers in CSV
-     * @return bool|string
-     */
-    private function getAllOffers()
-    {
-        $api = $this->awin_pro_api . '/' . $this->awin_id . '/' .
-            $this->awin_pro_id . '?' . $this->awin_offer_filters;
-        return $this->retrieveData($api);
+        return response($count);
     }
 
     /**
@@ -69,13 +61,21 @@ class AffiliateWindowController extends AffiliateController
      */
     private function putMerchants($res)
     {
-        // Explode the string into lines
-        $lines = explode('\n', $res);
+        $count = 0;
+        // Explode the string into lines, must be double quoted "\n".
+        $lines = explode("\n", $res);
+
         foreach ($lines as $line) {
+            // Skip empty line
+            if (!$line) continue;
             // Convert CSV string into array
-            $metadata = str_getcsv($line, ',', '"');
-            $this->putMerchant($metadata);
+            $metadata = str_getcsv($line);
+            if ($this->putMerchant($metadata)) {
+                $count++;
+            }
         }
+
+        return $count;
     }
 
     /**
@@ -93,17 +93,20 @@ class AffiliateWindowController extends AffiliateController
      * Merchant Display URL: metadata[14]
      * Merchant Region: metadata[15]
      *
+     *
+     * @param array $metadata - merchant metadata
+     * @return bool  - true when record is created, otherwise false
      */
     private function putMerchant(Array $metadata)
     {
         // Skip in-active merchants
-        if ($metadata[3] != 'yes') return;
+        if (count($metadata) < 15 || $metadata[3] != 'yes') return false;
 
-        $merchant = [
+        $merchant = array(
             'guid'   => $this->urlfy($metadata[1]),
             'title'   => $metadata[1],
             // TODO: Need to create an editor for auto-content
-            'editor_id' => 1,
+            //'editor_id' => 1,
             // TODO: Need to support different channels: shopping, travel
             'channel_id' => 1,
             // topic type 2: merchant
@@ -118,28 +121,205 @@ class AffiliateWindowController extends AffiliateController
             'content' => $metadata[6],
             'tracking_url' => $metadata[7],
             'display_url'  => $metadata[14]
-        ];
+        );
 
         // Check if we have already had this merchant
         $table = $this->getEntityTable(ETYPE_TOPIC);
-        $count = $table->where('aff_id', $merchant->aff_id)
-            ->where('aff_platform', $merchant->aff_platform)->count();
+        $record = $table->where('aff_id', $merchant['aff_id'])
+            ->where('aff_platform', $merchant['aff_platform'])->first();
 
-        if ($count != 0) {
-            // Update the entry only when the editor is still the auto-created,
+        if ($record) {
+            // Update the entry only when the editor is null
             // Otherwise we don't update the topic which may be modified manually.
+            if ($record->editor_id == null) {
+                $table->where('id', $record->id)->delete();
+                $table->create($merchant);
+                return true;
+            }
+            return false;
         } else {
             // Create the entry
-            $this->postEntity(ETYPE_TOPIC, $merchant);
+            $record = $table->create($merchant);
+            if (!$record)
+                return false;
+            else
+                return true;
         }
     }
 
+    /**
+     * Loop the list of offers received from API endpoint, store them into
+     * database.
+     *
+     * @param $res - http reponse from API endpoint
+     * @return int - number of offer updated
+     */
     private function putOffers($res)
     {
+        $count = 0;
+        // Expolode the string into lines, must be doulb quoted "\n"
+        $lines = explode("\n", $res);
 
+        foreach ($lines as $line) {
+            // Skip empty line
+            if (!$line) continue;
+            // Convert CSV string into array
+            $offer = str_getcsv($line);
+            if ($this->putOffer($offer)) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
-    private function putOffer()
+    /**
+     * Convert offer raw data into record and store them into table 'offers'.
+     * Required field:
+     * Offer ID: offer[0]
+     * Advertiser ID: offer[2]
+     * Offer type: offer[3]
+     * Voucher code: offer[4]
+     * Description: offer[5]
+     * Starts: offer[6]
+     * Ends: offer[7]
+     * Category: offer[8] -- Maybe
+     * Tracking link: offer[11]
+     * Display link: offer[12]
+     *
+     * @return bool
+     */
+    private function putOffer(Array $offer)
     {
+        // TODO: Skip some offer which is created long time ago
+        if (count($offer) < 12 || !is_numeric($offer[0])) return false;
+
+        $input = array(
+            'channel_id' => 1,
+            'status'     => 'draft',
+            'title'      => substr($offer[5], 0, 1024),
+            'vouchers'   => $offer[4],
+            'aff_offer_id' => $offer[0],
+            'starts'     => $this->AWinDate2MySQLDate($offer[6]),
+            'ends'       => $this->AWinDate2MySQLDate($offer[7]),
+            'tracking_url' => $offer[11],
+            'display_url'  => $offer[12]
+        );
+
+        $topicTable = $this->getEntityTable(ETYPE_TOPIC);
+        $merchant = $topicTable->where('aff_id', $offer[2])
+            ->where('aff_platform', 'AWIN')->first();
+
+        // If we can find the same offer
+        $found = false;
+        // If the offer we found can be updated automatically, if it is
+        // already modified by user, we will not overwrite it
+        $canUpdate = false;
+        $offerId = null;
+
+        if ($merchant->offers->count()) {
+            foreach($merchant->offers as $o) {
+                if ($o->aff_offer_id == $offer[0]) {
+                    $found = true;
+                    if ($o->author_id == null) {
+                        $offerId = $o->id;
+                        $canUpdate = true;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Remove old offer
+        if ($found && $canUpdate) {
+            $table = $this->getEntityTable(ETYPE_OFFER);
+            $table->where('id', $offerId)->delete();
+        }
+
+        // Create the offer
+        if (!$merchant->offers->count() || !$found || ($found && $canUpdate)) {
+            // There is no offers attached to the topic
+            $table = $this->getEntityTable(ETYPE_OFFER);
+            $record = $table->create($input);
+            // Update the pivot table
+            $record->topics()->sync([$merchant->id]);
+        }
+
+        return true;
+    }
+
+    private function AWinDate2MySQLDate($date)
+    {
+        // Awin date format: 'dd/mm/yyyy hh:mm'
+        return preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4:59', $date);
+    }
+
+
+    /**************************************************************************
+     * Test only API
+     **************************************************************************/
+
+
+    /**
+     * Return a list of advertisers' metadata we have subscribed in CSV
+     */
+    public function testGetMerchants()
+    {
+        $res = $this->retrieveData($this->awin_ads_api);
+        if (!$res)
+            return response('FAIL TO GET MERCHANTS METADATA FROM AWIN');
+        return response('SUCCESS');
+    }
+
+    /**
+     * Return a list of promotions of subscribed advertisers in CSV
+     * @return bool|string
+     */
+    public function testGetOffers()
+    {
+        $res = $this->retrieveData($this->awin_pro_api);
+        if (!$res)
+            return response('FAIL TO GET PROMOTIONS FROM AWIN');
+        return response('SUCCESS');
+    }
+
+    public function testPostMerchant($metadata)
+    {
+        // Delete record before create
+        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $entity = $table->where('aff_id', $metadata[0])
+            ->where('aff_platform', 'AWIN')->first();
+
+        if ($entity)
+            $table->where('aff_id', $metadata[0])
+                ->where('aff_platform', 'AWIN')->delete();
+
+        if ($this->putMerchant($metadata)) {
+            return response('SUCCESS');
+        }
+
+        return response('FAIL TO CREATE MERCHANT RECORD');
+    }
+
+    public function testPostOffer($input)
+    {
+        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $entity = $table->where('aff_id', $input[2])
+            ->where('aff_platform', 'AWIN')->first();
+
+        if ($entity) {
+            if ($entity->offers->count()) {
+                dd("TODO");
+            } else {
+                // Attach the offer
+                if ($this->putOffer($input)) {
+                    return response('SUCCESS');
+                }
+
+                return response('FAIL TO CREATE OFFER RECORD');
+            }
+        } else {
+            return response('ERROR: NO CORRESPONDING TOPIC FOR THIS OFFER');
+        }
     }
 }

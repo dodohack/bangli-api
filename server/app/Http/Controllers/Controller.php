@@ -38,4 +38,23 @@ class Controller extends BaseController
         // AJAX response
         return $json;
     }
+
+    /**
+     * Return error message with HTTP 500 error
+     * @param $json
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
+    public function error($json)
+    {
+        return response($json, 500);
+    }
+
+    /**
+     * Sanitize callback for input, strip all specially characters
+     * @param $value
+     */
+    public function sanitize(&$value)
+    {
+        $value = filter_var($value, FILTER_SANITIZE_STRING);
+    }
 }

@@ -27,6 +27,9 @@ $router->group(
 // Test
 $router->group(
     ['namespace' => '\App\Http\Controllers\Backend'], function () use ($router) {
+    $router->get('/awin-get-merchants', 'AffiliateWindowController@testGetMerchants');
+    $router->get('/awin-get-offers', 'AffiliateWindowController@testGetOffers');
 
-    $router->get('/awin-get-offer', 'AffiliateWindowController@getOffers');
+    $router->get('/awin-update-merchants', 'AffiliateWindowController@updateMerchants');
+    $router->get('/awin-update-offers', 'AffiliateWindowController@updateOffers');
 });

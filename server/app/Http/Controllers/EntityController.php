@@ -280,9 +280,9 @@ class EntityController extends Controller
         // Create the entity
         $record = $table->create($inputs);
         if (!$record) {
-            $error = ['etype' => $etype,
+            $msg = ['etype' => $etype,
                 'error' => 'Fail to create a entity'];
-            return parent::error(json_encode($error), 401);
+            return $this->error(json_encode($msg));
         }
 
         // Update entity relations
@@ -324,7 +324,7 @@ class EntityController extends Controller
 
         // Check if user has write permission to the entity
         if (!$this->canUserEditEntity($etype, $record, $user))
-            return response('No permission', 401);
+            return $this->error('No permission');
 
         // Update entity relations
         $this->updateRelations($etype, $inputs, $record);
