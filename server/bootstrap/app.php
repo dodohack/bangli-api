@@ -11,7 +11,7 @@ try {
 /*
  * Include our constant definition
  */
-require_once __DIR__.'/../app/const.php';
+require_once __DIR__.'/../app/Const.php';
 
 /*
 |--------------------------------------------------------------------------
