@@ -1,3 +1,7 @@
 .idea
 database/*.bak
-server/composer.lock
+composer.lock
+/vendor
+Homestead.json
+Homestead.yaml
+.env
