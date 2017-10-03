@@ -28,6 +28,14 @@ $app = new Laravel\Lumen\Application(
     realpath(__DIR__.'/../')
 );
 
+/* Add customized status code config file */
+$app->configure('auth');
+$app->configure('database');
+$app->configure('cache');
+// Load config/filesystems.php before facade
+$app->configure('filesystems');
+class_alias('Illuminate\Support\Facades\Storage', 'Storage');
+
 $app->withFacades();
 
 $app->withEloquent();
@@ -89,6 +97,17 @@ $app->routeMiddleware([
  $app->register(App\Providers\AppServiceProvider::class);
  $app->register(App\Providers\AuthServiceProvider::class);
   //$app->register(App\Providers\EventServiceProvider::class);
+
+/*
+ |--------------------------------------------------------------------------
+ | Register filesystem
+ |--------------------------------------------------------------------------
+ */
+$app->singleton('filesystem', function ($app) {
+    return $app->loadComponent('filesystems',
+        'Illuminate\Filesystem\FilesystemServiceProvider', 'filesystem');
+});
+
 
 /*
 |--------------------------------------------------------------------------
