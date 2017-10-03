@@ -2,22 +2,18 @@
 
 namespace App\Providers;
 
-use App\User;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\ServiceProvider;
+use Tymon\JWTAuth\Providers\AbstractServiceProvider;
+use Tymon\JWTAuth\Http\Middleware\Check;
+use Tymon\JWTAuth\Http\Parser\AuthHeaders;
+use Tymon\JWTAuth\Http\Parser\QueryString;
+use Tymon\JWTAuth\Http\Parser\InputSource;
+use Tymon\JWTAuth\Http\Parser\LumenRouteParams;
+use Tymon\JWTAuth\Http\Middleware\Authenticate;
+use Tymon\JWTAuth\Http\Middleware\RefreshToken;
+use Tymon\JWTAuth\Http\Middleware\AuthenticateAndRenew;
 
-class AuthServiceProvider extends ServiceProvider
+class AuthServiceProvider extends AbstractServiceProvider
 {
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
-    }
-
     /**
      * Boot the authentication services for the application.
      *
@@ -25,15 +21,30 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Here you may define how you wish users to be authenticated for your Lumen
-        // application. The callback which receives the incoming request instance
-        // should return either a User instance or null. You're free to obtain
-        // the User instance via an API token or any other method necessary.
+        $this->app->configure('jwt');
 
-        $this->app['auth']->viaRequest('api', function ($request) {
-            if ($request->input('api_token')) {
-                return User::where('api_token', $request->input('api_token'))->first();
-            }
+        $path = realpath(__DIR__.'/../../vendor/tymon/jwt-auth/config/config.php');
+        $this->mergeConfigFrom($path, 'jwt');
+
+        $this->app->routeMiddleware([
+            'jwt.auth' => Authenticate::class,
+            'jwt.refresh' => RefreshToken::class,
+            'jwt.renew' => AuthenticateAndRenew::class,
+            'jwt.check' => Check::class,
+        ]);
+
+        /* Register customProviderCreators */
+        $this->app['auth']->provider('jwt', function ($app, array $config) {
+            return new JwtUserProvider($app['hash'], $config['model']);
         });
+
+        $this->extendAuthGuard();
+
+        $this->app['tymon.jwt.parser']->setChain([
+            new AuthHeaders,
+            new QueryString,
+            new InputSource,
+            new LumenRouteParams,
+        ]);
     }
 }

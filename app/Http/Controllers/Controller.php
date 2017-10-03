@@ -7,6 +7,21 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
+    // The domain this API server serves, one of following configed in .env
+    // bangli.uk, huluwa.uk, bangli.us, ...
+    // www.bangli.uk, www.huluwa.uk, www.bangli.us, ...
+    protected $domain;
+    protected $www;
+    // Image server address with S3 bracket name
+    protected $imgServer;
+
+    public function __construct()
+    {
+        $this->domain = env('ROOT_DOMAIN');
+        $this->www = 'www.' . $this->domain;
+        $this->imgServer = env('IMG_SERVER');
+    }
+
     /**
      * Return JSONP or AJAX response based on client request
      * @param Request $request

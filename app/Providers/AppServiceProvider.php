@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Laravel\Lumen\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,8 +12,16 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function boot()
     {
-        //
+        /* This defines the polymorphic table *_type and *_id key, see laravel
+         * polymorphic table for how this works. */
+        Relation::morphMap([
+            'post'     => 'App\Models\Post',
+            'page'     => 'App\Models\Page',
+            'topic'    => 'App\Models\Topic',
+            'deal'     => 'App\Models\Deal',
+            'newsletter' => 'App\Models\Newsletter',
+        ]);
     }
 }
