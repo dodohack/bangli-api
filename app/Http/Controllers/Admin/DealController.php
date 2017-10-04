@@ -8,13 +8,13 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 
-use App\Models\Cms\Post;
+use App\Models\Offer;
 
 class DealController extends CmsController
 {
     /* Columns to be retrieved for posts list */
-    private $dealsColumns = ['cms_deals.id', 'editor_id',
-        'channel_id', 'state',
+    private $dealsColumns = ['offers.id', 'editor_id',
+        'channel_id', 'status',
         'title', 'published_at', 'created_at', 'updated_at'];
 
     /* Relations to be queried with the deal/deals */
@@ -52,7 +52,7 @@ class DealController extends CmsController
      */
     public function getStates(Request $request)
     {
-        return $this->getEntityStates($request, 'deal_posts');
+        return $this->getEntityStates($request, 'offers');
     }
 
     /**

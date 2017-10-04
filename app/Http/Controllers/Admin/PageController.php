@@ -9,14 +9,15 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-use App\Models\Cms\Page;
+use App\Models\Page;
 
 
 class PageController extends CmsController
 {
 
+    // FIXME
     /* Columns to be retrieved for pages list */
-    private $pagesColumns = ['cms_pages.id', 'editor_id', 'lock', 'state', 'page_type',
+    private $pagesColumns = ['pages.id', 'editor_id', 'lock', 'status', 'page_type',
         'title', 'created_at', 'updated_at'];
 
     /* Relations to be queried with page/pages */
@@ -51,7 +52,8 @@ class PageController extends CmsController
      */
     public function getStates(Request $request)
     {
-        return $this->getEntityStates($request, 'cms_pages');
+        // FIXME
+        return $this->getEntityStates($request, 'pages');
     }
 
     /**

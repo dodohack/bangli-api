@@ -8,14 +8,15 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 
-use App\Models\Cms\Post;
+use App\Models\Post;
 
 class PostController extends CmsController
 {
+    // FIXME: Hardcoded table columns, move them to Models.
     /* Columns to be retrieved for posts list */
-    private $postsColumns = ['cms_posts.id', 'editor_id', 'author_id', 'channel_id',
-                          'location_id', 'lock', 'state', 'creative_type',
-                          'title', 'excerpt', 'internal_note', 'fake_published_at',
+    private $postsColumns = ['posts.id', 'editor_id', 'author_id', 'channel_id',
+                          'location_id', 'lock', 'status',
+                          'title', 'excerpt',
                           'published_at', 'created_at', 'updated_at'];
 
     /* Relations to be queried with the post/posts */
@@ -55,7 +56,8 @@ class PostController extends CmsController
      */
     public function getStates(Request $request)
     {
-        return $this->getEntityStates($request, 'cms_posts');
+        // FIXME: Hardcoded table name
+        return $this->getEntityStates($request, 'posts');
     }
 
     /**

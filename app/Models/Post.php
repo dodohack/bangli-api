@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
-    protected $table = 'post';
+    protected $table = 'posts';
     // Make all attributes mass assignable.
     protected $fillable = ['id', 'editor_id', 'author_id', 'image_id',
         'channel_id', 'location_id', 'lock', 'featured', 'status',

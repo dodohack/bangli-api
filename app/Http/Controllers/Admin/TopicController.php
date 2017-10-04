@@ -8,15 +8,15 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 
-use App\Models\Cms\Topic;
+use App\Models\Topic;
 
 
 class TopicController extends CmsController
 {
 
     /* Columns to be retrieved for topics list */
-    private $topicsColumns = ['cms_topics.id', 'editor_id', 'channel_id',
-        'type_id', 'location_id', 'lock', 'ranking', 'state', 'guid', 'title',
+    private $topicsColumns = ['topics.id', 'editor_id', 'channel_id',
+        'type_id', 'location_id', 'lock', 'ranking', 'status', 'guid', 'title',
         'created_at', 'updated_at'];
 
     /* Relations to be queried with topic/topics */
@@ -53,7 +53,8 @@ class TopicController extends CmsController
      */
     public function getStates(Request $request)
     {
-        return $this->getEntityStates($request, 'cms_topics');
+        // FIXME:
+        return $this->getEntityStates($request, 'topics');
     }
 
     /**
