@@ -53,12 +53,12 @@ class CmsController extends EntityController
             ->groupBy('status')->get();
 
 
-        // Topic states and occurrences
+        // Topic statuss and occurrences
         $topic_status = DB::table('topics')
             ->select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        // Page states and occurrences
+        // Page statuss and occurrences
         $page_status = DB::table('pages')
             ->select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();

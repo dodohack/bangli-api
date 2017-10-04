@@ -45,7 +45,7 @@ class PageController extends CmsController
     }
 
     /**
-     * Return page states
+     * Return page statuss
      *
      * @param Request $request
      * @return object $json: jsonified pagination

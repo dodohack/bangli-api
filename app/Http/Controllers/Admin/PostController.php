@@ -52,7 +52,7 @@ class PostController extends CmsController
     }
 
     /**
-     * Return post states and occurrences
+     * Return post statuss and occurrences
      */
     public function getStates(Request $request)
     {

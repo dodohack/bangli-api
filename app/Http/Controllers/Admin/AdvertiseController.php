@@ -39,7 +39,7 @@ class AdvertiseController extends EntityController
     }
 
     /**
-     * Return advertise states and occurrences
+     * Return advertise statuss and occurrences
      */
     public function getStates(Request $request)
     {

@@ -39,7 +39,7 @@ class LocationController extends EntityController
     }
 
     /**
-     * Return location states and occurrences
+     * Return location statuss and occurrences
      */
     public function getStates(Request $request)
     {

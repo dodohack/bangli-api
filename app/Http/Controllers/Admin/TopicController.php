@@ -46,7 +46,7 @@ class TopicController extends CmsController
     }
 
     /**
-     * Return topic states
+     * Return topic statuss
      *
      * @param Request $request
      * @return object $json: jsonified pagination

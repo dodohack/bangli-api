@@ -144,7 +144,7 @@ class AttachmentController extends EntityController
     }
 
     /**
-     * Return attachment states and occurrences
+     * Return attachment statuss and occurrences
      */
     public function getStates(Request $request)
     {

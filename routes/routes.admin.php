@@ -69,7 +69,7 @@ $router->group([/*'middleware' => 'permission:use_dashboard',*/
     $router->put('/attachments/batch',    'AttachmentController@putAttachments');
     /* Upload a list of attachments */
     $router->post('/attachments/batch',   'AttachmentController@postAttachments');
-    $router->delete('/attachments/batch', 'AttachmentController@dealAttachments');
+    $router->delete('/attachments/batch', 'AttachmentController@deleteAttachments');
     /* Get a attachment */
     $router->get('/attachments/{id}',     'AttachmentController@getAttachment');
     /* Create a new attachment */
@@ -186,19 +186,19 @@ $router->group([/*'middleware' => ['role:administrator|editor'],*/
     /* Delete a page */
     $router->delete('/pages/{id}',  'PageController@deletePage');
 
-    /* Get list of deals */
-    $router->get('/deals',          'DealController@getDeals');
-    /* Update a list of deals */
-    $router->put('/deals/batch',    'DealController@putDeals');
-    $router->delete('/deals/batch', 'DealController@deleteDeals');
-    /* Get a deal */
-    $router->get('/deals/{id}',      'DealController@getDeal');
-    /* Create a new deal*/
-    $router->post('/deals',         'DealController@postDeal');
-    /* Update a deal */
-    $router->put('/deals/{id}',     'DealController@putDeal');
-    /* Delete a deal */
-    $router->delete('/deals/{id}',  'DealController@deleteDeal');
+    /* Get list of offers */
+    $router->get('/offers',          'OfferController@getOffers');
+    /* Update a list of offers */
+    $router->put('/offers/batch',    'OfferController@putOffers');
+    $router->delete('/offers/batch', 'OfferController@deleteOffers');
+    /* Get a offer */
+    $router->get('/offers/{id}',      'OfferController@getOffer');
+    /* Create a new offer*/
+    $router->post('/offers',         'OfferController@postOffer');
+    /* Update a offer */
+    $router->put('/offers/{id}',     'OfferController@putOffer');
+    /* Delete a offer */
+    $router->delete('/offers/{id}',  'OfferController@deleteOffer');
 });
 
 
@@ -214,7 +214,7 @@ $router->group([/*'middleware' => ['role:administrator|editor'],*/
     $router->get('/comments',          'CommentController@getComments');
     /* Update a list of comments */
     $router->put('/comments/batch',    'CommentController@putComments');
-    $router->delete('/comments/batch', 'CommentController@dealComments');
+    $router->delete('/comments/batch', 'CommentController@deleteComments');
     /* Get a comment */
     $router->get('/comments/{id}',     'CommentController@getComment');
     /* Create a new comment */

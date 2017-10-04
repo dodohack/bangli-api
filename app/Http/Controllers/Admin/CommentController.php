@@ -40,7 +40,7 @@ class CommentController extends EntityController
     }
 
     /**
-     * Return comment states and occurrences
+     * Return comment statuss and occurrences
      */
     public function getStates(Request $request)
     {

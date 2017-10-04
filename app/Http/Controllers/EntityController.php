@@ -312,6 +312,7 @@ class EntityController extends Controller
      * @param $columns - columns to return when 'put' success
      * @return object
      */
+    // FIXME: By-passed user check! Enable it in release.
     protected function putEntity($etype, $inputs, $key, $id,
                                  $relations = null, $columns = null)
     {
@@ -320,11 +321,15 @@ class EntityController extends Controller
         $table = $this->getEntityTable($etype);
 
         $record = $table->where($key, $id)->first();
+        /* FIXME START
+
         $user = $this->jwt->authenticate();
 
         // Check if user has write permission to the entity
         if (!$this->canUserEditEntity($etype, $record, $user))
             return $this->error('No permission');
+
+        FIXME END*/
 
         // Update entity relations
         $this->updateRelations($etype, $inputs, $record);
@@ -338,8 +343,11 @@ class EntityController extends Controller
         if (isset($inputs['content']) && $this->supportRevision($etype) &&
             !isset($inputs['auto'])) {
             $record->revisions()->create([
-                'state'        => $record->state,
+                'status'        => $record->status,
+                /* FIXME START
                 'user_id'      => $user->id,
+                FIXME END */
+                'user_id'      => 1,
                 'body'         => $record->content]);
         }
 
@@ -384,7 +392,7 @@ class EntityController extends Controller
 
         $record = $table->where($key, $id)->first();
         if ($record) {
-            if ($record->state == 'trash') {
+            if ($record->status == 'trash') {
                 // Do real delete
                 $rows = $table->where($key, $id)->delete();
                 $ret = ['etype'  => $etype,
@@ -392,7 +400,7 @@ class EntityController extends Controller
                 return parent::success($inputs, json_encode($ret));
             } else {
                 // Move entity to trash
-                $record->state = 'trash';
+                $record->status = 'trash';
                 $record->save();
                 return $this->getEntity($etype, $inputs, 'id', $id, $table);
             }
@@ -496,8 +504,8 @@ class EntityController extends Controller
     protected function getEntityStatus($request, $table)
     {
         $states = DB::table($table)
-            ->select(DB::raw('state, COUNT(*) as count'))
-            ->groupBy('state')->get();
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
 
         $json = json_encode($states);
 
@@ -615,10 +623,10 @@ class EntityController extends Controller
         /* Filter: entity category */
         $this->category = isset($inputs['category']) ? $inputs['category'] : null;
 
-        /* Filter: entity state, if 'all' is assigned to 'state', it equals
-         * to query with any states. */
-        $this->state = isset($inputs['state']) ?
-            ($inputs['state'] == 'all' ? null : $inputs['state']) : null;
+        /* Filter: entity status, if 'all' is assigned to 'status', it equals
+         * to query with any statuss. */
+        $this->status = isset($inputs['status']) ?
+            ($inputs['status'] == 'all' ? null : $inputs['status']) : null;
 
         /* Filter: entity author if applicable */
         $this->author = isset($inputs['author']) ? $inputs['author'] : null;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard deal post controller, it uses the same base controller as cms
+ * Dashboard offer post controller, it uses the same base controller as cms
  * Shared by all domains.
  */
 
@@ -10,45 +10,45 @@ use Illuminate\Http\Request;
 
 use App\Models\Offer;
 
-class DealController extends CmsController
+class OfferController extends CmsController
 {
     /* Columns to be retrieved for posts list */
-    private $dealsColumns = ['offers.id', 'editor_id',
+    private $offersColumns = ['offers.id', 'author_id',
         'channel_id', 'status',
         'title', 'published_at', 'created_at', 'updated_at'];
 
-    /* Relations to be queried with the deal/deals */
-    private $dealsRelations = ['topics'];
-    private $dealRelations  = ['topics'];
+    /* Relations to be queried with the offer/offers */
+    private $offersRelations = ['topics'];
+    private $offerRelations  = ['topics'];
 
 
     /**
-     * Return a list of deal posts
+     * Return a list of offers
      */
-    public function getDeals(Request $request)
+    public function getOffers(Request $request)
     {
         return $this->getEntitiesReq($request,
-            $this->dealsRelations, $this->dealsColumns);
+            $this->offersRelations, $this->offersColumns);
     }
 
     /**
-     * Update multiple deals
+     * Update multiple offers
      */
-    public function putDeals(Request $request)
+    public function putOffers(Request $request)
     {
-        return response('Deals post batch editing API unimplemented', 401);
+        return response('Offers batch editing API unimplemented', 401);
     }
 
     /**
-     * Move multiple deals into trash
+     * Move multiple offers into trash
      */
-    public function deleteDeals(Request $request)
+    public function deleteOffers(Request $request)
     {
         return response('API unimplemented', 401);
     }
 
     /**
-     * Return deal states and occurrences
+     * Return offer statuss and occurrences
      */
     public function getStates(Request $request)
     {
@@ -56,45 +56,45 @@ class DealController extends CmsController
     }
 
     /**
-     * Get a deal with it's relations
+     * Get a offer with it's relations
      * @param Request $request
      * @param $id - post id
      * @return string
      */
-    public function getDeal(Request $request, $id)
+    public function getOffer(Request $request, $id)
     {
         return $this->getEntityReq($request, 'id', $id, null, 
-            $this->dealRelations);
+            $this->offerRelations);
     }
 
     /**
-     * Update deal by given id
+     * Update offer by given id
      * @param Request $request
      * @param $id - post id to be updated
      * @return object
      */
-    public function putDeal(Request $request, $id)
+    public function putOffer(Request $request, $id)
     {
         return $this->putEntityReq($request, 'id', $id);
     }
 
     /**
-     * Create a new deal
+     * Create a new offer
      * @param Request $request
      * @return object
      */
-    public function postDeal(Request $request)
+    public function postOffer(Request $request)
     {
         return $this->postEntityReq($request);
     }
 
     /**
-     * Move a deal to trash by id
+     * Move a offer to trash by id
      * @param Request $request
      * @param $id
      * @return Post
      */
-    public function deleteDeal(Request $request, $id)
+    public function deleteOffer(Request $request, $id)
     {
         return $this->deleteEntityReq($request, 'id', $id);
     }
