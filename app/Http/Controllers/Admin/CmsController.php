@@ -10,12 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\EntityController;
-use App\Models\Cms\AttrCategoryView;
-use App\Models\Cms\AttrTopicTypeView;
-use App\Models\Cms\AttrChannelView;
-use App\Models\AttrLocationView;
-use App\Models\EditorView;
-use App\Models\AuthorView;
+use App\Models\ViewAttrCategory;
+use App\Models\ViewAttrTopicType;
+use App\Models\ViewAttrChannel;
+use App\Models\ViewAttrLocation;
+use App\Models\ViewEditor;
+use App\Models\ViewAuthor;
 use Illuminate\Support\Facades\Log;
 
 
@@ -29,53 +29,48 @@ class CmsController extends EntityController
     public function getAttributes(Request $request)
     {
         // Get list of available authors
-        $authors = AuthorView::get()->toArray();
+        $authors = ViewAuthor::get()->toArray();
 
         // Get list of available editors
-        $editors = EditorView::get()->toArray();
+        $editors = ViewEditor::get()->toArray();
 
         // Get all cms channels
-        $channels = AttrChannelView::get()->toArray();
+        $channels = ViewAttrChannel::get()->toArray();
 
         // Get all locations
-        $locations = AttrLocationView::get()->toArray();
+        $locations = ViewAttrLocation::get()->toArray();
 
         // Cms categories with number of posts/topics/deals per category
-        $categories = AttrCategoryView::get()->toArray();
+        $categories = ViewAttrCategory::get()->toArray();
 
         // Cms topic types
-        $topic_types = AttrTopicTypeView::get()->toArray();
+        $topic_types = ViewAttrTopicType::get()->toArray();
 
-        // Post states and occurrences
-        $post_states = DB::table('cms_posts')
-            ->select(DB::raw('state, COUNT(*) as count'))
-            ->groupBy('state')->get();
+        // FIXME: Hardcoded table names!!
+        // Post status and occurrences
+        $post_status = DB::table('posts')
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
 
-        // Post creative_type and occurrences
-        /*
-        $post_creative_types = DB::table('cms_posts')
-            ->select(DB::raw('creative_type, COUNT(*) as count'))
-            ->groupBy('creative_type')->get();
-        */
 
         // Topic states and occurrences
-        $topic_states = DB::table('cms_topics')
-            ->select(DB::raw('state, COUNT(*) as count'))
-            ->groupBy('state')->get();
+        $topic_status = DB::table('topics')
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
 
         // Page states and occurrences
-        $page_states = DB::table('cms_pages')
-            ->select(DB::raw('state, COUNT(*) as count'))
-            ->groupBy('state')->get();
+        $page_status = DB::table('pages')
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
 
-        // Deal states and occurrences
-//        $deal_states = DB::table('cms_deals')
-//            ->select(DB::raw('state, COUNT(*) as count'))
-//            ->groupBy('state')->get();
+        // Deal status and occurrences
+//        $deal_status = DB::table('offers')
+//            ->select(DB::raw('status, COUNT(*) as count'))
+//            ->groupBy('status')->get();
 
         $json = compact('authors', 'editors', 'channels', 'locations',
-            'categories', 'topic_types', 'post_states',
-            'topic_states', 'page_states');
+            'categories', 'topic_types', 'post_status',
+            'topic_status', 'page_status');
 
         return parent::success($request, $json);
     }

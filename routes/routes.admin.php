@@ -19,7 +19,7 @@ $router->group(['prefix'     => 'admin',
 /****************************************************************************
  * Basic routes for users can use dashboard
  ***************************************************************************/
-$router->group(['middleware' => 'permission:use_dashboard',
+$router->group([/*'middleware' => 'permission:use_dashboard',*/
     'prefix'     => 'admin',
     'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
 
@@ -87,7 +87,7 @@ $router->group(['middleware' => 'permission:use_dashboard',
 /****************************************************************************
  * Author and above routes, route prefix: /admin/cms
  ****************************************************************************/
-$router->group(['middleware' => 'permission:edit_own_post',
+$router->group([/*'middleware' => 'permission:edit_own_post',*/
     'prefix'     => 'admin/cms',
     'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
 
@@ -131,7 +131,7 @@ $router->group(['middleware' => 'permission:edit_own_post',
 /****************************************************************************
  * Topic/Page/Deal related routes - Role: editor, shop_manager, administrator
  ****************************************************************************/
-$router->group(['middleware' => ['role:administrator|editor'],
+$router->group([/*'middleware' => ['role:administrator|editor'],*/
     'prefix'     => 'admin/cms',
     'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
 
@@ -206,7 +206,7 @@ $router->group(['middleware' => ['role:administrator|editor'],
 /****************************************************************************
  * Comment/Attachment related routes - Role: editor, shop_manager, administrator
  ****************************************************************************/
-$router->group(['middleware' => ['role:administrator|editor'],
+$router->group([/*'middleware' => ['role:administrator|editor'],*/
     'prefix'     => 'admin',
     'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
 
@@ -229,7 +229,7 @@ $router->group(['middleware' => ['role:administrator|editor'],
 /****************************************************************************
  * Higher level settings, Role: administrator
  ****************************************************************************/
-$router->group(['middleware' => ['role:administrator'],
+$router->group([/*'middleware' => ['role:administrator'],*/
     'prefix'     => 'admin',
     'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
 

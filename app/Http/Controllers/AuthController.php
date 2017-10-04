@@ -53,6 +53,17 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        //
+        // FIXME: Always login a admin user for test.
+        //
+        $tables = ['role'];
+        $user = User::where('id', 1)->with($tables)->first()->toArray();
+        $ret = ['user' => $user, 'img_server' => env('IMG_SERVER')];
+        return parent::success($request, json_encode($ret));
+        //
+        // FIXME: END.
+        //
+
         if (!$token = $this->jwt->setRequest($request)->getToken()) {
             return response('Unauthorized.', 401);
         }

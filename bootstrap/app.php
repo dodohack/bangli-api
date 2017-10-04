@@ -61,23 +61,6 @@ $app->singleton(
     App\Console\Kernel::class
 );
 
-/* Introduced to fix jwt-auth runtime error [BEGIN] */
-/*
-$app->singleton(
-    Illuminate\Auth\AuthManager::class,
-    function ($app) {
-        return $app->make('auth');
-    }
-);
-$app->singleton(
-    Illuminate\Cache\CacheManager::class,
-    function ($app) {
-        return $app->make('cache');
-    }
-);
-*/
-/* Introduced to fix jwt-auth runtime error [END] */
-
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
