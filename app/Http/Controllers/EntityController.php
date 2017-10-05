@@ -483,6 +483,13 @@ class EntityController extends Controller
             }
         }
 
+        // Client side supports modify multiple offers with a topic entity
+        if (isset($inputs['offers'])) {
+            $offerIds = array_column($inputs['offers'], 'id');
+            // One direction many-many relationship between topic and offer.
+            $entity->offers()->sync($offerIds);
+        }
+
         // Update entity word count and others
         if (isset($inputs['statistic'])) {
             $word_count = $inputs['statistic']['word_count'];

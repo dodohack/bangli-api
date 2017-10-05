@@ -60,6 +60,12 @@ class Topic extends Model
             'topic_has_topic', 'topic2_id', 'topic1_id');
     }
 
+    public function topics_reverse()
+    {
+        return $this->belongsToMany('App\Models\ViewAttrTopic',
+            'topic_has_topic', 'topic1_id', 'topic2_id');
+    }
+
     public function offers()
     {
         return $this->belongsToMany('App\Models\Offer',
