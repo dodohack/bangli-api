@@ -228,7 +228,7 @@ class EntityController extends Controller
                                     $table = null,
                                     $relations = null,
                                     $columns = null,
-                                    $relCount=null)
+                                    $relCount = null)
     {
         if (!$table) {
             $db = $this->getEntityTable($etype);
@@ -333,7 +333,9 @@ class EntityController extends Controller
      */
     // FIXME: By-passed user check! Enable it in release.
     protected function putEntity($etype, $inputs, $key, $id,
-                                 $relations = null, $columns = null)
+                                 $relations = null,
+                                 $columns = null,
+                                 $relCount = null)
     {
         unset($inputs['created_at'], $inputs['updated_at']);
 
@@ -373,7 +375,7 @@ class EntityController extends Controller
         if ($record->update($inputs)) {
             // Return the updated entity
             return $this->getEntity($etype, $inputs, 'id', $id, $table,
-                $relations, $columns);
+                $relations, $columns, $relCount);
         } else {
             $error = ['etype' => $etype, 'error' => 'Update fails'];
             return parent::error(json_encode($error), 401);
@@ -390,11 +392,12 @@ class EntityController extends Controller
      * @return object
      */
     protected function putEntityReq(Request $request, $key, $id,
-                                    $relations = null, $columns = null)
+                                    $relations = null, $columns = null,
+                                    $relationCount = null)
     {
         $inputs = $request->all();
         return $this->putEntity($inputs['etype'], $inputs, $key, $id,
-            $relations, $columns);
+            $relations, $columns, $relationCount);
     }
 
     /**
@@ -450,7 +453,6 @@ class EntityController extends Controller
      */
     protected function updateRelations($etype, $inputs, $entity)
     {
-
         if (isset($inputs['tags'])) {
             $tagIds = array_column($inputs['tags'], 'id');
             $entity->tags()->sync($tagIds);
@@ -483,10 +485,16 @@ class EntityController extends Controller
             }
         }
 
+        // TODO: It is not efficient to update all offers of given topic.
         // Client side supports modify multiple offers with a topic entity
         if (isset($inputs['offers'])) {
+            // Update the record of each offer
+            $table = $this->getEntityTable(ETYPE_OFFER);
+            foreach ($inputs['offers'] as $offer) {
+                $table->where('id', $offer['id'])->update($offer);
+            }
+            // Update the pivot table topic_has_offer.
             $offerIds = array_column($inputs['offers'], 'id');
-            // One direction many-many relationship between topic and offer.
             $entity->offers()->sync($offerIds);
         }
 

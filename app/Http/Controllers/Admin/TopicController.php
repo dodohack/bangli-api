@@ -82,7 +82,7 @@ class TopicController extends CmsController
     public function putTopic(Request $request, $id)
     {
         return $this->putEntityReq($request, 'id', $id,
-                                   $this->topicRelations, null/* columns */);
+            $this->topicRelations, null/* columns */, $this->relationCount);
     }
 
     /**
