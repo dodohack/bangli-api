@@ -199,7 +199,9 @@ class EntityController extends Controller
     protected function getEntity($etype,
                                  $inputs, $key, $id,
                                  $table = null,
-                                 $relations = null, $columns = null,$count = null)
+                                 $relations = null,
+                                 $columns = null,
+                                 $count = null)
     {
         $entity = $this->getEntityObj($etype, $key, $id,
             $table, $relations, $columns, $count);
@@ -223,8 +225,10 @@ class EntityController extends Controller
      * @return string
      */
     protected function getEntityObj($etype, $key, $id,
-                                    $table = null, $relations = null,
-                                    $columns = null, $count=null)
+                                    $table = null,
+                                    $relations = null,
+                                    $columns = null,
+                                    $relCount=null)
     {
         if (!$table) {
             $db = $this->getEntityTable($etype);
@@ -237,7 +241,7 @@ class EntityController extends Controller
         $db = $db->where($key, $id);
 
         if ($relations) $db = $db->with($relations);
-        if ($count)     $db = $db->withCount($count);
+        if ($relCount)     $db = $db->withCount($relCount);
 
         if ($columns)   $entity = $db->first($columns);
         else            $entity = $db->first();
@@ -251,11 +255,13 @@ class EntityController extends Controller
     protected function getEntityReq(Request $request,
                                     $key, $id,
                                     $table = null,
-                                    $relations = null, $columns = null)
+                                    $relations = null,
+                                    $columns = null,
+                                    $relCount = null)
     {
         $inputs = $request->all();
         return $this->getEntity($inputs['etype'], $inputs, $key, $id,
-            $table, $relations, $columns);
+            $table, $relations, $columns, $relCount);
     }
 
     /**
@@ -264,11 +270,13 @@ class EntityController extends Controller
     protected function getEntityReqObj(Request $request,
                                        $key, $id,
                                        $table = null,
-                                       $relations = null, $columns = null)
+                                       $relations = null,
+                                       $columns = null,
+                                       $relCount = null)
     {
         $inputs = $request->all();
         return $this->getEntityObj($inputs['etype'], $key, $id,
-            $table, $relations, $columns);
+            $table, $relations, $columns, $relCount);
     }
 
     /**

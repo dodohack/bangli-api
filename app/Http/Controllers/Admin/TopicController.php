@@ -23,7 +23,7 @@ class TopicController extends CmsController
     private $topicsRelations = ['editor', 'categories', 'topics',
         'channel', 'type', 'statistics', 'activities'];
     private $topicRelations = ['editor', 'images', 'categories', 'topics',
-        'channel', 'type', 'location', 'revisions', 'statistics'];
+        'offers', 'channel', 'type', 'location', 'revisions', 'statistics'];
 
     /* Retrive number of offers related to given topic */
     private $relationCount = 'offers';
@@ -69,7 +69,8 @@ class TopicController extends CmsController
     public function getTopic(Request $request, $id)
     {
         return $this->getEntityReq($request, 'id', $id,
-            null/* table */, $this->topicRelations, null/* columns */);
+            null/* table */, $this->topicRelations, null/* columns */,
+            $this->relationCount);
     }
 
     /**
