@@ -11,7 +11,8 @@ class Topic extends Model
     protected $fillable = ['id', 'author_id', 'editor_id', 'channel_id',
         'type_id', 'location_id', 'lock', 'logo', 'ranking', 'featured',
         'status', 'guid', 'aff_id', 'aff_platform', 'display_url',
-        'tracking_url', 'title', 'title_cn', 'description', 'content', 'published_at'];
+        'tracking_url', 'title', 'title_cn', 'description', 'content',
+        'published_at'];
 
     protected $hidden = ['pivot'];
 

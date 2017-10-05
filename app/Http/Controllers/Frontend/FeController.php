@@ -48,7 +48,7 @@ class FeController extends EntityController
     {
         // TODO: should always query entity with 'publish' status.
         $result = $this->getArrayEntities($inputs['etype'], $inputs,
-            $relations, $columns, $pagination);
+            $relations, null, $columns, $pagination);
 
         $result['key'] = $inputs['key'];
 
@@ -84,7 +84,7 @@ class FeController extends EntityController
 
             // Get entities for each group
             $result[$key] = $this->getArrayEntities($etype, $params,
-                $relations, $columns, $isFullPagination);
+                $relations, null, $columns, $isFullPagination);
         }
 
         // Return entities with 'etype' in top level

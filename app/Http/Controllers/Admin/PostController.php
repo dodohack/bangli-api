@@ -32,7 +32,7 @@ class PostController extends CmsController
     public function getPosts(Request $request)
     {
         return $this->getEntitiesReq($request,
-            $this->postsRelations, $this->postsColumns);
+            $this->postsRelations, null, $this->postsColumns);
     }
 
     /**

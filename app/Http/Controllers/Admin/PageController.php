@@ -31,7 +31,7 @@ class PageController extends CmsController
     public function getPages(Request $request)
     {
         return $this->getEntitiesReq($request,
-            $this->pagesRelations, $this->pagesColumns);
+            $this->pagesRelations, null, $this->pagesColumns);
     }
 
     public function putPages(Request $request)

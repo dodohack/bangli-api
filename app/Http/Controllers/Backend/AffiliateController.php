@@ -44,7 +44,21 @@ class AffiliateController extends EntityController
      */
     protected function urlfy($name)
     {
+        // Decode html sepcial chars, say &amp;
+        $res = htmlspecialchars_decode($name);
+
+        // Remove tailing characters such UK
+        $res = preg_replace('/UK/', '', $res);
+
         // Remove specially characters and lowercase the string
-        return mb_strtolower(preg_replace('/[^a-zA-Z0-9]/','-', $name));
+        $res = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $res));
+
+        // Remove multiple dash to single dash, say '--', '---' to '-'.
+        $res = preg_replace('/\-[\-]+/', '-', $res);
+
+        // Remove tailing '-'
+        if (substr($res, -1) == '-') $res = substr($res, 0, -1);
+
+        return $res;
     }
 }

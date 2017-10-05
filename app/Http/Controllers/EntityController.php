@@ -26,8 +26,9 @@ class EntityController extends Controller
 {
     use EntityFilterTrait, PaginatorTrait;
 
-    // Table relations and columns to be retrieved
+    // Table relations, count of relation and columns to be retrieved
     protected $relations;
+    protected $relCount;
     protected $columns;
 
     // The pagination of returned entities, supports:
@@ -59,17 +60,20 @@ class EntityController extends Controller
      * @param $etype
      * @param $inputs
      * @param null $relations
+     * @param null $relCount
      * @param null $columns
      * @param string $pagination
+     * @return array json array
      */
     protected function getEntities($etype,
                                    $inputs,
                                    $relations = null,
+                                   $relCount = null,
                                    $columns = null,
                                    $pagination = 'full')
     {
         $ret = $this->getArrayEntities($etype, $inputs,
-            $relations, $columns, $pagination);
+            $relations, $relCount, $columns, $pagination);
 
         // Return json array
         return parent::successV2($inputs, json_encode($ret));
@@ -79,11 +83,14 @@ class EntityController extends Controller
      * A wrapper function of getEntities with different parameters
      * @param Request $request
      * @param null $relations
+     * @param null $relCount
      * @param null $columns
      * @param string $pagination
+     * @return array
      */
     protected function getEntitiesReq(Request $request,
                                       $relations = null,
+                                      $relCount = null,
                                       $columns = null,
                                       $pagination = 'full')
     {
@@ -107,7 +114,7 @@ class EntityController extends Controller
         }
 
         return $this->getEntities($inputs['etype'], $inputs, $relations,
-            $columns, $pagination);
+            $relCount, $columns, $pagination);
     }
 
     /**
@@ -115,12 +122,15 @@ class EntityController extends Controller
      * @param $etype
      * @param $inputs
      * @param null $relations
+     * @param null $relCount
      * @param null $columns
      * @param string $pagination
+     * @return array
      */
     protected function getArrayEntities($etype,
                                         $inputs,
                                         $relations = null,
+                                        $relCount = null,
                                         $columns = null,
                                         $pagination = 'full')
     {
@@ -142,7 +152,8 @@ class EntityController extends Controller
         $tableName = $this->getTableName($etype);
 
         // Decide columns and relations to be queried with this table
-        $this->initColumnsAndRelations($table, $columns, $relations, false);
+        $this->initColumnsAndRelations($table, $columns,
+            $relations, $relCount, false);
 
         // 1. Filter entities
         $table = $this->filterEntities($table, $tableName, $etype);
@@ -536,7 +547,11 @@ class EntityController extends Controller
 
         $db = $db->skip($this->skipNum)->take($this->perPage);
 
+        // Query with relations
         if ($this->relations)   $db = $db->with($this->relations);
+
+        // Count related model, say the number of offers associated with a topic.
+        if ($this->relCount)   $db = $db->withCount($this->relCount);
 
         if ($this->columns)  $records = $db->get($this->columns);
         else                 $records = $db->get();
@@ -659,7 +674,7 @@ class EntityController extends Controller
      * @param $full     - Is full columns/relations should be queried
      */
     private function initColumnsAndRelations($table, $columns, $relations,
-                                             $full = false)
+                                             $relCount, $full = false)
     {
         if ($columns == null) {
             if ($full)
@@ -678,6 +693,8 @@ class EntityController extends Controller
         } else {
             $this->relations = $relations;
         }
+
+        if ($relCount) $this->relCount = $relCount;
     }
 
     /**

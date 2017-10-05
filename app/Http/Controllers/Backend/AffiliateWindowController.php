@@ -102,41 +102,63 @@ class AffiliateWindowController extends AffiliateController
         // Skip in-active merchants
         if (count($metadata) < 15 || $metadata[3] != 'yes') return false;
 
-        $merchant = array(
-            'guid'   => $this->urlfy($metadata[1]),
-            'title'   => $metadata[1],
-            // TODO: Need to create an editor for auto-content
-            //'editor_id' => 1,
-            // TODO: Need to support different channels: shopping, travel
-            'channel_id' => 1,
-            // topic type 2: merchant
-            'type_id' => 2,
-            // TODO:
-            'location_id' => 1, // $metadata[15]
+        // Topic guid
+        $guid = $this->urlfy($metadata[1]);
+
+        // Check if we already have the topic in the table
+        $table = $this->getEntityTable(ETYPE_TOPIC);
+        // Check if we have already had this merchant
+        $record = $table->where('guid', $guid)->first();
+        if (!$record)
+            $record = $table->where('aff_id', $metadata[0])
+                ->where('aff_platform', 'AWIN')->first();
+
+        $merchantShort = array(
             'logo'   => $metadata[2],
-            // TODO: After introducing more criteria, we can safely set this to 'publish'
-            'status' => 'publish',
             'aff_id' => $metadata[0],
             'aff_platform' => 'AWIN',
-            'description' => $metadata[5],
-            'content' => $metadata[6],
             'tracking_url' => $metadata[7],
             'display_url'  => $metadata[14]
         );
 
-        // Check if we have already had this merchant
-        $table = $this->getEntityTable(ETYPE_TOPIC);
-        $record = $table->where('aff_id', $merchant['aff_id'])
-            ->where('aff_platform', $merchant['aff_platform'])->first();
+        $merchant = array_merge(
+            [
+                'guid'   => $guid,
+                // TODO: Need to create an editor for auto-content
+                //'editor_id' => 1,
+                'title'   => $metadata[1],
+                // TODO: Need to support different channels: shopping, travel
+                'channel_id' => 1,
+                // topic type 2: merchant
+                'type_id' => 2,
+                // TODO: region of the
+                'location_id' => 1, // $metadata[15]
+                // TODO: After introducing more criteria, we can safely set this to 'publish'
+                'status' => 'publish',
+                'description' => $metadata[5],
+                'content' => $metadata[6]
+            ],
+            $merchantShort
+        );
 
         if ($record) {
             // Update the entry only when the editor is null
             // Otherwise we don't update the topic which may be modified manually.
             if ($record->editor_id == null) {
-                $table->where('id', $record->id)->delete();
-                $table->create($merchant);
-                return true;
+                if ($table->where('id', $record->id)->update($merchant))
+                    return true;
+                else
+                    return false;
             }
+
+            // Partially update old topic with affiliate info.
+            if ($record->aff_id == null) {
+                if ($table->where('id', $record->id)->update($merchantShort))
+                    return true;
+                else
+                    return false;
+            }
+
             return false;
         } else {
             // Create the entry
@@ -253,7 +275,7 @@ class AffiliateWindowController extends AffiliateController
     private function AWinDate2MySQLDate($date)
     {
         // Awin date format: 'dd/mm/yyyy hh:mm'
-        return preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4:59', $date);
+        return preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $date);
     }
 
 

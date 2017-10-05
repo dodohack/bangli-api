@@ -28,7 +28,7 @@ class OfferController extends CmsController
     public function getOffers(Request $request)
     {
         return $this->getEntitiesReq($request,
-            $this->offersRelations, $this->offersColumns);
+            $this->offersRelations, null, $this->offersColumns);
     }
 
     /**

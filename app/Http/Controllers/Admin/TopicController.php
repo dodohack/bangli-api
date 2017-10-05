@@ -16,14 +16,17 @@ class TopicController extends CmsController
 
     /* Columns to be retrieved for topics list */
     private $topicsColumns = ['topics.id', 'editor_id', 'channel_id',
-        'type_id', 'location_id', 'lock', 'ranking', 'status', 'guid', 'title',
-        'created_at', 'updated_at'];
+        'type_id', 'location_id', 'lock', 'ranking', 'status', 'guid',
+        'title', 'title_cn', 'created_at', 'updated_at'];
 
     /* Relations to be queried with topic/topics */
     private $topicsRelations = ['editor', 'categories', 'topics',
         'channel', 'type', 'statistics', 'activities'];
     private $topicRelations = ['editor', 'images', 'categories', 'topics',
         'channel', 'type', 'location', 'revisions', 'statistics'];
+
+    /* Retrive number of offers related to given topic */
+    private $relationCount = 'offers';
 
     /**
      * Return a list of topics, no need to validate incoming parameters
@@ -32,7 +35,7 @@ class TopicController extends CmsController
     public function getTopics(Request $request)
     {
         return $this->getEntitiesReq($request,
-            $this->topicsRelations, $this->topicsColumns);
+            $this->topicsRelations, $this->relationCount, $this->topicsColumns);
     }
 
     public function putTopics(Request $request)
