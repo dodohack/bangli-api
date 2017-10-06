@@ -86,6 +86,22 @@ trait EntityFilterTrait
     }
 
     /**
+     * Filter entity by topic ID or slug it belongs
+     * @param $table
+     * @param $tableName
+     * @param $topic
+     */
+    public function filterByTopic($table, $tableName, $topic)
+    {
+        return $table->whereHas('topics', function ($q) use($topic) {
+            if (is_numeric($topic)) // Query with topic ID
+                $q->where('topics.id', '=', $topic);
+            else
+                $q->where('topics.guid', '=', $topic);
+        });
+    }
+
+    /**
      * Filter entity(ETYPE_TOPIC) by topic type ID or slug
      *
      * @param $table

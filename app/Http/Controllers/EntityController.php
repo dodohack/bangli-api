@@ -614,6 +614,10 @@ class EntityController extends Controller
         //if ($this->topicType)
         //    $db = $this->filterTopicByType($db, $tableName, $this->topicType);
 
+        // Query with topic which entity belongs to
+        if ($this->topic)
+            $db = $this->filterByTopic($db, $tableName, $this->topic);
+
         // Query with author
         if ($this->author)
             $db = $this->filterByAuthor($db, $tableName, $this->author);
@@ -660,6 +664,9 @@ class EntityController extends Controller
 
         /* Filter: entity category */
         $this->category = isset($inputs['category']) ? $inputs['category'] : null;
+
+        /* Filter: entity(post/offer)'s topic */
+        $this->topic = isset($inputs['topic']) ? $inputs['topic'] : null;
 
         /* Filter: entity status, if 'all' is assigned to 'status', it equals
          * to query with any statuss. */

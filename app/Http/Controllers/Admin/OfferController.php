@@ -12,10 +12,11 @@ use App\Models\Offer;
 
 class OfferController extends CmsController
 {
-    /* Columns to be retrieved for posts list */
-    private $offersColumns = ['offers.id', 'author_id',
-        'channel_id', 'status',
-        'title', 'published_at', 'created_at', 'updated_at'];
+    /* Columns to be retrieved for offers list, we need a full content  */
+    private $offersColumns = ['offers.id', 'author_id', 'channel_id', 'status',
+        'featured', 'title', 'tracking_url', 'display_url', 'vouchers',
+        'aff_offer_id', 'starts', 'ends',
+        'created_at', 'updated_at', 'published_at'];
 
     /* Relations to be queried with the offer/offers */
     private $offersRelations = ['topics'];
