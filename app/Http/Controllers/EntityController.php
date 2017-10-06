@@ -416,6 +416,7 @@ class EntityController extends Controller
         if ($record) {
             if ($record->status == 'trash') {
                 // Do real delete
+                // TODO: Sync with pivot table.
                 $rows = $table->where($key, $id)->delete();
                 $ret = ['etype'  => $etype,
                     'status' => 'TODO: Entity is deleted, return deleted entity'];
@@ -555,9 +556,6 @@ class EntityController extends Controller
      */
     private function getEntitiesInternal($db)
     {
-        // Query with status, frontend request always sets this to 'publish'
-        if ($this->status) $db = $db->where('status', $this->status);
-
         // Get total count for pagination where every filter is applied
         if ($this->pagination == 'full') $total = $db->count();
         else                             $total = 0;
@@ -597,6 +595,9 @@ class EntityController extends Controller
         if (isset($this->date['type']))
             $db = $db->whereBetween($this->date['type'],
                 [$this->date['from'], $this->date['to']]);
+
+        // Query with entity status.
+        if ($this->status) $db = $db->where('status', $this->status);
 
         // Query with channel, channel can be ether channel id or slug
         //if ($this->channel)
