@@ -27,6 +27,12 @@ $router->group(
     $router->get('/offer/{id}', 'OfferController@getOffer');
     $router->get('/offers', 'OfferController@getOffers');
 
+
+    /*************************************************************************
+     * Batch requests - retrieve any groups of any records, this enables
+     * client side to request any amount of different data within 1 request
+     *************************************************************************/
+    $router->get('/batch',            'BatchReqController@get');
 });
 
 //////////////////////////////////////////////////////////////////////////
