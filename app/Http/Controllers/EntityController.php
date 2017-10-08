@@ -246,6 +246,22 @@ class EntityController extends Controller
         if ($columns)   $entity = $db->first($columns);
         else            $entity = $db->first();
 
+
+        // Shorten topic's offer relationship title to 76 chars
+        // We need to have a read-more at client side
+        /*
+        if (array_search('offers', $relations) !== FALSE) {
+            $relLength = count($entity['offers']);
+            for($j = 0; $j < $relLength; $j++) {
+                $oldRelStr = $entity['offers'][$j]['title'];
+                $newRelStr = mb_substr($oldRelStr, 0, 76);
+                if (mb_substr($newRelStr, -1) != mb_strstr($oldRelStr, -1))
+                    $newRelStr = $newRelStr . '...';
+                $entity['offers'][$j]['title'] = $newRelStr;
+            }
+        }
+        */
+
         return $entity;
     }
 
@@ -576,6 +592,17 @@ class EntityController extends Controller
 
         if ($this->columns)  $records = $db->get($this->columns);
         else                 $records = $db->get();
+
+        // Shorten entity title to 76 chars if it is too long
+        $length = count($records);
+        for($i = 0; $i < $length; $i++) {
+            $record = $records[$i];
+            $oldStr = $record['title'];
+            $newStr = mb_substr($oldStr, 0, 76);
+            if (mb_substr($newStr, -1) != mb_substr($oldStr, -1))
+                $newStr = $newStr . '...';
+            $records[$i]['title'] = $newStr;
+        }
 
         return ['total' => $total, 'entities' => $records];
     }
