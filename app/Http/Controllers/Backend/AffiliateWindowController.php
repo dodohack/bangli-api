@@ -9,6 +9,8 @@ use App\Http\Controllers\Backend\AffiliateController;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
+USE App\Models\Category;
+
 class AffiliateWindowController extends AffiliateController
 {
     private $awin_id;      // Affiliate Window ID
@@ -163,6 +165,9 @@ class AffiliateWindowController extends AffiliateController
         } else {
             // Create the entry
             $record = $table->create($merchant);
+            // Setup merchant's category
+            $catId = $this->getCategoryId($metadata[8]);
+            $record->categories()->sync([$catId]);
             if (!$record)
                 return false;
             else
@@ -232,7 +237,7 @@ class AffiliateWindowController extends AffiliateController
 
         $topicTable = $this->getEntityTable(ETYPE_TOPIC);
         $merchant = $topicTable->where('aff_id', $offer[2])
-            ->where('aff_platform', 'AWIN')->first();
+            ->where('aff_platform', 'AWIN')->with(['categories'])->first();
 
         // If we can find the same offer
         $found = false;
@@ -267,6 +272,8 @@ class AffiliateWindowController extends AffiliateController
             $record = $table->create($input);
             // Update the pivot table
             $record->topics()->sync([$merchant->id]);
+            // Update offer category
+            $record->categories()->sync([$merchant->categories[0]->id]);
         }
 
         return true;
@@ -279,18 +286,25 @@ class AffiliateWindowController extends AffiliateController
     }
 
     /**
-     * Convert awin category to our local one
+     * Map awin category to our local category
      */
-    private function guessCategory($acat)
+    private function getCategoryId($acat)
     {
+        $cat = 'other-stuff';
         $acat = strtolower($acat);
-        if (strpos($acat, 'food')) return 'cooking'; // 厨房分类
-        if (strpos($acat, 'cloth')) return 'clothes-bag';
-        if (strpos($acat, 'travel')) return 'travel';
-        if (strpos($acat, 'mobile') || strpos($acat, 'isp')) return '';
-        if (strpos($acat, 'mobile') || strpos($acat, 'isp')) return 'telecom'; // 电信业务分类
+        if (strpos($acat, 'food') !== false) $cat = 'cooking'; // 厨房分类
+        else if (strpos($acat, 'cloth') !== false) $cat = 'clothes-bag';
+        else if (strpos($acat, 'travel') !== false) $cat = 'travel';
+        else if (strpos($acat, 'gift') !== false) $cat = 'beauty';
+        else if (strpos($acat, 'health') !== false) $cat = 'healthcare';
+        //else if (strpos($acat, 'mobile') !== false ||
+        //    strpos($acat, 'isp') !== false) $cat = 'telecom'; // 电信业务分类
+        //else if (strpos($acat, 'ticket')) return '';
+        //else if (strpos($acat, 'sport')) return '';
+
         // TODO: Redo our category!!
-        return 'other-stuff';
+
+        return Category::where('slug', $cat)->first()->id;
     }
 
 
