@@ -609,7 +609,7 @@ class EntityController extends Controller
 
         // Query with category
         if ($this->category)
-            $db = $this->filterByCategory($db, $tableName, $this->editor);
+            $db = $this->filterByCategory($db, $tableName, $this->category);
 
         // TOPIC ENTITY ONLY: Query with topic type
         //if ($this->topicType)

@@ -278,6 +278,21 @@ class AffiliateWindowController extends AffiliateController
         return preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $date);
     }
 
+    /**
+     * Convert awin category to our local one
+     */
+    private function guessCategory($acat)
+    {
+        $acat = strtolower($acat);
+        if (strpos($acat, 'food')) return 'cooking'; // 厨房分类
+        if (strpos($acat, 'cloth')) return 'clothes-bag';
+        if (strpos($acat, 'travel')) return 'travel';
+        if (strpos($acat, 'mobile') || strpos($acat, 'isp')) return '';
+        if (strpos($acat, 'mobile') || strpos($acat, 'isp')) return 'telecom'; // 电信业务分类
+        // TODO: Redo our category!!
+        return 'other-stuff';
+    }
+
 
     /**************************************************************************
      * Test only API

@@ -42,4 +42,12 @@ class FeOffer extends Offer
         return ['topic'];
     }
 
+    /**
+     * Get simpified topics this offer belongs to
+     */
+    public function topics()
+    {
+        return $this->belongsToMany('App\Models\FeViewSimpleTopic',
+            'topic_has_offer', 'offer_id', 'topic_id');
+    }
 }

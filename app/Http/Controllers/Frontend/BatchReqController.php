@@ -43,7 +43,7 @@ class BatchReqController extends FeController
      *
      *  /batch?group=[
      *     {"params": "key=lastest_post;etype=post;channel=shopping;per_page=6;sort_by=date;order=desc"},
-     *     {"params": "key=featured_deal;etype=topic;channel=shopping;per_page=10;sort_by=ranking;order=desc"},
+     *     {"params": "key=featured_topic;etype=topic;channel=shopping;per_page=10;sort_by=ranking;order=desc;relations=offer,post"},
      *     ...
      * ];
      * @param Request $request
@@ -57,12 +57,18 @@ class BatchReqController extends FeController
         // Decode parameters in each group
         $this->convertParam2Input($groups);
 
+
         // Retrieve entities using standard method
         $result = [];
         $idx    = 0;
         foreach($groups as $group) {
+            // If we need to get relations with the request
+            $relations = null;
+            if (isset($group->inputs['relations']))
+                $relations = $this->setupRelations($group->inputs['relations']);
+
             $result[$idx++] =
-                $this->getArrayEntitiesByKey($group->inputs, null, null, 'none');
+                $this->getArrayEntitiesByKey($group->inputs, $relations, null, 'none');
         }
 
         return $this->success($request, json_encode($result));
@@ -83,5 +89,46 @@ class BatchReqController extends FeController
                 $group->inputs[$k] = $v;
             }
         }
+    }
+
+    /**
+     * Sanitize incoming relations string, return relations in array
+     * FIXME: Hardcoded relationship
+     * @param $relationString
+     * @return array
+     */
+    private function setupRelations($relationString) {
+        $relations = [];
+        if (!$relationString) return null;
+
+        // We expect incoming relations are separated by ','
+        $tokens = explode(",", $relationString);
+        foreach ($tokens as $rel) {
+            switch($rel) {
+                case ETYPE_TOPIC:
+                    array_push($relations, 'topics');
+                    break;
+                case ETYPE_OFFER:
+                    array_push($relations, 'offers');
+                    break;
+                case ETYPE_POST:
+                    array_push($relations, 'posts');
+                    break;
+                case ETYPE_PAGE:
+                    array_push($relations, 'pages');
+                    break;
+                case ETYPE_ATTACHMENT:
+                    array_push($relations, 'attachments');
+                    break;
+                case ETYPE_COMMENT:
+                    array_push($relations, 'comments');
+                    break;
+            }
+        }
+
+        if (count($relations))
+            return $relations;
+        else
+            return null;
     }
 }

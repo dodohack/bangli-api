@@ -28,7 +28,8 @@ class Offer extends Model
 
     public function categories()
     {
-        // TODO: Do we need to support this?
+        return $this->belongsToMany('App\Models\ViewAttrCategory',
+            'offer_has_category', 'offer_id', 'cat_id');
     }
 
     /**
