@@ -74,13 +74,4 @@ class FePost extends Post
     {
         return $this->belongsTo('App\Models\FeViewAttrLocation', 'location_id');
     }
-
-    /*
-     * Relationship between topic and category
-     */
-    public function categories()
-    {
-        return $this->belongsToMany('App\Models\FeViewAttrCategory',
-            'post_has_category', 'post_id', 'cat_id');
-    }
 }
