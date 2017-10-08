@@ -28,7 +28,7 @@ class Offer extends Model
 
     public function categories()
     {
-        return $this->belongsToMany('App\Models\ViewAttrCategory',
+        return $this->belongsToMany('App\Models\Category',
             'offer_has_category', 'offer_id', 'cat_id');
     }
 
