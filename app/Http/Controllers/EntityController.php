@@ -44,11 +44,15 @@ class EntityController extends Controller
     protected $perPage;   // Number of entities per list page
     protected $curPage;   // Current page of entity list
     protected $params;    // Entity specific filters
+    // FIXME: Resolve these 2 date filter
     protected $fData;     // Date filter
+    protected $date;      // Date filter
     protected $eType;     // Entity type
     protected $eId;       // Entity relation id ???
     protected $query;     // User input search string
     protected $skipNum;   // Number of skipped records of current page
+    protected $category;
+    protected $topic;
 
     // Sorting
     protected $orderBy;   // Order by 'table column name'

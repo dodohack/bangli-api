@@ -42,7 +42,7 @@ class BatchReqController extends FeController
      *  RESTful request:
      *
      *  /batch?group=[
-     *     {"params": "key=lastest_post;etype=post;channel=shopping;per_page=6;sort_by=date;order=desc"},
+     *     {"params": "key=lastest_post;etype=post;channel=shopping;topic=xxx;per_page=6;sort_by=date;order=desc"},
      *     {"params": "key=featured_topic;etype=topic;channel=shopping;per_page=10;sort_by=ranking;order=desc;relations=offer,post"},
      *     ...
      * ];
@@ -106,22 +106,6 @@ class BatchReqController extends FeController
         foreach ($tokens as $rel) {
             switch($rel) {
                 case ETYPE_TOPIC:
-                    /**
-                     * FIXME: We got QueryException by specifying the columns
-                     * of the relationship. I have also tried to manually write
-                     * the closure
-                     * $db->with(array(topics => function($query) {
-                     *    $query->select('id', 'guid', ...);
-                     * }));
-                     * to query relationship columns, which does hit the same error.
-                     *
-                     * After we solve this issue, we can eliminate lots of definition
-                     * of views whose main purpose is to limit the columns of a
-                     * relationship.
-                     *
-                     * SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'id' in field list is ambiguous (SQL: select `id`, `guid`, `logo`, `title`, `topic_has_offer`.`offer_id` as `pivot_offer_id`, `topic_has_offer`.`topic_id` as `pivot_topic_id` from `topics` inner join `topic_has_offer` on `topics`.`id` = `topic_has_offer`.`topic_id` where `topic_has_offer`.`offer_id` in (7459, 7769, 7771, 7772, 7930, 7947))
-                     *
-                     */
                     array_push($relations, 'topics');
                     break;
                 case ETYPE_OFFER:
