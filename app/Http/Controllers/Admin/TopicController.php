@@ -25,7 +25,7 @@ class TopicController extends CmsController
     private $topicRelations = ['editor', 'images', 'categories', 'topics',
         'offers', 'channel', 'type', 'location', 'revisions', 'statistics'];
 
-    /* Retrive number of offers related to given topic */
+    /* Retrieve number of offers related to given topic */
     private $relationCount = 'offers';
 
     /**

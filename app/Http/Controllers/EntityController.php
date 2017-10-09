@@ -698,10 +698,10 @@ class EntityController extends Controller
         /* Filter: entity channel */
         $this->cId = isset($inputs['cId']) ? $inputs['cId'] : null;
 
-        /* Filter: entity category */
+        /* Filter: entity has given category */
         $this->category = isset($inputs['category']) ? $inputs['category'] : null;
 
-        /* Filter: entity(post/offer)'s topic */
+        /* Filter: entity(post/offer) belongs to given topic */
         $this->topic = isset($inputs['topic']) ? $inputs['topic'] : null;
 
         /* Filter: entity status, if 'all' is assigned to 'status', it equals
@@ -722,6 +722,9 @@ class EntityController extends Controller
         /* Topic related filters                                             */
         /* Topic type */
         $this->topicType = isset($inputs['type']) ? $inputs['type'] : null;
+
+        /* Topic has offers associated */
+        $this->topicHasOffer = isset($inputs['has_offer']) ? $inputs['has_offer'] : null;
 
         /* Ordering */
         $this->orderBy = isset($inputs['order_by']) ? $inputs['order_by'] : null;

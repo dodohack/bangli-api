@@ -27,11 +27,11 @@ class FeController extends EntityController
      * @param string $pagination
      * @return mixed
      */
-    public function getEntitiesByKey(Request $request, $relations, $columns,
-                                     $pagination = 'full')
+    public function getEntitiesByKey(Request $request, $relations, $relCount,
+                                     $columns, $pagination = 'full')
     {
         $result = $this->getArrayEntitiesByKey($request->all(), $relations,
-            $columns, $pagination);
+            $relCount, $columns, $pagination);
 
         return $this->success($request, json_encode($result));
     }
@@ -43,12 +43,12 @@ class FeController extends EntityController
      * @param $columns
      * @param $pagination
      */
-    public function getArrayEntitiesByKey($inputs, $relations, $columns,
-                                          $pagination)
+    public function getArrayEntitiesByKey($inputs, $relations, $relCount,
+                                          $columns, $pagination)
     {
         // TODO: should always query entity with 'publish' status.
         $result = $this->getArrayEntities($inputs['etype'], $inputs,
-            $relations, null, $columns, $pagination);
+            $relations, $relCount, $columns, $pagination);
 
         $result['key'] = $inputs['key'];
 

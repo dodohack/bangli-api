@@ -15,6 +15,18 @@ use App\Models\ViewTopicHasPost;
 
 class TopicController extends FeController
 {
+    /* Columns to be retrieved for topics list */
+    private $topicsColumns = ['topics.id', 'channel_id',
+        'type_id', 'ranking', 'guid',
+        'title', 'title_cn', 'updated_at'];
+
+    /* Relations to be queried with topic/topics */
+    private $topicsRelations = [];
+
+
+    /* Retrieve number of offers related to given topic */
+    private $relationCount = 'offers';
+
     /**
      * Get a list of published topics
      * @param Request $request
@@ -23,7 +35,7 @@ class TopicController extends FeController
     public function getTopics(Request $request)
     {
         return $this->getEntitiesByKey($request,
-            $this->topicRelations, $this->topicColumns);
+            null, $this->relationCount, $this->topicsColumns);
     }
 
     /**
@@ -35,7 +47,7 @@ class TopicController extends FeController
     public function getGroupTopics(Request $request)
     {
         return $this->getGroupedEntities($request,
-            $this->topicRelations, $this->topicsColumns);
+            null, $this->topicsColumns);
     }
 
     public function getTopic(Request $request, $guid)
