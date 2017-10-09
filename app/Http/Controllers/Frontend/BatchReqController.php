@@ -68,7 +68,8 @@ class BatchReqController extends FeController
                 $relations = $this->setupRelations($group->inputs['relations']);
 
             $result[$idx++] =
-                $this->getArrayEntitiesByKey($group->inputs, $relations, null, 'none');
+                $this->getArrayEntitiesByKey($group->inputs, $relations,
+                    null, null, 'none');
         }
 
         return $this->success($request, json_encode($result));
