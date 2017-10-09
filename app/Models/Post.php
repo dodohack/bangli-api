@@ -69,7 +69,8 @@ class Post extends Model
      */
     public function channel()
     {
-        return $this->belongsTo('App\Models\ViewAttrChannel', 'channel_id');
+        return $this->belongsTo('App\Models\Channel', 'channel_id')
+            ->select(['channels.id', 'slug', 'name']);
     }
 
     /*
@@ -77,7 +78,8 @@ class Post extends Model
      */
     public function location()
     {
-        return $this->belongsTo('App\Models\ViewAttrLocation', 'location_id');
+        return $this->belongsTo('App\Models\Location', 'location_id')
+            ->select(['locations.id', 'level', 'parent_id', 'name']);
     }
 
     /*
@@ -93,8 +95,9 @@ class Post extends Model
      */
     public function categories()
     {
-        return $this->belongsToMany('App\Models\ViewAttrCategory',
-            'post_has_category', 'post_id', 'cat_id');
+        return $this->belongsToMany('App\Models\Category',
+            'post_has_category', 'post_id', 'cat_id')
+            ->select(['categories.id', 'channel_id', 'parent_id', 'name']);
     }
 
     /*
@@ -102,8 +105,9 @@ class Post extends Model
      */
     public function topics()
     {
-        return $this->belongsToMany('App\Models\ViewAttrTopic',
-            'topic_has_post', 'post_id', 'topic_id');
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_post', 'post_id', 'topic_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title']);
     }
 
     /*

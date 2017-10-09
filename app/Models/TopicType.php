@@ -7,9 +7,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ViewAttrTopicType extends Model
+class TopicType extends Model
 {
-    protected $table = 'view_attr_topic_types';
+    protected $table = 'topic_types';
     protected $hidden = ['pivot'];
     public $timestamps = false;
 }

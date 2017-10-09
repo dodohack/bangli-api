@@ -10,10 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\EntityController;
-use App\Models\ViewAttrCategory;
-use App\Models\ViewAttrTopicType;
-use App\Models\ViewAttrChannel;
-use App\Models\ViewAttrLocation;
+use App\Models\Category;
+use App\Models\TopicType;
+use App\Models\Channel;
+use App\Models\Location;
 use App\Models\ViewEditor;
 use App\Models\ViewAuthor;
 use Illuminate\Support\Facades\Log;
@@ -35,16 +35,18 @@ class CmsController extends EntityController
         $editors = ViewEditor::get()->toArray();
 
         // Get all cms channels
-        $channels = ViewAttrChannel::get()->toArray();
+        $channels = Channel::get(['id', 'slug', 'name'])->toArray();
 
         // Get all locations
-        $locations = ViewAttrLocation::get()->toArray();
+        $locations = Location::get(['id', 'level', 'parent_id', 'name'])
+            ->toArray();
 
         // Cms categories with number of posts/topics/deals per category
-        $categories = ViewAttrCategory::get()->toArray();
+        $categories = Category::get(['id', 'channel_id', 'parent_id', 'name'])
+            ->toArray();
 
         // Cms topic types
-        $topic_types = ViewAttrTopicType::get()->toArray();
+        $topic_types = TopicType::get(['id', 'channel_id', 'name'])->toArray();
 
         // FIXME: Hardcoded table names!!
         // Post status and occurrences

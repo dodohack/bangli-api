@@ -41,4 +41,15 @@ class FeOffer extends Offer
         // All relations are needed by default
         return ['topic'];
     }
+
+    /**
+     * Get the topics this offer belongs to, only retrieve few columns
+     */
+    public function topics()
+    {
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_offer', 'offer_id', 'topic_id')
+            ->select(['topics.id', 'guid', 'logo', 'title']);
+    }
+
 }

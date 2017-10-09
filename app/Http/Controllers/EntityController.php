@@ -572,6 +572,8 @@ class EntityController extends Controller
      */
     private function getEntitiesInternal($db)
     {
+        //\Illuminate\Support\Facades\DB::enableQueryLog();
+
         // Get total count for pagination where every filter is applied
         if ($this->pagination == 'full') $total = $db->count();
         else                             $total = 0;
@@ -592,6 +594,8 @@ class EntityController extends Controller
 
         if ($this->columns)  $records = $db->get($this->columns);
         else                 $records = $db->get();
+
+        //var_export(\Illuminate\Support\Facades\DB::getQueryLog());
 
         // Shorten entity title to 76 chars if it is too long
         $length = count($records);

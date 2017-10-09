@@ -122,7 +122,7 @@ class BatchReqController extends FeController
                      * SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'id' in field list is ambiguous (SQL: select `id`, `guid`, `logo`, `title`, `topic_has_offer`.`offer_id` as `pivot_offer_id`, `topic_has_offer`.`topic_id` as `pivot_topic_id` from `topics` inner join `topic_has_offer` on `topics`.`id` = `topic_has_offer`.`topic_id` where `topic_has_offer`.`offer_id` in (7459, 7769, 7771, 7772, 7930, 7947))
                      *
                      */
-                    array_push($relations, 'topics:id,guid,logo,title');
+                    array_push($relations, 'topics');
                     break;
                 case ETYPE_OFFER:
                     array_push($relations, 'offers');

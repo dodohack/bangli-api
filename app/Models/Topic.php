@@ -23,17 +23,20 @@ class Topic extends Model
 
     public function channel()
     {
-        return $this->belongsTo('App\Models\ViewAttrChannel', 'channel_id');
+        return $this->belongsTo('App\Models\Channel', 'channel_id')
+            ->select(['channels.id', 'slug', 'name']);
     }
 
     public function type()
     {
-        return $this->belongsTo('App\Models\ViewAttrTopicType', 'type_id');
+        return $this->belongsTo('App\Models\TopicType', 'type_id')
+            ->select(['topic_types.id', 'channel_id', 'name']);
     }
 
     public function location()
     {
-        return $this->belongsTo('App\Models\ViewAttrLocation', 'location_id');
+        return $this->belongsTo('App\Models\Location', 'location_id')
+            ->select(['locations.id', 'level', 'parent_id', 'name']);
     }
 
     public function images()
@@ -44,8 +47,9 @@ class Topic extends Model
 
     public function categories()
     {
-        return $this->belongsToMany('App\Models\ViewAttrCategory',
-            'topic_has_category', 'topic_id', 'cat_id');
+        return $this->belongsToMany('App\Models\Category',
+            'topic_has_category', 'topic_id', 'cat_id')
+            ->select(['categories.id', 'channel_id', 'parent_id', 'name']);
     }
 
     public function posts()
@@ -56,14 +60,16 @@ class Topic extends Model
 
     public function topics()
     {
-        return $this->belongsToMany('App\Models\ViewAttrTopic',
-            'topic_has_topic', 'topic2_id', 'topic1_id');
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_topic', 'topic2_id', 'topic1_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title']);
     }
 
     public function topics_reverse()
     {
-        return $this->belongsToMany('App\Models\ViewAttrTopic',
-            'topic_has_topic', 'topic1_id', 'topic2_id');
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_topic', 'topic1_id', 'topic2_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title']);
     }
 
     public function offers()

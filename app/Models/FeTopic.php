@@ -68,15 +68,16 @@ class FeTopic extends Topic
     }
 
     /////////////////////////////////////////////////////////////////////////
-    // Overwrite parent relationships, use 'view's to abstract limited
-    // columns exposure to minimize the data transfer.
+    // Overwrite parent relationships, only a few columns should be
+    // retrieved with.
 
     /*
      * The channel this topic belongs to
      */
     public function channel()
     {
-        return $this->belongsTo('App\Models\FeViewAttrChannel', 'channel_id');
+        return $this->belongsTo('App\Models\Channel', 'channel_id')
+            ->select(['channel.id', 'slug', 'name']);
     }
 
     /*
@@ -84,7 +85,8 @@ class FeTopic extends Topic
      */
     public function type()
     {
-        return $this->belongsTo('App\Models\FeViewAttrTopicType', 'type_id');
+        return $this->belongsTo('App\Models\TopicType', 'type_id')
+            ->select(['topic_types.id', 'slug', 'name']);
     }
 
     /*
@@ -92,7 +94,8 @@ class FeTopic extends Topic
      */
     public function location()
     {
-        return $this->belongsTo('App\Models\FeViewAttrLocation', 'location_id');
+        return $this->belongsTo('App\Models\Location', 'location_id')
+            ->select(['locations.id', 'level', 'parent_id', 'name', 'slug']);
     }
 
     /*
@@ -100,7 +103,8 @@ class FeTopic extends Topic
      */
     public function categories()
     {
-        return $this->belongsToMany('App\Models\FeViewAttrCategory',
-            'topic_has_category', 'topic_id', 'cat_id');
+        return $this->belongsToMany('App\Models\Category',
+            'topic_has_category', 'topic_id', 'cat_id')
+            ->select(['categories.id', 'parent_id', 'name', 'slug']);
     }
 }
