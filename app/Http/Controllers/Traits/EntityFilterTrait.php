@@ -135,6 +135,11 @@ trait EntityFilterTrait
             return $table->doesntHave('offers');
     }
 
+    public function filterTopicGuidStarts($table, $tableName, $guidStarts)
+    {
+        return $table->where('guid', 'like', $guidStarts . '%');
+    }
+
     /**
      * Simple title search of entity
      *

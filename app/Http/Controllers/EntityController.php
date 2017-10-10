@@ -55,6 +55,7 @@ class EntityController extends Controller
     protected $topic;
     protected $topicType;
     protected $topicHasOffer;
+    protected $topicGuidStarts;
 
     // Sorting
     protected $orderBy;   // Order by 'table column name'
@@ -656,6 +657,10 @@ class EntityController extends Controller
         if ($this->topicHasOffer)
             $db = $this->filterTopicHasOffer($db, $tableName, $this->topicHasOffer);
 
+        // TOPIC ENTITY ONLY: Only get topic with at least 1 offer
+        if ($this->topicGuidStarts)
+            $db = $this->filterTopicGuidStarts($db, $tableName, $this->topicGuidStarts);
+
         // Query with topic which entity belongs to
         if ($this->topic)
             $db = $this->filterByTopic($db, $tableName, $this->topic);
@@ -734,6 +739,10 @@ class EntityController extends Controller
         /* Topic has offers associated */
         $this->topicHasOffer =
             isset($inputs['topic_has_offer']) ? $inputs['topic_has_offer'] : null;
+
+        /* Topic guid starts with given character[s] */
+        $this->topicGuidStarts =
+            isset($inputs['topic_guid_starts']) ? $inputs['topic_guid_starts'] : null;
 
         /* Ordering */
         $this->orderBy = isset($inputs['order_by']) ? $inputs['order_by'] : null;
