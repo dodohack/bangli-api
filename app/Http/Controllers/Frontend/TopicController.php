@@ -50,13 +50,16 @@ class TopicController extends FeController
             null, $this->topicsColumns);
     }
 
+    // FIXME: Merge FeToic::topic_relations/topic_columns with
+    // the definition relations/columns of data member.
     public function getTopic(Request $request, $guid)
     {
         $inputs = $request->all();
         $table  = $this->getEntityTable($inputs['etype']);
 
         $topic = $this->getEntityObj($inputs['etype'], 'guid', $guid, $table,
-            FeTopic::topic_relations(), FeTopic::topic_columns());
+            FeTopic::topic_relations(), FeTopic::topic_columns(),
+            $this->relationCount);
 
         if (!$topic) {
             // FIXME: Return content
