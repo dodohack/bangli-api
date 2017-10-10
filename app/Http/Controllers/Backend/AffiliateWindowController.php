@@ -128,7 +128,7 @@ class AffiliateWindowController extends AffiliateController
                 'guid'   => $guid,
                 // TODO: Need to create an editor for auto-content
                 //'editor_id' => 1,
-                'title'   => $metadata[1],
+                'title'   => htmlspecialchars_decode($metadata[1]),
                 // TODO: Need to support different channels: shopping, travel
                 'channel_id' => 1,
                 // topic type 2: merchant
@@ -226,7 +226,7 @@ class AffiliateWindowController extends AffiliateController
             'channel_id' => 1,
             // TODO: After introducing more criteria, we can safely set this to 'publish'
             'status'     => 'publish',
-            'title'      => substr($offer[5], 0, 1024),
+            'title'      => htmlspecialchars_decode(substr($offer[5], 0, 1024)),
             'vouchers'   => $offer[4],
             'aff_offer_id' => $offer[0],
             'starts'     => $this->AWinDate2MySQLDate($offer[6]),
