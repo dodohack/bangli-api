@@ -117,8 +117,22 @@ trait EntityFilterTrait
            return $table->join('topic_types',
                function($join) use ($tableName, $type) {
                   $join->on($tableName . '.type_id', '=', 'topic_types.id')
-                      ->where('topic_type.slug', '=', $type);
+                      ->where('topic_types.slug', '=', $type);
                });
+    }
+
+    /**
+     * Filter entity(TOPIC) if it has offer associated.
+     * @param $table
+     * @param $tableName
+     * @return mixed
+     */
+    public function filterTopicHasOffer($table, $tableName, $hasOffer)
+    {
+        if ($hasOffer)
+            return $table->has('offers');
+        else
+            return $table->doesntHave('offers');
     }
 
     /**

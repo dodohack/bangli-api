@@ -53,6 +53,8 @@ class EntityController extends Controller
     protected $skipNum;   // Number of skipped records of current page
     protected $category;
     protected $topic;
+    protected $topicType;
+    protected $topicHasOffer;
 
     // Sorting
     protected $orderBy;   // Order by 'table column name'
@@ -647,8 +649,12 @@ class EntityController extends Controller
             $db = $this->filterByCategory($db, $tableName, $this->category);
 
         // TOPIC ENTITY ONLY: Query with topic type
-        //if ($this->topicType)
-        //    $db = $this->filterTopicByType($db, $tableName, $this->topicType);
+        if ($this->topicType)
+            $db = $this->filterTopicByType($db, $tableName, $this->topicType);
+
+        // TOPIC ENTITY ONLY: Only get topic with at least 1 offer
+        if ($this->topicHasOffer)
+            $db = $this->filterTopicHasOffer($db, $tableName, $this->topicHasOffer);
 
         // Query with topic which entity belongs to
         if ($this->topic)
@@ -722,9 +728,12 @@ class EntityController extends Controller
         /* Topic related filters                                             */
         /* Topic type */
         $this->topicType = isset($inputs['type']) ? $inputs['type'] : null;
+        if (!$this->topicType)
+            $this->topicType = isset($inputs['topic_type']) ? $inputs['topic_type'] : null;
 
         /* Topic has offers associated */
-        $this->topicHasOffer = isset($inputs['has_offer']) ? $inputs['has_offer'] : null;
+        $this->topicHasOffer =
+            isset($inputs['topic_has_offer']) ? $inputs['topic_has_offer'] : null;
 
         /* Ordering */
         $this->orderBy = isset($inputs['order_by']) ? $inputs['order_by'] : null;
