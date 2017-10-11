@@ -42,6 +42,14 @@ class Offer extends Model
     }
 
     /**
+     * Query scope: featured offers
+     */
+    public function scopeFeatured($query)
+    {
+        return $query->where('featured', true);
+    }
+
+    /**
      * Query scope: get published offers
      * @param $query
      * @return mixed

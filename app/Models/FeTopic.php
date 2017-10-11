@@ -4,12 +4,13 @@ namespace App\Models;
 
 class FeTopic extends Topic
 {
-    protected $table = 'fe_view_topics';
+    //protected $table = 'fe_view_topics';
 
     /*
      * Return an array of columns which are returned to client when request
      * multiple posts.
      */
+    /*
     public function simpleColumns()
     {
         return ['fe_view_topics.id', 'fe_view_topics.channel_id',
@@ -17,11 +18,12 @@ class FeTopic extends Topic
             'title', 'title_cn', 'description', 'content', 'published_at',
             'created_at', 'updated_at'];
     }
-
+    */
     /*
      * Return an array of columns which are returned to client when request
      * a single post.
      */
+    /*
     public function fullColumns()
     {
         return ['fe_view_topics.id', 'fe_view_topics.channel_id',
@@ -29,7 +31,7 @@ class FeTopic extends Topic
             'title', 'title_cn', 'description', 'content', 'published_at',
             'updated_at'];
     }
-
+   */
     public function simpleRelations()
     {
         return null;
@@ -68,43 +70,37 @@ class FeTopic extends Topic
     }
 
     /////////////////////////////////////////////////////////////////////////
-    // Overwrite parent relationships, only a few columns should be
-    // retrieved with.
+    // Overwrite parent relationships, only query published relationship(with
+    // query scope.
 
-    /*
-     * The channel this topic belongs to
-     */
-    public function channel()
+    public function posts()
     {
-        return $this->belongsTo('App\Models\Channel', 'channel_id')
-            ->select(['channels.id', 'slug', 'name']);
+        return $this->belongsToMany('App\Models\Post',
+            'topic_has_post', 'topic_id', 'post_id')
+            ->publish();
     }
 
-    /*
-     * The topic type this topic belongs to
-     */
-    public function type()
+    public function topics()
     {
-        return $this->belongsTo('App\Models\TopicType', 'type_id')
-            ->select(['topic_types.id', 'slug', 'name']);
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_topic', 'topic2_id', 'topic1_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title'])
+            ->publish();
     }
 
-    /*
-     * The location this topic belongs to
-     */
-    public function location()
+    public function topics_reverse()
     {
-        return $this->belongsTo('App\Models\Location', 'location_id')
-            ->select(['locations.id', 'level', 'parent_id', 'name', 'slug']);
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_topic', 'topic1_id', 'topic2_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title'])
+            ->publish();
     }
 
-    /*
-     * Relationship between topic and category
-     */
-    public function categories()
+    public function offers()
     {
-        return $this->belongsToMany('App\Models\Category',
-            'topic_has_category', 'topic_id', 'cat_id')
-            ->select(['categories.id', 'parent_id', 'name', 'slug']);
+        return $this->belongsToMany('App\Models\Offer',
+            'topic_has_offer', 'topic_id', 'offer_id')
+            ->publish();
     }
+
 }

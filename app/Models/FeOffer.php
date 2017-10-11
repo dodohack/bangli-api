@@ -49,7 +49,8 @@ class FeOffer extends Offer
     {
         return $this->belongsToMany('App\Models\Topic',
             'topic_has_offer', 'offer_id', 'topic_id')
-            ->select(['topics.id', 'guid', 'logo', 'title']);
+            ->select(['topics.id', 'guid', 'logo', 'title'])
+            ->publish();
     }
 
 }

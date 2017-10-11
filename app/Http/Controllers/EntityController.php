@@ -52,9 +52,11 @@ class EntityController extends Controller
     protected $query;     // User input search string
     protected $skipNum;   // Number of skipped records of current page
     protected $category;
+    protected $featured;
     protected $topic;
     protected $topicType;
     protected $topicHasOffer;
+    protected $topicHasFeaturedOffer;
     protected $topicGuidStarts;
 
     // Sorting
@@ -579,7 +581,7 @@ class EntityController extends Controller
      */
     private function getEntitiesInternal($db)
     {
-        //\Illuminate\Support\Facades\DB::enableQueryLog();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
 
         // Get total count for pagination where every filter is applied
         if ($this->pagination == 'full') $total = $db->count();
@@ -602,7 +604,7 @@ class EntityController extends Controller
         if ($this->columns)  $records = $db->get($this->columns);
         else                 $records = $db->get();
 
-        //var_export(\Illuminate\Support\Facades\DB::getQueryLog());
+        var_export(\Illuminate\Support\Facades\DB::getQueryLog());
 
         // Shorten entity title to 76 chars if it is too long
         $length = count($records);
@@ -649,6 +651,10 @@ class EntityController extends Controller
         if ($this->category)
             $db = $this->filterByCategory($db, $tableName, $this->category);
 
+        // If the entity if featured or not
+        if ($this->featured)
+            $db = $this->filterByCategory($db, $tableName, $this->featured);
+
         // TOPIC ENTITY ONLY: Query with topic type
         if ($this->topicType)
             $db = $this->filterTopicByType($db, $tableName, $this->topicType);
@@ -657,7 +663,12 @@ class EntityController extends Controller
         if ($this->topicHasOffer)
             $db = $this->filterTopicHasOffer($db, $tableName, $this->topicHasOffer);
 
-        // TOPIC ENTITY ONLY: Only get topic with at least 1 offer
+        // TOPIC ENTITY ONLY: Only get topic with at least 1 featured offer
+        if ($this->topicHasFeaturedOffer)
+            $db = $this->filterTopicHasFeaturedOffer($db, $tableName,
+                $this->topicHasFeaturedOffer);
+
+        // TOPIC ENTITY ONLY: Only get topic whose guid starts with given characters
         if ($this->topicGuidStarts)
             $db = $this->filterTopicGuidStarts($db, $tableName, $this->topicGuidStarts);
 
@@ -712,6 +723,9 @@ class EntityController extends Controller
         /* Filter: entity has given category */
         $this->category = isset($inputs['category']) ? $inputs['category'] : null;
 
+        /* Filter: entity is marked as featured or not */
+        $this->featured = isset($inputs['featured']) ? $inputs['featured'] : null;
+
         /* Filter: entity(post/offer) belongs to given topic */
         $this->topic = isset($inputs['topic']) ? $inputs['topic'] : null;
 
@@ -739,6 +753,10 @@ class EntityController extends Controller
         /* Topic has offers associated */
         $this->topicHasOffer =
             isset($inputs['topic_has_offer']) ? $inputs['topic_has_offer'] : null;
+
+        /* Topic has featured offers associated */
+        $this->topicHasOffer = isset($inputs['topic_has_featured_offer']) ?
+            $inputs['topic_has_featured_offer'] : null;
 
         /* Topic guid starts with given character[s] */
         $this->topicGuidStarts =

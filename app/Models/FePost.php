@@ -52,29 +52,13 @@ class FePost extends Post
     // retrieved with.
 
     /*
-     * The channel this topic belongs to
-     */
-    public function channel()
+ * Get the topics this post belongs to
+ */
+    public function topics()
     {
-        return $this->belongsTo('App\Models\Channel', 'channel_id')
-            ->select(['channel.id', 'slug', 'name']);
-    }
-
-    /*
-     * The topic type this topic belongs to
-     */
-    public function type()
-    {
-        return $this->belongsTo('App\Models\TopicType', 'type_id')
-            ->select(['topic_types.id', 'slug', 'name']);
-    }
-
-    /*
-     * The location this topic belongs to
-     */
-    public function location()
-    {
-        return $this->belongsTo('App\Models\Location', 'location_id')
-            ->select(['locations.id', 'level', 'parent_id', 'name', 'slug']);
+        return $this->belongsToMany('App\Models\Topic',
+            'topic_has_post', 'post_id', 'topic_id')
+            ->select(['topics.id', 'channel_id', 'type_id', 'title'])
+            ->publish();
     }
 }

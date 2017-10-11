@@ -30,13 +30,13 @@ class Topic extends Model
     public function type()
     {
         return $this->belongsTo('App\Models\TopicType', 'type_id')
-            ->select(['topic_types.id', 'channel_id', 'name']);
+            ->select(['topic_types.id', 'channel_id', 'name', 'slug']);
     }
 
     public function location()
     {
         return $this->belongsTo('App\Models\Location', 'location_id')
-            ->select(['locations.id', 'level', 'parent_id', 'name']);
+            ->select(['locations.id', 'level', 'parent_id', 'name', 'slug']);
     }
 
     public function images()
@@ -49,7 +49,7 @@ class Topic extends Model
     {
         return $this->belongsToMany('App\Models\Category',
             'topic_has_category', 'topic_id', 'cat_id')
-            ->select(['categories.id', 'channel_id', 'parent_id', 'name']);
+            ->select(['categories.id', 'channel_id', 'parent_id', 'name', 'slug']);
     }
 
     public function posts()
@@ -98,8 +98,16 @@ class Topic extends Model
         return $this->morphMany('App\models\Comment', 'commentable');
     }
 
+    /**
+     * Query scope: featured topics
+     */
+    public function scopeFeatured($query)
+    {
+        return $query->where('featured', true);
+    }
+
     /* Query scope: a topic in publish status */
-    public function scopePublic($query)
+    public function scopePublish($query)
     {
         return $query->where('status', 'publish');
     }

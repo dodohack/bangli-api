@@ -86,6 +86,21 @@ trait EntityFilterTrait
     }
 
     /**
+     * Filter an entity by if it is featured
+     * @param $table
+     * @param $tableName
+     * @param $featured
+     * @return mixed
+     */
+    public function filterByFeatured($table, $tableName, $featured)
+    {
+        if ($featured)
+            return $table->where('featured', true);
+        else
+            return $table->where('featured', '<>', true);
+    }
+
+    /**
      * Filter entity by topic ID or slug it belongs
      * @param $table
      * @param $tableName
@@ -135,6 +150,32 @@ trait EntityFilterTrait
             return $table->doesntHave('offers');
     }
 
+    /**
+     * Filter entity(TOPIC) if it has any featured offers
+     * @param $table
+     * @param $tableName
+     * @param $hasFeaturedOffer
+     * @return mixed
+     */
+    public function filterTopicHasFeaturedOffer($table, $tableName, $hasFeaturedOffer)
+    {
+        if ($hasFeaturedOffer)
+            return $table->whereHas('offers', function ($q) {
+                $q->where('offers.featured', true);
+            });
+        else
+            return $table->whereHas('offers', function ($q) {
+                $q->where('offers.featured', '<>' ,true);
+            });
+    }
+
+    /**
+     * Filter entity(TOPIC) by it's guid start with characters
+     * @param $table
+     * @param $tableName
+     * @param $guidStarts - characters to search
+     * @return mixed
+     */
     public function filterTopicGuidStarts($table, $tableName, $guidStarts)
     {
         return $table->where('guid', 'like', $guidStarts . '%');

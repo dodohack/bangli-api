@@ -18,34 +18,21 @@ use App\Models\FeComment;
 
 class FeController extends EntityController
 {
-
-    /**
-     * Return a list of published entities indexed by given key
-     * @param Request $request
-     * @param $relations
-     * @param $columns
-     * @param string $pagination
-     * @return mixed
-     */
-    public function getEntitiesByKey(Request $request, $relations, $relCount,
-                                     $columns, $pagination = 'full')
-    {
-        $result = $this->getArrayEntitiesByKey($request->all(), $relations,
-            $relCount, $columns, $pagination);
-
-        return $this->success($request, json_encode($result));
-    }
-
     /**
      * Return an array of published entities indexed by given key
      * @param $inputs
      * @param $relations
+     * @param $relCount
      * @param $columns
      * @param $pagination
+     * @return array of entities indexed by key
      */
     public function getArrayEntitiesByKey($inputs, $relations, $relCount,
                                           $columns, $pagination)
     {
+        // Alway query published entities for frontend.
+        $inputs['status'] = 'publish';
+
         // TODO: should always query entity with 'publish' status.
         $result = $this->getArrayEntities($inputs['etype'], $inputs,
             $relations, $relCount, $columns, $pagination);
@@ -63,9 +50,11 @@ class FeController extends EntityController
      * @param $columns
      * @return string
      */
-    public function getGroupedEntities(Request $request, $relations, $columns)
+    public function getGroupedEntities($inputs, $relations, $columns)
     {
-        $inputs = $request->all();
+        // Alway query published entities for frontend.
+        $inputs['status'] = 'publish';
+
         $etype  = $inputs['etype'];
         $isFullPagination = isset($inputs['pagination']) ? true : false;
 
@@ -88,9 +77,7 @@ class FeController extends EntityController
         }
 
         // Return entities with 'etype' in top level
-        $ret = ['etype' => $etype, 'data' => $result];
-
-        return $this->success($request, json_encode($ret));
+        return ['etype' => $etype, 'data' => $result];
     }
 
     /**
@@ -111,11 +98,15 @@ class FeController extends EntityController
         }
     }
 
+    // FIXME: We are going to remove fe_view_* as it casued so much troubles
+    // and performance issue as well probably!
+
     /**
      * Overload parent function, returns table name in literal string
      * @param $etype
      * @return string
      */
+    /*
     protected function getTableName($etype)
     {
         switch ($etype) {
@@ -129,4 +120,5 @@ class FeController extends EntityController
                 return parent::getTableName($etype);
         }
     }
+    */
 }

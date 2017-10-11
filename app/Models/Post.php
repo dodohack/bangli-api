@@ -79,7 +79,7 @@ class Post extends Model
     public function location()
     {
         return $this->belongsTo('App\Models\Location', 'location_id')
-            ->select(['locations.id', 'level', 'parent_id', 'name']);
+            ->select(['locations.id', 'level', 'parent_id', 'name', 'slug']);
     }
 
     /*
@@ -140,6 +140,14 @@ class Post extends Model
     public function comments()
     {
         return $this->morphMany('App\Models\Comment', 'commentable');
+    }
+
+    /**
+     * Query scope: featured posts
+     */
+    public function scopeFeatured($query)
+    {
+        return $query->where('featured', true);
     }
 
     /*

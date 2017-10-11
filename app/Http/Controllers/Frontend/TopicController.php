@@ -24,8 +24,10 @@ class TopicController extends FeController
     private $topicsRelations = [];
 
 
+    // FIXME: If enabling querying relationship count, select the column of
+    // FIXME: the main table will not work!!
     /* Retrieve number of offers related to given topic */
-    private $relationCount = 'offers';
+    private $relationCount = null; //'offers';
 
     /**
      * Get a list of published topics
@@ -34,8 +36,10 @@ class TopicController extends FeController
      */
     public function getTopics(Request $request)
     {
-        return $this->getEntitiesByKey($request,
-            null, $this->relationCount, $this->topicsColumns);
+        $result = $this->getArrayEntitiesByKey($request->all(), null,
+            $this->relationCount, $this->topicsColumns, 'full');
+
+        return $this->success($request, json_encode($result));
     }
 
     /**
@@ -46,8 +50,10 @@ class TopicController extends FeController
      */
     public function getGroupTopics(Request $request)
     {
-        return $this->getGroupedEntities($request,
+        $result = $this->getGroupedEntities($request->all(),
             null, $this->topicsColumns);
+
+        return $this->success($request, json_encode($result));
     }
 
     // FIXME: Merge FeToic::topic_relations/topic_columns with
