@@ -653,7 +653,7 @@ class EntityController extends Controller
 
         // If the entity if featured or not
         if ($this->featured)
-            $db = $this->filterByCategory($db, $tableName, $this->featured);
+            $db = $this->filterByFeatured($db, $tableName, $this->featured);
 
         // TOPIC ENTITY ONLY: Query with topic type
         if ($this->topicType)
