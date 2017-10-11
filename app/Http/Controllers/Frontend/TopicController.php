@@ -36,7 +36,13 @@ class TopicController extends FeController
      */
     public function getTopics(Request $request)
     {
-        $result = $this->getArrayEntitiesByKey($request->all(), null,
+        $inputs = $request->all();
+        $relations = null;
+
+        if (isset($inputs['relations']))
+            $relations = $this->setupRelations($inputs['relations']);
+
+        $result = $this->getArrayEntitiesByKey($request->all(), $relations,
             $this->relationCount, $this->topicsColumns, 'full');
 
         return $this->success($request, json_encode($result));

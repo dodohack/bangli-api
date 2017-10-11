@@ -4,34 +4,35 @@ namespace App\Models;
 
 class FeTopic extends Topic
 {
+    // TODO: Can we remove this view?
     //protected $table = 'fe_view_topics';
 
     /*
      * Return an array of columns which are returned to client when request
      * multiple posts.
      */
-    /*
+
     public function simpleColumns()
     {
-        return ['fe_view_topics.id', 'fe_view_topics.channel_id',
+        return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'description', 'content', 'published_at',
+            'title', 'title_cn', 'topics.description', 'content', 'published_at',
             'created_at', 'updated_at'];
     }
-    */
+
     /*
      * Return an array of columns which are returned to client when request
      * a single post.
      */
-    /*
+
     public function fullColumns()
     {
-        return ['fe_view_topics.id', 'fe_view_topics.channel_id',
+        return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'description', 'content', 'published_at',
+            'title', 'title_cn', 'topics.description', 'content', 'published_at',
             'updated_at'];
     }
-   */
+
     public function simpleRelations()
     {
         return null;

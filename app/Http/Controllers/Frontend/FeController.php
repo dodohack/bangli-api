@@ -81,6 +81,47 @@ class FeController extends EntityController
     }
 
     /**
+     * Sanitize incoming relations string, return relations in array
+     * FIXME: Hardcoded relationship
+     * @param $relationString
+     * @return array
+     */
+    protected function setupRelations($relationString) {
+        $relations = [];
+        if (!$relationString) return null;
+
+        // We expect incoming relations are separated by ','
+        $tokens = explode(",", $relationString);
+        foreach ($tokens as $rel) {
+            switch($rel) {
+                case ETYPE_TOPIC:
+                    array_push($relations, 'topics');
+                    break;
+                case ETYPE_OFFER:
+                    array_push($relations, 'offers');
+                    break;
+                case ETYPE_POST:
+                    array_push($relations, 'posts');
+                    break;
+                case ETYPE_PAGE:
+                    array_push($relations, 'pages');
+                    break;
+                case ETYPE_ATTACHMENT:
+                    array_push($relations, 'attachments');
+                    break;
+                case ETYPE_COMMENT:
+                    array_push($relations, 'comments');
+                    break;
+            }
+        }
+
+        if (count($relations))
+            return $relations;
+        else
+            return null;
+    }
+
+    /**
      * Overload parent function, return frontend specific models
      * @param $etype
      */
