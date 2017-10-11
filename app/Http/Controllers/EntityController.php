@@ -581,7 +581,7 @@ class EntityController extends Controller
      */
     private function getEntitiesInternal($db)
     {
-        \Illuminate\Support\Facades\DB::enableQueryLog();
+        //\Illuminate\Support\Facades\DB::enableQueryLog();
 
         // Get total count for pagination where every filter is applied
         if ($this->pagination == 'full') $total = $db->count();
@@ -598,13 +598,15 @@ class EntityController extends Controller
         // Query with relations
         if ($this->relations)   $db = $db->with($this->relations);
 
+        // withCount overwrites columns in get, must use select before it
+        if ($this->columns) $db = $db->select($this->columns);
+
         // Count related model, say the number of offers associated with a topic.
         if ($this->relCount)   $db = $db->withCount($this->relCount);
 
-        if ($this->columns)  $records = $db->get($this->columns);
-        else                 $records = $db->get();
+        $records = $db->get();
 
-        var_export(\Illuminate\Support\Facades\DB::getQueryLog());
+        //var_export(\Illuminate\Support\Facades\DB::getQueryLog());
 
         // Shorten entity title to 76 chars if it is too long
         $length = count($records);
@@ -755,7 +757,7 @@ class EntityController extends Controller
             isset($inputs['topic_has_offer']) ? $inputs['topic_has_offer'] : null;
 
         /* Topic has featured offers associated */
-        $this->topicHasOffer = isset($inputs['topic_has_featured_offer']) ?
+        $this->topicHasFeaturedOffer = isset($inputs['topic_has_featured_offer']) ?
             $inputs['topic_has_featured_offer'] : null;
 
         /* Topic guid starts with given character[s] */

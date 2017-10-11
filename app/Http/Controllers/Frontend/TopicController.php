@@ -16,8 +16,8 @@ use App\Models\ViewTopicHasPost;
 class TopicController extends FeController
 {
     /* Columns to be retrieved for topics list */
-    private $topicsColumns = ['topics.id', 'channel_id',
-        'type_id', 'ranking', 'guid',
+    private $topicsColumns = ['topics.id', 'topics.channel_id',
+        'type_id', 'ranking', 'guid', 'logo',
         'title', 'title_cn', 'updated_at'];
 
     /* Relations to be queried with topic/topics */
@@ -27,7 +27,7 @@ class TopicController extends FeController
     // FIXME: If enabling querying relationship count, select the column of
     // FIXME: the main table will not work!!
     /* Retrieve number of offers related to given topic */
-    private $relationCount = null; //'offers';
+    private $relationCount = 'offers';
 
     /**
      * Get a list of published topics
