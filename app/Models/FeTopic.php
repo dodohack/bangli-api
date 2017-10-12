@@ -15,7 +15,7 @@ class FeTopic extends Topic
     public function simpleColumns()
     {
         return ['topics.id', 'topics.channel_id',
-            'location_id', 'ranking', 'guid', 'display_url', 'tracking_url',
+            'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
             'title', 'title_cn', 'topics.description', 'content', 'published_at',
             'created_at', 'updated_at'];
     }
@@ -28,7 +28,7 @@ class FeTopic extends Topic
     public function fullColumns()
     {
         return ['topics.id', 'topics.channel_id',
-            'location_id', 'ranking', 'guid', 'display_url', 'tracking_url',
+            'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
             'title', 'title_cn', 'topics.description', 'content', 'published_at',
             'updated_at'];
     }

@@ -62,14 +62,20 @@ class BatchReqController extends FeController
         $result = [];
         $idx    = 0;
         foreach($groups as $group) {
+
             // If we need to get relations with the request
             $relations = null;
             if (isset($group->inputs['relations']))
                 $relations = $this->setupRelations($group->inputs['relations']);
 
+            // Always count number of offers of a gopic
+            $relCount = null;
+            if ($group->inputs['etype'] == ETYPE_TOPIC)
+                $relCount = 'offers';
+
             $result[$idx++] =
                 $this->getArrayEntitiesByKey($group->inputs, $relations,
-                    null, null, 'full');
+                    $relCount, null, 'full');
         }
 
         return $this->success($request, json_encode($result));
