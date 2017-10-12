@@ -4,4 +4,6 @@ composer.lock
 /vendor
 Homestead.json
 Homestead.yaml
+public/images
+public/storage
 .env

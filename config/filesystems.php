@@ -43,17 +43,20 @@ return [
 
     'disks' => [
 
+        // Local storage for testing
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
         ],
 
+        // Local storage on production server
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'visibility' => 'public',
         ],
 
+        // Network storage on Amazon S3
         's3' => [
             'driver' => 's3',
             'key' => env('S3_KEY'),
@@ -70,16 +73,10 @@ return [
     'image-root' => 'images/',
 
     /*
-     * thumbnails config for e-commerence(huluwa.uk) and bangli network
+     * thumbnails config for bangli.uk
      * Each entry contains thumbnail name, width and height
      */
-    'thumb-huluwa' => [
-        ['thumb-gallery',         160, 160],
-        ['thumb-card-lg',         320, 260],
-        ['thumb-product-slide',   360, 400],
-    ],
-
-    'thumb-bangli' => [
+    'thumbs' => [
         ['thumb-avatar',  80,  80],
         ['thumb-gallery', 160, 160],
         ['thumb-card-lg', 320, 260],

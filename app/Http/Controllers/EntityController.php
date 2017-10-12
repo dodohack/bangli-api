@@ -775,6 +775,7 @@ class EntityController extends Controller
     /**
      * Determine which columns and relations of the entity to query together
      * when querying a list of entities or a single entity
+     * FIXME: $full shouldn't control both columns and relations!
      *
      * @param $columns  - User input columns if any
      * @param $relations- User input relations if any

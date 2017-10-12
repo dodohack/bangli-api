@@ -26,13 +26,9 @@ class SysController extends Controller
         $roles = Role::get()->toArray();
 
         // Available thumbnail configs
-        if (strcmp($this->domain, 'huluwa.uk'))
-            $thumbs = config('filesystems.thumb-huluwa');
-        else
-            $thumbs = config('filesystems.thumb-bangli');
+        $thumbs = config('filesystems.thumbs');
 
         $json = compact('roles', 'thumbs');
-
         return parent::success($request, $json);
     }
 }

@@ -33,19 +33,15 @@ class AttachmentController extends EntityController
     {
         parent::__construct($jwt);
 
-        // We can change 'local' to 's3' or other cloud system
-        $this->disk = Storage::disk('s3');
+        // Default image storage for production is api_server/public/images.
+        $this->disk = Storage::disk('public');
 
         // Get image root path
         $this->imagePath = config('filesystems.image-root') . date('Y/m/');
         $this->thumbPath = $this->imagePath . 'thumbs/';
 
         // Init list of support thumbnail dimensions
-        if ($this->domain == 'huluwa.uk') {
-            $this->thumbConfig = config('filesystems.thumb-huluwa');
-        } else {
-            $this->thumbConfig = config('filesystems.thumb-bangli');
-        }
+        $this->thumbConfig = config('filesystems.thumbs');
     }
 
     /**
@@ -58,7 +54,6 @@ class AttachmentController extends EntityController
         // We need to add extra columns to the returned array, which is the
         // image server address.
         $inputs = $request->all();
-        $images = $this->getArrayEntities($inputs['etype'], $inputs);
         return $this->getEntitiesReq($request);
     }
 
@@ -214,7 +209,8 @@ class AttachmentController extends EntityController
 
         // Update database record
         $record = new Attachment;
-        $record->user_id = $this->jwt->authenticate()->id;
+        // FIXME: Authentication!
+        $record->user_id = 1; //$this->jwt->authenticate()->id;
         $record->catalog = 'cms';
         $record->path    = $this->imagePath;
         $record->thumb_path = $this->thumbPath;

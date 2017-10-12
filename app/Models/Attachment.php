@@ -19,6 +19,28 @@ class Attachment extends Model
 {
     protected $table = 'attachments';
 
+    public function simpleColumns()
+    {
+        return ['attachments.id', 'path', 'thumb_path', 'mime_type',
+            'title', 'desc', 'filename', 'size', 'width', 'height',
+            'thumbnail', 'created_at', 'updated_at'];
+    }
+
+    public function fullColumns()
+    {
+        return $this->simpleColumns();
+    }
+
+    public function simpleRelations()
+    {
+        return null;
+    }
+
+    public function fullRelations()
+    {
+        return null;
+    }
+
     /*
      * Get the user owns this attachment
      */
