@@ -14,8 +14,7 @@ use App\Models\Category;
 use App\Models\TopicType;
 use App\Models\Channel;
 use App\Models\Location;
-use App\Models\ViewEditor;
-use App\Models\ViewAuthor;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 
@@ -29,10 +28,10 @@ class CmsController extends EntityController
     public function getAttributes(Request $request)
     {
         // Get list of available authors
-        $authors = ViewAuthor::get()->toArray();
+        $authors = User::whereIn('role_id', [1,2,3,4])->get(['id', 'display_name'])->toArray();
 
         // Get list of available editors
-        $editors = ViewEditor::get()->toArray();
+        $editors = User::whereIn('role_id', [1,2,3])->get(['id', 'display_name'])->toArray();
 
         // Get all cms channels
         $channels = Channel::get(['id', 'slug', 'name'])->toArray();

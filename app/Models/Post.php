@@ -53,7 +53,8 @@ class Post extends Model
      */
     public function author()
     {
-        return $this->belongsTo('App\Models\ViewAuthor', 'author_id');
+        return $this->belongsTo('App\Models\User', 'author_id')
+            ->select(['id', 'display_name']);
     }
 
     /*
@@ -61,7 +62,8 @@ class Post extends Model
      */
     public function editor()
     {
-        return $this->belongsTo('App\Models\ViewEditor', 'editor_id');
+        return $this->belongsTo('App\Models\User', 'editor_id')
+            ->select(['id', 'display_name']);
     }
 
     /*

@@ -397,6 +397,9 @@ class EntityController extends Controller
                 'body'         => $record->content]);
         }
 
+        // Remove unwanted columns
+        unset($inputs['etype'], $inputs['auto']);
+
         if ($record->update($inputs)) {
             // Return the updated entity
             return $this->getEntity($etype, $inputs, 'id', $id, $table,

@@ -74,9 +74,9 @@ class TopicController extends CmsController
     }
 
     /**
-     * Update topic by given guid
+     * Update topic by given id/guid
      * @param Request $request
-     * @param $guid - topic guid to be updated
+     * @param $id - topic id/guid to be updated
      * @return object
      */
     public function putTopic(Request $request, $id)

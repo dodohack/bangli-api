@@ -18,7 +18,8 @@ class Topic extends Model
 
     public function editor()
     {
-        return $this->belongsTo('App\Models\ViewEditor', 'editor_id');
+        return $this->belongsTo('App\Models\User', 'editor_id')
+            ->select(['id', 'display_name']);
     }
 
     public function channel()

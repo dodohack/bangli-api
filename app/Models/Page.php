@@ -49,7 +49,8 @@ class Page extends Model
      */
     public function editor()
     {
-        return $this->belongsTo('App\Models\User', 'editor_id');
+        return $this->belongsTo('App\Models\User', 'editor_id')
+            ->select(['id', 'display_name']);
     }
 
     /*
