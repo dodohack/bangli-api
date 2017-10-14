@@ -448,7 +448,7 @@ class EntityController extends Controller
                 $rows = $table->where($key, $id)->delete();
                 $ret = ['etype'  => $etype,
                     'status' => 'TODO: Entity is deleted, return deleted entity'];
-                return parent::success($inputs, json_encode($ret));
+                return parent::successV2($inputs, json_encode($ret));
             } else {
                 // Move entity to trash
                 $record->status = 'trash';

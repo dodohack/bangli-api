@@ -7,10 +7,11 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\EntityController;
 
 use App\Models\Post;
 
-class PostController extends CmsController
+class PostController extends EntityController
 {
     // FIXME: Hardcoded table columns, move them to Models.
     /* Columns to be retrieved for posts list */

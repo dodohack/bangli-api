@@ -7,11 +7,12 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\EntityController;
 
 use App\Models\Topic;
 
 
-class TopicController extends CmsController
+class TopicController extends EntityController
 {
 
     /* Columns to be retrieved for topics list */

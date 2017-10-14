@@ -6,11 +6,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\EntityController;
 use Illuminate\Http\Request;
 
-use App\Models\Offer;
-
-class OfferController extends CmsController
+class OfferController extends EntityController
 {
     /* Columns to be retrieved for offers list, we need a full content  */
     private $offersColumns = ['offers.id', 'author_id', 'channel_id', 'status',
