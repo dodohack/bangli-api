@@ -429,6 +429,35 @@ class EntityController extends Controller
     }
 
     /**
+     * Do the actually delete work
+     * @param $etype - entity type
+     * @param $key   - primary id name
+     * @param $id    - primary id
+     * @return bool  - true if we've found the record else false
+     */
+    protected function deleteEntityInternal($etype, $key, $id)
+    {
+        $table = $this->getEntityTable($etype);
+
+        $record = $table->where($key, $id)->first();
+
+        if ($record) {
+            if ($record->status == 'trash') {
+                // Physically delete a 'trash'ed entity
+                // TODO: Check if relationship is automatically deleted as we
+                // have FK constraint on it.
+                $table->where($key, $id)->delete();
+            } else {
+                // Move entity to trash
+                $record->status = 'trash';
+                $record->save();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Move a entity to trash by id
      * @param $etype - entity type
      * @param $inputs - request inputs
@@ -438,23 +467,9 @@ class EntityController extends Controller
      */
     protected function deleteEntity($etype, $inputs, $key, $id)
     {
-        $table = $this->getEntityTable($etype);
-
-        $record = $table->where($key, $id)->first();
-        if ($record) {
-            if ($record->status == 'trash') {
-                // Do real delete
-                // TODO: Sync with pivot table.
-                $rows = $table->where($key, $id)->delete();
-                $ret = ['etype'  => $etype,
-                    'status' => 'TODO: Entity is deleted, return deleted entity'];
-                return parent::successV2($inputs, json_encode($ret));
-            } else {
-                // Move entity to trash
-                $record->status = 'trash';
-                $record->save();
-                return $this->getEntity($etype, $inputs, 'id', $id, $table);
-            }
+        if ($this->deleteEntityInternal($etype, $key, $id)) {
+            $ret = ['etype'  => $etype, 'num_of_deleted' => 1];
+            return parent::successV2($inputs, json_encode($ret));
         } else {
             $error = ['etype' => $etype, 'error' => 'Delete fails'];
             return parent::error(json_encode($error), 401);
@@ -472,6 +487,31 @@ class EntityController extends Controller
     {
         $inputs = $request->all();
         return $this->deleteEntity($inputs['etype'], $inputs, $key, $id);
+    }
+
+    protected function deleteEntitiesReq(Request $request)
+    {
+        $numDeleted = 0;
+        $etype = $request->get('etype');
+        $ids   = $request->get('ids');
+
+        if (!$etype || !$ids)
+            return;
+
+        $idAry = explode(',', $ids);
+
+        foreach($idAry as $id) {
+            if ($this->deleteEntityInternal($etype, 'id', $id))
+                $numDeleted++;
+        }
+
+        if ($numDeleted) {
+            $ret = ['etype'  => $etype, 'num_of_deleted' => $numDeleted];
+            return parent::success($request, json_encode($ret));
+        } else {
+            $error = ['etype' => $etype, 'error' => 'Delete fails'];
+            return parent::error(json_encode($error), 401);
+        }
     }
 
     /**

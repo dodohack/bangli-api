@@ -49,7 +49,7 @@ class PostController extends EntityController
      */
     public function deletePosts(Request $request)
     {
-        return response('API unimplemented', 401);
+        return $this->deleteEntitiesReq($request);
     }
 
     /**

@@ -46,7 +46,7 @@ class TopicController extends EntityController
 
     public function deleteTopics(Request $request)
     {
-        return response('unimplemented API', 401);
+        return $this->deleteEntitiesReq($request);
     }
 
     /**

@@ -41,7 +41,7 @@ class PageController extends CmsController
 
     public function deletePages(Request $request)
     {
-        return response('unimplemented API', 401);
+        return $this->deleteEntitiesReq($request);
     }
 
     /**

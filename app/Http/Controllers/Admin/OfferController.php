@@ -40,11 +40,11 @@ class OfferController extends EntityController
     }
 
     /**
-     * Move multiple offers into trash
+     * Move multiple offers into trash, by entity type and ids
      */
     public function deleteOffers(Request $request)
     {
-        return response('API unimplemented', 401);
+        return $this->deleteEntitiesReq($request);
     }
 
     /**
