@@ -40,11 +40,12 @@ class AuthServiceProvider extends AbstractServiceProvider
 
         $this->extendAuthGuard();
 
+        // We only enable 'Authorization' header and '?token=' query parameters.
         $this->app['tymon.jwt.parser']->setChain([
             new AuthHeaders,
             new QueryString,
-            new InputSource,
-            new LumenRouteParams,
+            //new InputSource,
+            //new LumenRouteParams,
         ]);
     }
 }

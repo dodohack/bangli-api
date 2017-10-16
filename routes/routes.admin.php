@@ -1,27 +1,29 @@
 <?php
 /**
  * Backend admin routes for bangli-admin-spa.
+ * NOTE: All backend routes should be protected by middleare, even for
+ * 'register' and 'login' route. Token should firstly be obtained from auth
+ * server in order to use this api server.
  */
-
-$router->group(['namespace'  => '\App\Http\Controllers'], function () use ($router) {
-    $router->post('/admin/register', 'AuthController@postRegister');
-    $router->get('/admin/login',     'AuthController@login');
-});
-
-$router->group(['prefix'     => 'admin',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
-    /* Beacon: /admin/ping?key=domain_key */
-    $router->get('/ping', 'PingController@handle');
-    $router->post('/ping', 'PingController@handle');
-});
-
 
 /****************************************************************************
  * Basic routes for users can use dashboard
  ***************************************************************************/
-$router->group([/*'middleware' => 'permission:use_dashboard',*/
-    'prefix'     => 'admin',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
+$router->group([
+    'prefix' => 'admin',
+    'middleware' => 'permission:use_dashboard',
+    'namespace'  => '\App\Http\Controllers\Admin'
+], function () use ($router) {
+
+    /* Register user or login user into application server with valid token */
+    $router->post('/register', 'AuthController@postRegister');
+    $router->post('/login',    'AuthController@login');
+    $router->get('/login',     'AuthController@login');
+
+    /* Beacon: /admin/ping?key=domain_key */
+    $router->get('/ping', 'PingController@handle');
+    $router->post('/ping', 'PingController@handle');
+
 
     /************************************************************************
      * Preload commonly used data to client, such as authors, editors,
@@ -87,9 +89,11 @@ $router->group([/*'middleware' => 'permission:use_dashboard',*/
 /****************************************************************************
  * Author and above routes, route prefix: /admin/cms
  ****************************************************************************/
-$router->group([/*'middleware' => 'permission:edit_own_post',*/
+$router->group([
+    'middleware' => 'permission:edit_own_post',
     'prefix'     => 'admin/cms',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
+    'namespace'  => '\App\Http\Controllers\Admin'
+], function () use ($router) {
 
     /* API: /posts?page=<num>?state=<string>&author=<num>&editor=<num>&per_page=<num> */
     /* Retrieve a list of posts */
@@ -131,9 +135,11 @@ $router->group([/*'middleware' => 'permission:edit_own_post',*/
 /****************************************************************************
  * Topic/Page/Deal related routes - Role: editor, shop_manager, administrator
  ****************************************************************************/
-$router->group([/*'middleware' => ['role:administrator|editor'],*/
+$router->group([
+    'middleware' => ['role:administrator|editor'],
     'prefix'     => 'admin/cms',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
+    'namespace'  => '\App\Http\Controllers\Admin'
+], function () use ($router) {
 
     /* Update a list of categories */
     $router->put('/categories/batch',      'CmsCatController@putCategories');
@@ -206,9 +212,11 @@ $router->group([/*'middleware' => ['role:administrator|editor'],*/
 /****************************************************************************
  * Comment/Attachment related routes - Role: editor, shop_manager, administrator
  ****************************************************************************/
-$router->group([/*'middleware' => ['role:administrator|editor'],*/
+$router->group([
+    'middleware' => ['role:administrator|editor'],
     'prefix'     => 'admin',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
+    'namespace'  => '\App\Http\Controllers\Admin'
+], function () use ($router) {
 
     /* Get list of comments */
     $router->get('/comments',          'CommentController@getComments');
@@ -229,9 +237,11 @@ $router->group([/*'middleware' => ['role:administrator|editor'],*/
 /****************************************************************************
  * Higher level settings, Role: administrator
  ****************************************************************************/
-$router->group([/*'middleware' => ['role:administrator'],*/
+$router->group([
+    'middleware' => ['role:administrator'],
     'prefix'     => 'admin',
-    'namespace'  => '\App\Http\Controllers\Admin'], function () use ($router) {
+    'namespace'  => '\App\Http\Controllers\Admin'
+], function () use ($router) {
 
     /* Get a list of locations */
     $router->get('/locations',             'LocationController@getLocations');

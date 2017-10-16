@@ -1,10 +1,14 @@
 <?php
+/**
+ * This is the backend middleware guarded auth controller.
+ */
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Exceptions\TokenInvalidException;
-use Tymon\JWTAuth\JWTAuth;
+use Illuminate\Support\Facades\Auth;
+
 use GuzzleHttp\Exception\ServerException;
 Use GuzzleHttp\Client;
 
@@ -13,17 +17,6 @@ use App\Models\Role;
 
 class AuthController extends Controller
 {
-    /**
-     * @var \Tymon\JWTAuth\JWTAuth
-     */
-    protected $jwt;
-
-    public function __construct(JWTAuth $jwt)
-    {
-        $this->jwt = $jwt;
-        parent::__construct();
-    }
-
     /*
      * Process callback request from authentication server
      */
@@ -46,42 +39,19 @@ class AuthController extends Controller
     }
 
     /*
-     *  When login a user, just test of the user is created on the api
-     * server, and return app domain specific user profile on success.
-     * If the user is not created, it will query auth server for verification
-     * and create one locally.
+     * Login a user with correctly permission into api server.
+     * @return user - The user's basic information used for display purpose by
+     *                client side.
      */
     public function login(Request $request)
     {
-        //
-        // FIXME: Always login a admin user for test.
-        //
-        $tables = ['role'];
-        $user = User::where('id', 1)->with($tables)->first()->toArray();
-        $ret = ['user' => $user, 'img_server' => env('IMG_SERVER')];
-        return parent::success($request, json_encode($ret));
-        //
-        // FIXME: END.
-        //
-
-        if (!$token = $this->jwt->setRequest($request)->getToken()) {
-            return response('Unauthorized.', 401);
-        }
-
-        try {
-            $user = $this->jwt->authenticate();
-        } catch (TokenExpiredException $e) {
-            return response('Token Expired.', 401);
-        } catch (JWTException $e) {
-            return response('Token Invalid.', 401);
-        } catch (TokenInvalidException $e) {
-            return response('Token Invalid.', 401);
-        }
+        // Middleware already takes care about user
+        $user = $this->guard()->user();
 
         if (!$user) {
             // TODO: Verify if the user is already on auth server, if it is,
-            // then create one.
-            $ret = $this->isUserOnAuthServer($this->jwt->getToken());
+            // then create one on api server.
+            $ret = $this->isUserOnAuthServer($this->guard()->getToken());
             if ($ret->email) {
                 $user = $this->createUser($ret->email);
             } else {
@@ -89,11 +59,7 @@ class AuthController extends Controller
             }
         }
 
-        $tables = ['role',  'addresses'];
-        // NOTE: We can't user $user->with($tables) here.
-        $user = User::where('id', $user->id)->with($tables)->first()->toArray();
-        // TODO: This should only used for bangli-admin-spa, frontend spa loads
-        // img_server immediately after app starts.
+        $user->with(['role'])->first()->toArray();
         $ret = ['user' => $user, 'img_server' => env('IMG_SERVER')];
         return parent::success($request, json_encode($ret));
     }
@@ -117,7 +83,7 @@ class AuthController extends Controller
     private function createUser($email)
     {
         $user = new User;
-        $payload = $this->jwt->parseToken()->getPayload();
+        $payload = $this->guard()->parseToken()->getPayload();
         $user->uuid    = $payload->get('sub');
         $user->name    = $payload->get('aud');
         $user->role_id = Role::customer()->first()->id;
@@ -145,5 +111,14 @@ class AuthController extends Controller
 
         /* Read up to 1K data from returned body contains new user info or error */
         return json_decode($res->getBody()->read(1024));
+    }
+
+    /**
+     * Get the guard to be used during authentication.
+     * @return mixed
+     */
+    private function guard()
+    {
+        return Auth::guard();
     }
 }
