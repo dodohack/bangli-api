@@ -356,7 +356,6 @@ class EntityController extends Controller
      * @param $columns - columns to return when 'put' success
      * @return object
      */
-    // FIXME: By-passed user check! Enable it in release.
     protected function putEntity($etype, $inputs, $key, $id,
                                  $relations = null,
                                  $columns = null,
@@ -388,7 +387,6 @@ class EntityController extends Controller
             $record->revisions()->create([
                 'status'       => $record->status,
                 'user_id'      => $user->id,
-                'user_id'      => 1,
                 'body'         => $record->content]);
         }
 
