@@ -70,18 +70,20 @@ class AttachmentController extends EntityController
         // TODO: Retrieve images from request body
 
         // Regenerate thumbnails
+        // TODO: Now we do this for whole images which takes ages to finish.
+        // TODO: Need to support regen thumbnail for portion of images
         if (array_key_exists('gen-thumb', $inputs)) {
 
             // TODO: Support thumbnail gen for given images
-            $images = Attachment::limit(10)->get();
-            //Attachment::chunk(100, function ($images) {
+            //$images = Attachment::limit(10)->get();
+            Attachment::chunk(100, function ($images) {
                 foreach ($images as $image) {
                     $uri = $image->path . $image->filename;
                     $pi  = pathinfo($image->filename);
 
                     // Do not touch image which does not exists
                     if (!$this->disk->exists($uri)) {
-                        echo "Image '", $uri, "' does not exist<br>";
+                        //echo "Image '", $uri, "' does not exist<br>";
                         continue;
                     }
 
@@ -116,7 +118,7 @@ class AttachmentController extends EntityController
                         $this->genThumbRecord($pi['basename'], $pi['extension']);
                     $image->save();
                 }
-            //});
+            });
         }
 
         return response('Posts batch editing API unimplemented', 401);
