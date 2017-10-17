@@ -72,7 +72,7 @@ class AttachmentController extends EntityController
         // Regenerate thumbnails
         // TODO: Now we do this for whole images which takes ages to finish.
         // TODO: Need to support regen thumbnail for portion of images
-        if (array_key_exists('gen-thumb', $inputs)) {
+        if ($inputs['gen-thumb'] && $inputs['gen-thumb'] == true) {
 
             // TODO: Support thumbnail gen for given images
             //$images = Attachment::limit(10)->get();
