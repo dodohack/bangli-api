@@ -80,5 +80,6 @@ return [
         ['thumb-avatar',  80,  80],
         ['thumb-gallery', 160, 160],
         ['thumb-card-lg', 320, 260],
+        ['thumb-card-21', 400, 200],  // 2 : 1
     ]
 ];

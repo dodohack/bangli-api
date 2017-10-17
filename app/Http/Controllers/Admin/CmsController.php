@@ -65,13 +65,13 @@ class CmsController extends EntityController
             ->groupBy('status')->get();
 
         // Deal status and occurrences
-//        $deal_status = DB::table('offers')
-//            ->select(DB::raw('status, COUNT(*) as count'))
-//            ->groupBy('status')->get();
+        $offer_status = DB::table('offers')
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
 
         $json = compact('authors', 'editors', 'channels', 'locations',
             'categories', 'topic_types', 'post_status',
-            'topic_status', 'page_status');
+            'topic_status', 'offer_status', 'page_status');
 
         return parent::success($request, $json);
     }

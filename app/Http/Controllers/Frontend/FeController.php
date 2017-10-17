@@ -107,7 +107,7 @@ class FeController extends EntityController
                     array_push($relations, 'pages');
                     break;
                 case ETYPE_ATTACHMENT:
-                    array_push($relations, 'attachments');
+                    array_push($relations, 'images');
                     break;
                 case ETYPE_COMMENT:
                     array_push($relations, 'comments');
