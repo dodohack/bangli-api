@@ -12,7 +12,7 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    return 'Welcome to api.' . env('ROOT_DOMAIN') . ', nothing here!';
 });
 
 $router->group(
