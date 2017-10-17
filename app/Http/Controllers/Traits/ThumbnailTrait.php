@@ -67,19 +67,19 @@ trait ThumbnailTrait
         if ($success) {
             // save thumbnail into a file
             $fullName = $thumbPath . $imgName . '-' .
-                $thumbWidth . 'x' . $thumbHeight . $imgExt;
+                $thumbWidth . 'x' . $thumbHeight . '.' . $imgExt;
 
             // Storing thumbnail image in a variable
             ob_start(); // start a new output buffer
             // Create different type of thumbnail
             switch($imgExt) {
-                case '.jpg':
+                case 'jpg':
                     imagejpeg($tmpImg, NULL);
                     break;
-                case '.png':
+                case 'png':
                     imagepng($tmpImg, NULL);
                     break;
-                case '.gif':
+                case 'gif':
                     imagegif($tmpImg, NULL);
                     break;
                 default:

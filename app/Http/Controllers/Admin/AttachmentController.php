@@ -63,6 +63,9 @@ class AttachmentController extends EntityController
      */
     public function putAttachments(Request $request)
     {
+	// Count of thumbs updated
+	$count = 0;
+	
         // TODO: Need extra authentication for editing others' files
 
         $inputs = $request->all();
@@ -76,16 +79,22 @@ class AttachmentController extends EntityController
 
             // TODO: Support thumbnail gen for given images
             //$images = Attachment::limit(10)->get();
-            Attachment::chunk(100, function ($images) {
+            Attachment::chunk(20, function ($images, &$count) {
                 foreach ($images as $image) {
                     $uri = $image->path . $image->filename;
                     $pi  = pathinfo($image->filename);
 
                     // Do not touch image which does not exists
                     if (!$this->disk->exists($uri)) {
-                        //echo "Image '", $uri, "' does not exist<br>";
                         continue;
                     }
+
+		    // Sanity check, ignore files which has image extension names
+		    // but actually are not images.
+		    // Such as html file in .jpg extension.
+		    $mimeType = mime_content_type($uri);
+		    if (substr($mimeType, 0, 5) != 'image')
+			continue;
 
                     // 1. Get name and path info of old thumbnails
                     $oldThumbs = json_decode($image->thumbnail, true);
@@ -108,20 +117,22 @@ class AttachmentController extends EntityController
                     // 4. Generate thumbnails
                     $imgObj = $this->createImage($uri);
                     foreach ($this->thumbConfig as $tc) {
-                        $this->createThumbs($this->disk, $imgObj,
-                            $image->thumb_path, $pi['basename'], $pi['extension'],
-                            $tc[1], $tc[2]);
+                        if ($this->createThumbs($this->disk, $imgObj,
+						$image->thumb_path, $pi['filename'], $pi['extension'],
+						$tc[1], $tc[2])) {
+			    $count++;
+			}
                     }
 
                     // 5. Update records
                     $image->thumbnail =
-                        $this->genThumbRecord($pi['basename'], $pi['extension']);
+                        $this->genThumbRecord($pi['filename'], $pi['extension']);
                     $image->save();
                 }
             });
         }
 
-        return response('Posts batch editing API unimplemented', 401);
+        return parent::success($request, ['count' => $count]);
     }
 
     /**
@@ -194,7 +205,7 @@ class AttachmentController extends EntityController
 
         // Get absolute name with path and extension
         $imgName = $this->generateFilename();
-        $fullName = $this->imagePath . $imgName . $imgExt;
+        $fullName = $this->imagePath . $imgName . '.' . $imgExt;
 
         // Store the image to disk or cloud
         $this->disk->put("{$fullName}", File::get($file));
@@ -211,8 +222,7 @@ class AttachmentController extends EntityController
 
         // Update database record
         $record = new Attachment;
-        // FIXME: Authentication!
-        $record->user_id = 1; //$this->jwt->authenticate()->id;
+        $record->user_id = $this->guard()->user()->id;
         $record->catalog = 'cms';
         $record->path    = $this->imagePath;
         $record->thumb_path = $this->thumbPath;
@@ -220,7 +230,7 @@ class AttachmentController extends EntityController
         $record->tag_id     = 1;
         $record->title      = $file->getClientOriginalName();
         $record->desc       = $file->getClientOriginalName();
-        $record->filename   = $imgName . $imgExt;
+        $record->filename   = $imgName . '.' . $imgExt;
         $record->size       = $file->getSize();
         $record->width      = imagesx($image);
         $record->height     = imagesy($image);
@@ -256,11 +266,11 @@ class AttachmentController extends EntityController
         $mime = $image->getMimeType();
         switch ($mime) {
             case 'image/jpeg':
-                return '.jpg';
+                return 'jpg';
             case 'image/png':
-                return '.png';
+                return 'png';
             case 'image/gif':
-                return '.gif';
+                return 'gif';
             default:
                 return false;
         }
@@ -280,7 +290,7 @@ class AttachmentController extends EntityController
         $records = [];
         foreach($this->thumbConfig as $t) {
             $records[$t[0]] = [
-                'file' => $name . '-' . $t[1] . 'x' . $t[2] . $ext,
+                'file' => $name . '-' . $t[1] . 'x' . $t[2] . '.' . $ext,
                 'width' => $t[1],
                 'height' => $t[2]
             ];
