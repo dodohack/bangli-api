@@ -367,15 +367,12 @@ class EntityController extends Controller
         $table = $this->getEntityTable($etype);
 
         $record = $table->where($key, $id)->first();
-        /* FIXME START
 
-        $user = $this->jwt->authenticate();
-
+        $user = $this->guard()->user();
+	
         // Check if user has write permission to the entity
         if (!$this->canUserEditEntity($etype, $record, $user))
             return $this->error('No permission');
-
-        FIXME END*/
 
         // Update entity relations
         $this->updateRelations($etype, $inputs, $record);
@@ -389,10 +386,8 @@ class EntityController extends Controller
         if (isset($inputs['content']) && $this->supportRevision($etype) &&
             !isset($inputs['auto'])) {
             $record->revisions()->create([
-                'status'        => $record->status,
-                /* FIXME START
+                'status'       => $record->status,
                 'user_id'      => $user->id,
-                FIXME END */
                 'user_id'      => 1,
                 'body'         => $record->content]);
         }
@@ -585,16 +580,15 @@ class EntityController extends Controller
      */
     protected function canUserEditEntity($etype, $record, $user)
     {
-        assert(0 && "TODO: canUserEditEntity");
-        /*
-        if ($etype == ETYPE_PAGE && $user->hasRole('author'))
+	// Author can edit his posts
+        if ($etype == ETYPE_POST && $user->hasRole('author'))
             return $record->author_id == $user->id ? true: false;
 
-        if ($user->hasRole(['editor', 'shop_manager', 'administrator']))
+	// Editor and administrator can edit any content
+        if ($user->hasRole(['editor', 'administrator']))
             return true;
 
         return false;
-        */
     }
 
 
