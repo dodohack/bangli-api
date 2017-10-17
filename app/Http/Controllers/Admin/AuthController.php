@@ -59,8 +59,8 @@ class AuthController extends Controller
             }
         }
 
-        $user->with(['role'])->first()->toArray();
-        $ret = ['user' => $user, 'img_server' => env('IMG_SERVER')];
+        $result = $user->with(['role'])->first()->toArray();
+        $ret = ['user' => $result, 'img_server' => env('IMG_SERVER')];
         return parent::success($request, json_encode($ret));
     }
 

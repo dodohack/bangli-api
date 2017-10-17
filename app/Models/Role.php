@@ -9,12 +9,7 @@ use Illuminate\Support\Facades\Config;
 class Role extends Model
 {
     protected $table = 'roles';
-
-    // Query scope
-    public function scopeCustomer($query) {
-        return $query->where('name', 'customer');
-    }
-
+    
     // Big block of caching functionality.
     // NOTE: Cache::tags is a temp solution, will use memached in production
     public function cachedPermissions()
