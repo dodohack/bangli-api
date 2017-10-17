@@ -272,8 +272,10 @@ class AffiliateWindowController extends AffiliateController
             $record = $table->create($input);
             // Update the pivot table
             $record->topics()->sync([$merchant->id]);
+	    // FIXME: Some merchants have empty categories!
             // Update offer category
-            $record->categories()->sync([$merchant->categories[0]->id]);
+	    if(count($merchant->categories))
+		$record->categories()->sync([$merchant->categories[0]->id]);
         }
 
         return true;
