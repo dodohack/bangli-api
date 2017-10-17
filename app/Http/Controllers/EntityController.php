@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Traits\EntityFilterTrait;
 use App\Http\Controllers\Traits\PaginatorTrait;
@@ -62,6 +63,15 @@ class EntityController extends Controller
     // Sorting
     protected $orderBy;   // Order by 'table column name'
     protected $order;     // Sort by 'desc' or 'asc'
+
+    /**
+     * Get the guard to be used during authentication.
+     * @return mixed
+     */
+    protected function guard()
+    {
+        return Auth::guard();
+    }
 
 
     /**

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
-use Tymon\JWTAuth\JWTAuth;
 
 use App\Http\Controllers\EntityController;
 use App\Models\Attachment;
@@ -29,10 +28,8 @@ class AttachmentController extends EntityController
     protected $thumbPath;
     protected $thumbConfig;
 
-    public function __construct(JWTAuth $jwt)
+    public function __construct()
     {
-        parent::__construct($jwt);
-
         // Default image storage for production is api_server/public/images.
         $this->disk = Storage::disk('public');
 
