@@ -6,9 +6,6 @@
  * server in order to use this api server.
  */
 
-/****************************************************************************
- * Basic routes for users can use dashboard
- ***************************************************************************/
 $router->group([
     'prefix' => 'admin',
     'middleware' => 'permission:use_dashboard',
@@ -133,7 +130,7 @@ $router->group([
 
 
 /****************************************************************************
- * Topic/Page/Deal related routes - Role: editor, shop_manager, administrator
+ * Topic/Page/Deal related routes - Role: editor, administrator
  ****************************************************************************/
 $router->group([
     'middleware' => ['role:administrator|editor'],
@@ -291,4 +288,12 @@ $router->group([
     $router->put('/fe_menus/{id}',         'FeMenuController@putFeMenu');
     /* Delete a frontend menu */
     $router->delete('/fe_menus/{id}',      'FeMenuController@deleteFeMenu');
+
+    /*************************************************************************
+     * Offer filter settings
+     *************************************************************************/
+    $router->get('/offer_filters',          'OfferFilterController@getAll');
+    $router->get('/offer_filters/{type}',   'OfferFilterController@get');
+    $router->put('/offer_filters/{type}',   'OfferFilterController@put');
+    $router->post('/offer_filters',         'OfferFilterController@post');
 });
