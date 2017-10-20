@@ -259,6 +259,9 @@ class AffiliateWindowController extends AffiliateController
         $merchant = $topicTable->where('aff_id', $offer[2])
             ->where('aff_platform', 'AWIN')->with(['categories'])->first();
 
+        // We may can't find the merchant if merchant table is relative old.
+        if (!$merchant) return false;
+
         // If we can find the same offer
         $found = false;
         // If the offer we found can be updated automatically, if it is
