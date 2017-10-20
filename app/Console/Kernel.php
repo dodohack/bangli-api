@@ -13,7 +13,10 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        \App\Console\Commands\ResetEditLock::class,
+        \App\Console\Commands\SendEmails::class,
+        \App\Console\Commands\UpdateOffers::class,
+        \App\Console\Commands\UpdateMerchants::class
     ];
 
     /**
@@ -24,6 +27,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //
+        //$schedule->command('reset:edit_lock')->everyFiveMinutes();
+
+        // Update offer daily
+        $schedule->command('offer:update')->daily();
+
+        // Update merchant weekly
+        $schedule->command('merchant:update')->weekly();
     }
 }

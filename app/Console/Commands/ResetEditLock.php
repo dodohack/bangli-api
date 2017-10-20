@@ -6,7 +6,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\CmsPost;
 use Illuminate\Console\Command;
 
 class ResetEditLock extends Command

@@ -1,6 +1,6 @@
 <?php
 /**
- * Cronjob: update affiliates' offers periodically
+ * Cronjob: update affiliates periodically
  */
 
 namespace App\Console\Commands;
@@ -8,14 +8,14 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Http\Controllers\Backend\AffiliateWindowController;
 
-class UpdateOffers extends Command
+class UpdateMerchants extends Command
 {
     /**
      * The name and signature of the console command
      */
-    protected $signature = 'offer:update';
+    protected $signature = 'merchant:update';
 
-    protected $description = 'Update affiliates offers';
+    protected $description = 'Update affiliates';
 
     public function __construct()
     {
@@ -28,6 +28,6 @@ class UpdateOffers extends Command
     public function handle()
     {
         $awin = new AffiliateWindowController();
-        $awin->updateOffers();
+        $awin->updateMerchants();
     }
 }
