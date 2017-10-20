@@ -193,9 +193,24 @@ class AffiliateWindowController extends AffiliateController
             if (!$line) continue;
             // Convert CSV string into array
             $offer = str_getcsv($line);
-            if ($this->putOffer($offer)) {
-                $count++;
-            }
+
+            //
+            // Validate offer quality
+            //
+            // 1. start date
+            if (!$this->dateFilter($offer[6], true)) continue;
+            // 2. end date
+            if (!$this->dateFilter($offer[7], false)) continue;
+            // 3. offer merchant id
+            if (!$this->merchantIdFilter('AWIN', $offer[2])) continue;
+            // 4. offer description
+            if (!$this->contentFilter($offer[5])) continue;
+
+            // Extend offer description when it is short
+            if (strlen($offer[5]) < 40) $offer[5] = $this->contentExtender($offer[5]);
+
+            // Save the offer
+            if ($this->putOffer($offer)) $count++;
         }
 
         return $count;
