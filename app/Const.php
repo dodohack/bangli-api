@@ -24,3 +24,8 @@ define ("TT_GENERIC",  "generic");  // General topic
 define ("TT_COUNTRY",  "country");
 define ("TT_CITY",     "city");     // Highlighted travel city
 define ("TT_ROUTE",    "route");    // Highlighted travel route
+
+// Affiliate platform name constant
+define ("AWIN", "AWIN");
+define ("LINKSHARE", "LINKSHARE");
+define ("WEBGAIN", "WEBGAIN");

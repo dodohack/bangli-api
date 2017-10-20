@@ -125,12 +125,12 @@ class AffiliateWindowController extends AffiliateController
         $record = $table->where('guid', $guid)->first();
         if (!$record)
             $record = $table->where('aff_id', $metadata[0])
-                ->where('aff_platform', 'AWIN')->first();
+                ->where('aff_platform', AWIN)->first();
 
         $merchantShort = array(
             'logo'   => $metadata[2],
             'aff_id' => $metadata[0],
-            'aff_platform' => 'AWIN',
+            'aff_platform' => AWIN,
             'tracking_url' => $metadata[7],
             'display_url'  => $metadata[14]
         );
@@ -216,7 +216,7 @@ class AffiliateWindowController extends AffiliateController
             // 3. end date
             if (!$this->dateFilter($offer[7], false)) continue;
             // 4. offer merchant id
-            if (!$this->merchantIdFilter('AWIN', $offer[2])) continue;
+            if (!$this->merchantIdFilter(AWIN, $offer[2])) continue;
             // 5. offer description
             if (!$this->contentFilter($offer[5])) continue;
 
@@ -263,7 +263,7 @@ class AffiliateWindowController extends AffiliateController
 
         $topicTable = $this->getEntityTable(ETYPE_TOPIC);
         $merchant = $topicTable->where('aff_id', $offer[2])
-            ->where('aff_platform', 'AWIN')
+            ->where('aff_platform', AWIN)
             ->with(['categories', 'offers'])->first();
 
         // We may can't find the merchant if merchant table is relative old.
@@ -373,11 +373,11 @@ class AffiliateWindowController extends AffiliateController
         // Delete record before create
         $table = $this->getEntityTable(ETYPE_TOPIC);
         $entity = $table->where('aff_id', $metadata[0])
-            ->where('aff_platform', 'AWIN')->first();
+            ->where('aff_platform', AWIN)->first();
 
         if ($entity)
             $table->where('aff_id', $metadata[0])
-                ->where('aff_platform', 'AWIN')->delete();
+                ->where('aff_platform', AWIN)->delete();
 
         if ($this->putMerchant($metadata)) {
             return response('SUCCESS');
@@ -390,7 +390,7 @@ class AffiliateWindowController extends AffiliateController
     {
         $table = $this->getEntityTable(ETYPE_TOPIC);
         $entity = $table->where('aff_id', $input[2])
-            ->where('aff_platform', 'AWIN')->first();
+            ->where('aff_platform', AWIN)->first();
 
         if ($entity) {
             if ($entity->offers->count()) {

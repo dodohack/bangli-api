@@ -6,8 +6,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\EntityController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\EntityController;
+use App\Models\Topic;
 
 class OfferController extends EntityController
 {
@@ -78,6 +79,15 @@ class OfferController extends EntityController
         $inputs = $request->all();
         // Set author_id for offer as indicate of manually modified.
         $inputs['author_id'] = $this->guard()->user()->id;
+
+        // Update tracking_url automatically
+        if (isset($inputs['display_url']) && isset($inputs['topics'])) {
+            $tracking_url = $this->autoPutTrackingUrl(
+                $inputs['display_url'], $inputs['topics'][0]);
+
+            if ($tracking_url)
+                $inputs['tracking_url'] = $tracking_url;
+        }
         return $this->putEntity($inputs['etype'], $inputs, 'id', $id);
     }
 
@@ -100,5 +110,27 @@ class OfferController extends EntityController
     public function deleteOffer(Request $request, $id)
     {
         return $this->deleteEntityReq($request, 'id', $id);
+    }
+
+    /**
+     * Update offer's tracking_url automatically
+     */
+    private function autoPutTrackingUrl($display_url, $topicId)
+    {
+        $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
+        if ($record) {
+            switch ($record['aff_platform']) {
+                case AWIN:
+                    return 'http://www.awin1.com/cread.php?awinaffid='
+                    . env('AWIN_ID') . '&awinmid=' . $record['aff_id']
+                    . '&p=' . urlencode($display_url);
+                case LINKSHARE:
+                case WEBGAIN:
+                default:
+                    return false;
+            }
+        }
+
+        return false;
     }
 }
