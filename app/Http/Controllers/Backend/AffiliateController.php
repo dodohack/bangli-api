@@ -55,8 +55,8 @@ class AffiliateController extends EntityController
             return false;
         }
 
-        // Read up to 10M data from returned stream
-        return $res->getBody()->read(1024*1024*10);
+        // Read up to 20M data from returned stream
+        return $res->getBody()->read(1024*1024*20);
     }
 
     /**
@@ -99,7 +99,7 @@ class AffiliateController extends EntityController
             // Skip empty lines
             if ($reg == '') continue;
             // Matches, return not pass
-            if (preg_match($reg, $text)) return false;
+            if (preg_match('/'.$reg.'/', $text)) return false;
         }
 
         return true;
@@ -121,7 +121,7 @@ class AffiliateController extends EntityController
             // Matches, return not pass
             if ($platform == $merchants[0] && $mid == $merchants[1]) return false;
         }
-        
+
         return true;
     }
 

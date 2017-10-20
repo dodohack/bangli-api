@@ -5,9 +5,7 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\Backend\AffiliateController;
-use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Storage;
 
 USE App\Models\Category;
 
@@ -21,11 +19,13 @@ class AffiliateWindowController extends AffiliateController
 
     public function __construct()
     {
+        parent::__construct();
         // Read Affiliate Window configuration from file .env.
         $this->awin_id      = env('AWIN_ID');
         $this->awin_pro_id  = env('AWIN_PROMOTION_ID');
         $this->awin_ads_pwd = env('AWIN_ADVERTISER_API_PWD');
 
+        // TODO: Get offers from all merchants even we are not joined.
         $this->awin_pro_api = env('AWIN_PROMOTION_API') . '/' .
             $this->awin_id . '/' . $this->awin_pro_id .
             '?promotionType=&categoryIds=&regionIds=&advertiserIds=&membershipStatus=joined&promotionStatus=';
@@ -41,6 +41,9 @@ class AffiliateWindowController extends AffiliateController
 
         $res = $this->retrieveData($this->awin_ads_api);
         if ($res) {
+            // Save a copy for debug purpose
+            Storage::disk('local')->put('awin_merchants.xls', $res);
+            // Update database
             $count = $this->putMerchants($res);
         }
 
@@ -52,6 +55,9 @@ class AffiliateWindowController extends AffiliateController
         $count = 0;
         $res = $this->retrieveData($this->awin_pro_api);
         if ($res) {
+            // Save a copy for debug purpose
+            Storage::disk('local')->put('awin_offers.xls', $res);
+            // Update datebase
             $count = $this->putOffers($res);
         }
 
@@ -64,8 +70,8 @@ class AffiliateWindowController extends AffiliateController
     private function putMerchants($res)
     {
         $count = 0;
-        // Explode the string into lines, must be double quoted "\n".
-        $lines = explode("\n", $res);
+        // Explode the string into lines
+        $lines = explode(PHP_EOL, $res);
 
         foreach ($lines as $line) {
             // Skip empty line
@@ -185,8 +191,8 @@ class AffiliateWindowController extends AffiliateController
     private function putOffers($res)
     {
         $count = 0;
-        // Expolode the string into lines, must be doulb quoted "\n"
-        $lines = explode("\n", $res);
+        // Explode the string into lines
+        $lines = explode(PHP_EOL, $res);
 
         foreach ($lines as $line) {
             // Skip empty line
@@ -197,13 +203,15 @@ class AffiliateWindowController extends AffiliateController
             //
             // Validate offer quality
             //
-            // 1. start date
+            // 1. Data integrity
+            if (count($offer) < 12 || !is_numeric($offer[0])) continue;
+            // 2. start date
             if (!$this->dateFilter($offer[6], true)) continue;
-            // 2. end date
+            // 3. end date
             if (!$this->dateFilter($offer[7], false)) continue;
-            // 3. offer merchant id
+            // 4. offer merchant id
             if (!$this->merchantIdFilter('AWIN', $offer[2])) continue;
-            // 4. offer description
+            // 5. offer description
             if (!$this->contentFilter($offer[5])) continue;
 
             // Extend offer description when it is short
@@ -234,9 +242,6 @@ class AffiliateWindowController extends AffiliateController
      */
     private function putOffer(Array $offer)
     {
-        // TODO: Skip some offer which is created long time ago
-        if (count($offer) < 12 || !is_numeric($offer[0])) return false;
-
         $input = array(
             'channel_id' => 1,
             // TODO: After introducing more criteria, we can safely set this to 'publish'

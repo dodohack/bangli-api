@@ -6,9 +6,7 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\Backend\AffiliateController;
-use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Storage;
 
 class LinkShareController extends AffiliateController
 {
@@ -18,6 +16,7 @@ class LinkShareController extends AffiliateController
 
     public function __construct()
     {
+        parent::__construct();
         $this->ls_id      = env('LINKSHARE_ID');
         $this->ls_ads_api = env('LINKSHARE_ADVERTISER_API');
         $this->ls_pro_api = env('LINKSHARE_COUPON_API');
