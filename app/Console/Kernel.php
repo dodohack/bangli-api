@@ -31,10 +31,10 @@ class Kernel extends ConsoleKernel
         //$schedule->command('reset:edit_lock')->everyFiveMinutes();
 
         // Purge expired offer daily
-        $schedule->command('offer:purge-expired')->daily();
+        $schedule->command('offer:purge-expired')->dailyAt('2:00');
 
         // Update offer daily
-        $schedule->command('offer:update')->daily();
+        $schedule->command('offer:update')->dailyAt('2:10');
 
         // Update merchant weekly
         $schedule->command('merchant:update')->weekly();
