@@ -21,7 +21,7 @@ class OfferFilterController extends Controller
 
     public function get(Request $request, $type)
     {
-        $ret = OfferFilter::where('type', $type)->get()->toJson();
+        $ret = OfferFilter::where('type', $type)->first()->toJson();
         return parent::success($request, $ret);
     }
 
