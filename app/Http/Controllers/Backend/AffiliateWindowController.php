@@ -35,6 +35,9 @@ class AffiliateWindowController extends AffiliateController
             '&format=CSV&filter=SUBSCRIBED_ALL';
     }
 
+    /**
+     * Retrieve and update merchants info
+     */
     public function updateMerchants()
     {
         $count = 0;
@@ -50,6 +53,9 @@ class AffiliateWindowController extends AffiliateController
         return response($count);
     }
 
+    /**
+     * Retrieve and update offers info
+     */
     public function updateOffers()
     {
         $count = 0;

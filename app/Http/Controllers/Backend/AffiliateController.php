@@ -10,6 +10,7 @@ use App\Http\Controllers\EntityController;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
+use App\Models\Offer;
 use App\Models\OfferFilter;
 
 class AffiliateController extends EntityController
@@ -42,6 +43,16 @@ class AffiliateController extends EntityController
     public function updateOffers()
     {
         assert("Child class must implement");
+    }
+
+    /**
+     * Remove expired offers, currently we will delete offer expires more
+     * than 1 day.
+     */
+    public function purgeExpiredOffers()
+    {
+        $yesterday = date('Y-m-d', time() - 60 * 60 * 24) . ' 23:59:59';
+        Offer::where('ends', '<', $yesterday)->delete();
     }
 
     protected function retrieveData($api)

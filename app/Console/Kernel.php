@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ResetEditLock::class,
         \App\Console\Commands\SendEmails::class,
         \App\Console\Commands\UpdateOffers::class,
+        \App\Console\Commands\PurgeExpiredOffers::class,
         \App\Console\Commands\UpdateMerchants::class
     ];
 
@@ -29,10 +30,14 @@ class Kernel extends ConsoleKernel
     {
         //$schedule->command('reset:edit_lock')->everyFiveMinutes();
 
+        // Purge expired offer daily
+        $schedule->command('offer:purge-expired')->daily();
+
         // Update offer daily
         $schedule->command('offer:update')->daily();
 
         // Update merchant weekly
         $schedule->command('merchant:update')->weekly();
+
     }
 }
