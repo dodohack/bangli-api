@@ -263,7 +263,8 @@ class AffiliateWindowController extends AffiliateController
 
         $topicTable = $this->getEntityTable(ETYPE_TOPIC);
         $merchant = $topicTable->where('aff_id', $offer[2])
-            ->where('aff_platform', 'AWIN')->with(['categories'])->first();
+            ->where('aff_platform', 'AWIN')
+            ->with(['categories', 'offers'])->first();
 
         // We may can't find the merchant if merchant table is relative old.
         if (!$merchant) return false;
@@ -288,8 +289,8 @@ class AffiliateWindowController extends AffiliateController
             }
         }
 
-        // Remove old offer
-        if ($found && $canUpdate) {
+        // Remove old offer we just found
+        if ($canUpdate) {
             $table = $this->getEntityTable(ETYPE_OFFER);
             $table->where('id', $offerId)->delete();
         }
@@ -301,10 +302,10 @@ class AffiliateWindowController extends AffiliateController
             $record = $table->create($input);
             // Update the pivot table
             $record->topics()->sync([$merchant->id]);
-	    // FIXME: Some merchants have empty categories!
+            // FIXME: Some merchants have empty categories!
             // Update offer category
-	    if(count($merchant->categories))
-		$record->categories()->sync([$merchant->categories[0]->id]);
+            if(count($merchant->categories))
+                $record->categories()->sync([$merchant->categories[0]->id]);
         }
 
         return true;

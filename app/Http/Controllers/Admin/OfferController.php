@@ -75,7 +75,10 @@ class OfferController extends EntityController
      */
     public function putOffer(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        $inputs = $request->all();
+        // Set author_id for offer as indicate of manually modified.
+        $inputs['author_id'] = $this->guard()->user()->id;
+        return $this->putEntity($inputs['etype'], $inputs, 'id', $id);
     }
 
     /**
