@@ -653,7 +653,9 @@ class EntityController extends Controller
 
         //var_export(\Illuminate\Support\Facades\DB::getQueryLog());
 
+        // FIXME: We can't do it here as it is shared by both FE and BE.
         // Shorten entity title to 76 chars if it is too long
+        /*
         $length = count($records);
         for($i = 0; $i < $length; $i++) {
             $record = $records[$i];
@@ -663,6 +665,7 @@ class EntityController extends Controller
                 $newStr = $newStr . '...';
             $records[$i]['title'] = $newStr;
         }
+        */
 
         return ['total' => $total, 'entities' => $records];
     }
