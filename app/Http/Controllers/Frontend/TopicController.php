@@ -42,9 +42,9 @@ class TopicController extends FeController
         if (isset($inputs['relations']))
             $relations = $this->setupRelations($inputs['relations']);
 
-        $result = $this->getArrayEntitiesByKey($request->all(), $relations,
+        $result = $this->getArrayEntitiesByKey($inputs, $relations,
             $this->relationCount, $this->topicsColumns, 'full');
-
+        // FIXME: Error handling.
         return $this->success($request, json_encode($result));
     }
 

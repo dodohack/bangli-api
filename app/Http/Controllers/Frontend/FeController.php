@@ -132,8 +132,6 @@ class FeController extends EntityController
             case ETYPE_POST:        return new FePost;
             case ETYPE_OFFER:       return new FeOffer;
             case ETYPE_PAGE:        return new FePage;
-            case ETYPE_ADVERTISE:   return new FeAdvertise;
-            case ETYPE_COMMENT:     return new FeComment;
             default:
                 return parent::getEntityTable($etype);
         }
@@ -155,8 +153,6 @@ class FeController extends EntityController
             case ETYPE_POST:         return 'fe_view_posts';
             case ETYPE_PAGE:         return 'fe_view_pages';
             case ETYPE_OFFER:        return 'fe_view_offers';
-            case ETYPE_ADVERTISE:    return 'fe_view_advertisers';
-            case ETYPE_COMMENT:      return 'fe_view_comments';
             default:
                 return parent::getTableName($etype);
         }

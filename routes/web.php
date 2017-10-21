@@ -24,9 +24,12 @@ $router->group(
     $router->get('/topics/{guid}',  'TopicController@getTopic');
 
     // Offer
-    $router->get('/offer/{id}', 'OfferController@getOffer');
-    $router->get('/offers', 'OfferController@getOffers');
+    $router->get('/offer/{id}',     'OfferController@getOffer');
+    $router->get('/offers',         'OfferController@getOffers');
 
+    // Advertisement
+    $router->get('/advertises',       'AdvertiseController@getAds');
+    $router->get('/advertises/{id}',  'AdvertiseController@getAd');
 
     /*************************************************************************
      * Batch requests - retrieve any groups of any records, this enables
