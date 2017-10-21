@@ -60,6 +60,8 @@ class EntityController extends Controller
     protected $topicHasFeaturedOffer;
     protected $topicGuidStarts;
 
+    protected $position;  // Advertise position
+
     // Sorting
     protected $orderBy;   // Order by 'table column name'
     protected $order;     // Sort by 'desc' or 'asc'
@@ -697,6 +699,10 @@ class EntityController extends Controller
         //    $db = $this->filterByCommentAble($db, $tableName, $this->cType, $this->cId);
         //}
 
+        // Advertise position
+        if ($this->position)
+            $db = $db->where('position', $this->position);
+
         // Query with category
         if ($this->category)
             $db = $this->filterByCategory($db, $tableName, $this->category);
@@ -769,6 +775,9 @@ class EntityController extends Controller
         $this->cType = isset($inputs['cType']) ? $inputs['cType'] : null;
         /* Filter: entity channel */
         $this->cId = isset($inputs['cId']) ? $inputs['cId'] : null;
+
+        /* Filter: advertise position */
+        $this->position = isset($inputs['position']) ? $inputs['position'] : null;
 
         /* Filter: entity has given category */
         $this->category = isset($inputs['category']) ? $inputs['category'] : null;

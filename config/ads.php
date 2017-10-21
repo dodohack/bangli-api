@@ -21,9 +21,7 @@ return [
     'positions' => [
         // Desktop only ads
         ['ad-pc-top-banner', 728, 80, '桌面顶部位置横幅'],
-        ['ad-pc-sidebar-banner-1', 400, 200, '桌面侧栏广告位1'],
-        ['ad-pc-sidebar-banner-2', 400, 300, '桌面侧栏广告位2'],
-        ['ad-pc-sidebar-banner-3', 400, 300, '桌面侧栏广告位3'],
+        ['ad-pc-sidebar-banner', 400, 250, '桌面侧栏广告位'],
 
         // Mobile only ads
         ['ad-xs-top-banner', 500, 200, '手机版顶部横幅'],

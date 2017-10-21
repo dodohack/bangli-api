@@ -30,7 +30,7 @@ class FeController extends EntityController
     public function getArrayEntitiesByKey($inputs, $relations, $relCount,
                                           $columns, $pagination)
     {
-        // Alway query published entities for frontend.
+        // Always query published entities for frontend.
         $inputs['status'] = 'publish';
 
         // TODO: should always query entity with 'publish' status.
