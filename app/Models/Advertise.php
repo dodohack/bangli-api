@@ -11,25 +11,36 @@ class Advertise extends Model
 {
     protected $table = 'advertises';
     protected $hidden = ['pivot'];
-    protected $fillable = ['id', 'state', 'device', 'position', 'location',
-        'image_id', 'title', 'description', 'target_url', 'started_at',
-        'ended_at'];
+    protected $fillable = ['id', 'channel_id', 'status', 'position', 'location',
+        'title', 'description', 'image_url', 'target_url', 'starts', 'ends'];
 
-    /*
-     * Get the editor that owns the deal
-     */
-    public function editor()
+    public function simpleColumns()
     {
-        return $this->belongsTo('App\Models\User', 'editor_id');
+        return ['advertises.id', 'channel_id', 'status', 'position', 'location',
+            'title', 'image_url', 'target_url', 'starts', 'ends'];
     }
 
-    /*
-     * Get deal's statistic
-     */
-    public function statistics()
+    public function fullColumns()
     {
-        return $this->morphMany('App\Models\Statistic', 'content');
+        // All columns are needed by default
+        return null;
     }
+
+    public function simpleRelations()
+    {
+        // No relationship by default
+        return null;
+    }
+
+    public function fullRelations()
+    {
+        // No relationship by default
+        return null;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // Relations
 
     /*
      * query scope

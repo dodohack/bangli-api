@@ -28,7 +28,9 @@ class SysController extends Controller
         // Available thumbnail configs
         $thumbs = config('filesystems.thumbs');
 
-        $json = compact('roles', 'thumbs');
+        $positions = config('ads.positions');
+
+        $json = compact('roles', 'thumbs', 'positions');
         return parent::success($request, $json);
     }
 }

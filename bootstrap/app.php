@@ -35,6 +35,7 @@ $app->configure('view');
 
 
 /* Add customized status code config file */
+$app->configure('ads');
 $app->configure('auth');
 $app->configure('database');
 $app->configure('cache');

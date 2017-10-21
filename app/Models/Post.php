@@ -35,13 +35,13 @@ class Post extends Model
 
     public function simpleRelations()
     {
-        // All relations are needed by default
+        // No relationship by default
         return null;
     }
 
     public function fullRelations()
     {
-        // All relations are needed by default
+        // No relationship by default
         return null;
     }
 
