@@ -12,12 +12,12 @@ class Advertise extends Model
     protected $table = 'advertises';
     protected $hidden = ['pivot'];
     protected $fillable = ['id', 'channel_id', 'status', 'position', 'location',
-        'title', 'description', 'image_url', 'target_url', 'starts', 'ends'];
+        'rank', 'title', 'description', 'image_url', 'target_url', 'starts', 'ends'];
 
     public function simpleColumns()
     {
         return ['advertises.id', 'channel_id', 'status', 'position', 'location',
-            'title', 'image_url', 'target_url', 'starts', 'ends'];
+            'rank', 'title', 'image_url', 'target_url', 'starts', 'ends'];
     }
 
     public function fullColumns()
