@@ -18,7 +18,7 @@ class TopicController extends FeController
     /* Columns to be retrieved for topics list */
     private $topicsColumns = ['topics.id', 'topics.channel_id',
         'type_id', 'ranking', 'guid', 'logo',
-        'title', 'title_cn', 'updated_at'];
+        'title', 'title_cn', 'topics.description', 'updated_at'];
 
     /* Relations to be queried with topic/topics */
     private $topicsRelations = [];
