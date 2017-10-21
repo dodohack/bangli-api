@@ -82,7 +82,7 @@ class OfferController extends EntityController
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
-            $tracking_url = $this->autoPutTrackingUrl(
+            $tracking_url = $this->autoTrackingUrl(
                 $inputs['display_url'], $inputs['topics'][0]);
 
             if ($tracking_url)
@@ -98,7 +98,20 @@ class OfferController extends EntityController
      */
     public function postOffer(Request $request)
     {
-        return $this->postEntityReq($request);
+        $inputs = $request->all();
+        // Set author_id for offer as indicate of manually modified.
+        $inputs['author_id'] = $this->guard()->user()->id;
+
+        // Update tracking_url automatically
+        if (isset($inputs['display_url']) && isset($inputs['topics'])) {
+            $tracking_url = $this->autoTrackingUrl(
+                $inputs['display_url'], $inputs['topics'][0]);
+
+            if ($tracking_url)
+                $inputs['tracking_url'] = $tracking_url;
+        }
+
+        return $this->postEntity($inputs['etype'], $inputs);
     }
 
     /**
@@ -115,7 +128,7 @@ class OfferController extends EntityController
     /**
      * Update offer's tracking_url automatically
      */
-    private function autoPutTrackingUrl($display_url, $topicId)
+    private function autoTrackingUrl($display_url, $topicId)
     {
         $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
         if ($record) {
