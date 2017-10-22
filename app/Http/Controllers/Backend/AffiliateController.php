@@ -109,8 +109,8 @@ class AffiliateController extends EntityController
         foreach($this->contentFilters as $reg) {
             // Skip empty lines
             if ($reg == '') continue;
-            // Matches, return not pass
-            if (preg_match('/'.$reg.'/', $text)) return false;
+            // Case insensitive matches, return not pass
+            if (preg_match('/'.$reg.'/i', $text)) return false;
         }
 
         return true;
