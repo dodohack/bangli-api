@@ -86,7 +86,7 @@ trait EntityFilterTrait
     }
 
     /**
-     * Filter an entity by if it is featured
+     * Filter an entity by if it is [level 1 or 2] featured
      * @param $table
      * @param $tableName
      * @param $featured
@@ -95,7 +95,7 @@ trait EntityFilterTrait
     public function filterByFeatured($table, $tableName, $featured)
     {
         if ($featured)
-            return $table->where('featured', true);
+            return $table->where('featured', $featured);
         else
             return $table->where('featured', '<>', true);
     }
