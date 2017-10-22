@@ -109,7 +109,7 @@ class TopicController extends EntityController
         $editor_id = $this->guard()->user()->id;
         if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $editor_id;
 
-        return $this->postEntity($inputs['etypes'], $inputs);
+        return $this->postEntity($inputs['etype'], $inputs);
     }
 
     /**
