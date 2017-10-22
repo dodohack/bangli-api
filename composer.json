@@ -10,7 +10,8 @@
         "vlucas/phpdotenv": "~2.2",
         "tymon/jwt-auth": "1.0.0-rc.1",
         "guzzlehttp/guzzle": "~6.3",
-        "league/flysystem": "^1.0"
+        "league/flysystem": "^1.0",
+        "php-mime-mail-parser/php-mime-mail-parser": "^2.9.2"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
