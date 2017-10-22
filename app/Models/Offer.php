@@ -59,4 +59,14 @@ class Offer extends Model
     {
         return $query->where('status', 'publish');
     }
+
+    /**
+     * Query scope: offer is started and is not expired
+     * @param $query
+     */
+    public function scopeValid($query)
+    {
+        $now = date('Y-m-d H:i:s');
+        return $query->where('starts', '<=', $now)->where('ends', '>=', $now);
+    }
 }

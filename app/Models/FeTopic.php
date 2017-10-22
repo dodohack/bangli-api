@@ -101,7 +101,7 @@ class FeTopic extends Topic
     {
         return $this->belongsToMany('App\Models\Offer',
             'topic_has_offer', 'topic_id', 'offer_id')
-            ->publish();
+            ->publish()->valid();
     }
 
 }
