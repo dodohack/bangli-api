@@ -82,7 +82,15 @@ class TopicController extends EntityController
      */
     public function putTopic(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id,
+        $inputs = $request->all();
+
+        // Set editor_id if client does not set, this is required.
+        // Affiliate related cronjob will look into editor_id as a flag of
+        // if a topic is modified manually or not.
+        $editor_id = $this->guard()->user()->id;
+        if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $editor_id;
+
+        return $this->putEntity($inputs['etype'], $inputs, 'id', $id,
             $this->topicRelations, null/* columns */, $this->relationCount);
     }
 
@@ -93,7 +101,15 @@ class TopicController extends EntityController
      */
     public function postTopic(Request $request)
     {
-        return $this->postEntityReq($request);
+        $inputs = $request->all();
+
+        // Set editor_id if client does not set, this is required.
+        // Affiliate related cronjob will look into editor_id as a flag of
+        // if a topic is modified manually or not.
+        $editor_id = $this->guard()->user()->id;
+        if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $editor_id;
+
+        return $this->postEntity($inputs['etypes'], $inputs);
     }
 
     /**
