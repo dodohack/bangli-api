@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Traits\EntityFilterTrait;
 use App\Http\Controllers\Traits\PaginatorTrait;
+use App\Http\Controllers\Traits\ContentFilterTrait;
 use App\Models\Post;
 use App\Models\Page;
 use App\Models\Topic;
@@ -25,7 +26,7 @@ use App\Models\Comment;
 
 class EntityController extends Controller
 {
-    use EntityFilterTrait, PaginatorTrait;
+    use EntityFilterTrait, PaginatorTrait, ContentFilterTrait;
 
     // Table relations, count of relation and columns to be retrieved
     protected $relations;
