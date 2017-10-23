@@ -160,6 +160,17 @@ $router->group([
     /* Delete a tag */
     $router->delete('/tags/{id}',     'CmsTagController@deleteTag');
 
+
+    /* Get a new topic type */
+    $router->get('/topic_types/{id}',     'CmsTopicTypeController@get');
+    /* Create a new topic type */
+    $router->post('/topic_types',         'CmsTopicTypeController@post');
+    /* Update a topic type */
+    $router->put('/topic_types/{id}',     'CmsTopicTypeController@put');
+    /* Delete a topic type */
+    $router->delete('/topic_types/{id}',  'CmsTopicTypeController@delete');
+
+
     /* API: /topics?page=<num>?status=<string>&editor=<num>&per_page=<num> */
     /* Get list of topics */
     $router->get('/topics',          'TopicController@getTopics');
