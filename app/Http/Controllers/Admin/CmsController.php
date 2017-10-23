@@ -45,7 +45,7 @@ class CmsController extends EntityController
             ->toArray();
 
         // Cms topic types
-        $topic_types = TopicType::get(['id', 'channel_id', 'name'])->toArray();
+        $topic_types = TopicType::get(['id', 'channel_id', 'name', 'slug'])->toArray();
 
         // FIXME: Hardcoded table names!!
         // Post status and occurrences
