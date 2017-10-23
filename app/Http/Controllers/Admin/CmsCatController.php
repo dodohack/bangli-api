@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 
-use App\Models\Cms\Category;
+use App\Models\Category;
 
 class CmsCatController extends CmsController
 {

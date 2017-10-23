@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 
-use App\Models\Cms\Tag;
+use App\Models\Tag;
 
 class CmsTagController extends CmsController
 {
