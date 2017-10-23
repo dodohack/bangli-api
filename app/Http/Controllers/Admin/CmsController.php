@@ -41,7 +41,7 @@ class CmsController extends EntityController
             ->toArray();
 
         // Cms categories with number of posts/topics/deals per category
-        $categories = Category::get(['id', 'channel_id', 'parent_id', 'name'])
+        $categories = Category::get(['id', 'channel_id', 'parent_id', 'name', 'slug'])
             ->toArray();
 
         // Cms topic types
