@@ -191,17 +191,22 @@ trait EntityFilterTrait
      */
     public function filterBySearchString($table, $etype, $text)
     {
-        $text = '%' . $text . '%';
+        $text = $text . '%';
         return $table->where(function ($query) use ($etype, $text) {
-            if ($etype == ETYPE_TOPIC)  // Search in topic
-                $query->where('title', 'like', $text)
-                    ->orWhere('guid', 'like', $text);
-            else if ($etype == ETYPE_ATTACHMENT) // Search in attachment
-                $query->where('title', 'like', $text)
-                    ->orWhere('desc', 'like', $text)
-                    ->orWhere('filename', 'like', $text);
-            else // Search in any other entities
-                $query->where('title', 'like', $text);
+            switch ($etype) {
+                case ETYPE_TOPIC:  // Search in topic for starting with
+                    return $query->where('title', 'like', $text)
+                        ->orWhere('guid', 'like', $text)
+                        ->orWhere('title_cn', 'like', $text);
+                case ETYPE_ATTACHMENT: // Search in attachment for any match
+                    $text = '%' . $text;
+                    return $query->where('title', 'like', $text)
+                        ->orWhere('desc', 'like', $text)
+                        ->orWhere('filename', 'like', $text);
+                default: // Search in any other entities for any match
+                    $text = '%' . $text;
+                    return $query->where('title', 'like', $text);
+            }
         });
     }
 }
