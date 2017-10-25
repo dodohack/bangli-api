@@ -86,7 +86,7 @@ trait EntityFilterTrait
     }
 
     /**
-     * Filter an entity by if it is [level 1 or 2] featured
+     * Filter an entity by if it is [level 1 or/and 2] featured
      * @param $table
      * @param $tableName
      * @param $featured
@@ -94,10 +94,20 @@ trait EntityFilterTrait
      */
     public function filterByFeatured($table, $tableName, $featured)
     {
-        if ($featured)
+        if (is_numeric($featured))
+        {
+            // Single featured, say featured=2
             return $table->where('featured', $featured);
-        else
+        }
+        else if (is_string($featured))
+        {
+            // Multiple featured, say featured=1,2
+            $features = explode(',', $featured);
+            if (count($features))
+                return $table->whereIn('featured', $features);
+        } else {
             return $table->where('featured', '<>', true);
+        }
     }
 
     /**
