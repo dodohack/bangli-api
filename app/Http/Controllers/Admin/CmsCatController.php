@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 
 
 use App\Models\Category;
+use App\Models\PostHasCategory;
+use App\Models\TopicHasCategory;
+use App\Models\OfferHasCategory;
 
 class CmsCatController extends Controller
 {
@@ -56,15 +59,31 @@ class CmsCatController extends Controller
     }
 
     /**
-     * Delete a category
+     * Delete a category:
+     * If a child category is deleted, all its relations will be auto added to
+     * its parent category.
+     * If it is a root category and there is relationship with it, it can't be
+     * deleted(this is done by database FK constraint).
      */
     public function deleteCategory(Request $request, $id)
     {
-        $numDeleted = Category::destroy($id);
+        $cat = Category::find($id);
 
-        if ($numDeleted)
+        // Move relationships to its parent first
+        if ($cat->parent_id != 0) {
+            PostHasCategory::where('cat_id', $id)->update(['cat_id' => $cat->parent_id]);
+            TopicHasCategory::where('cat_id', $id)->update(['cat_id' => $cat->parent_id]);
+            OfferHasCategory::where('cat_id', $id)->update(['cat_id' => $cat->parent_id]);
+        }
+
+        // Now we can safely destroy the category when relationships are removed
+        $ret = Category::destroy($id);
+
+        if ($ret)
             return parent::success($request, $id);
         else
             return response('FAIL', 401);
     }
+
+
 }
