@@ -72,7 +72,7 @@ class AttachmentController extends EntityController
             $count = $this->genThumbnails($starts, $ends);
         }
 
-        return parent::success($request);
+        return parent::success($request, ['status' => 'ok']);
     }
 
     /**
