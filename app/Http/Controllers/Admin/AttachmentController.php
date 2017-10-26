@@ -249,10 +249,6 @@ class AttachmentController extends EntityController
      */
     private function genThumbnails($starts, $ends)
     {
-        // Regenerate thumbnails
-        $starts = isset($inputs['starts']) ? $inputs['starts'] : null;
-        $ends   = isset($inputs['ends']) ? $inputs['ends'] : null;
-
         $db = new Attachment;
         if ($starts) $db = $db->where('updated_at', '>=', $starts);
         if ($ends)   $db = $db->where('updated_at', '<=', $ends);
