@@ -33,8 +33,7 @@ class FeController extends EntityController
         // Always query published entities for frontend.
         $inputs['status'] = 'publish';
 
-        // TODO: should always query entity with 'publish' status.
-        $result = $this->getArrayEntities($inputs['etype'], $inputs,
+        $result = $this->getEntities($inputs['etype'], $inputs,
             $relations, $relCount, $columns, $pagination);
 
         // etype should be attached to each group of entities

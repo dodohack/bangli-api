@@ -22,8 +22,9 @@ class CmsCatController extends Controller
      */
     public function getCategory(Request $request, $id)
     {
-        $json = Category::find($id)->toJson();
-        return parent::success($request, $json);
+        $ret = Category::where('id', $id)->first();
+
+        return parent::success($request->get('callback'), null, $ret);
     }
 
     /**
@@ -31,15 +32,11 @@ class CmsCatController extends Controller
      */
     public function postCategory(Request $request)
     {
-        $input = $request->except('id');
+        $inputs = $request->except('id');
 
-        $newTag = Category::create($input);
+        $newTag = Category::create($inputs);
 
-        if ($newTag) {
-            return parent::success($request, json_encode($newTag));
-        } else {
-            return response('FAIL', 401);
-        }
+        return parent::responseReq($request, $newTag, 'post category fail');
     }
 
     /**
@@ -51,11 +48,7 @@ class CmsCatController extends Controller
 
         $newCat = Category::find($id)->update($input);
 
-        if ($newCat) {
-            return $this->getCategory($request, $id);
-        } else {
-            return response('FAIL', 401);
-        }
+        return parent::responseReq($request, $newCat, 'put category fail');
     }
 
     /**
@@ -79,10 +72,7 @@ class CmsCatController extends Controller
         // Now we can safely destroy the category when relationships are removed
         $ret = Category::destroy($id);
 
-        if ($ret)
-            return parent::success($request, $id);
-        else
-            return response('FAIL', 401);
+        return parent::responseReq($request, $ret, 'delete category error');
     }
 
 

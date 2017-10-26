@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 
-use App\Http\Controllers\Controller;
 use App\Models\FeTopic;
 use App\Models\FeOffer;
 use App\Models\FeViewRelatedTopic;
@@ -46,7 +45,7 @@ class TopicController extends FeController
         $result = $this->getArrayEntitiesByKey($inputs, $relations,
             $this->relationCount, $this->topicsColumns, 'full');
         // FIXME: Error handling.
-        return Controller::success($request, json_encode($result));
+        return parent::successReq($request, $result);
     }
 
     /**
@@ -60,7 +59,7 @@ class TopicController extends FeController
         $result = $this->getGroupedEntities($request->all(),
             null, $this->topicsColumns);
 
-        return $this->success($request, $request->get('etype'), $result);
+        return $this->successReq($request, $result);
     }
 
     // FIXME: Merge FeToic::topic_relations/topic_columns with
@@ -71,13 +70,12 @@ class TopicController extends FeController
         $etype = $inputs['etype'];
         $table  = $this->getEntityTable($etype);
 
-        $topic = $this->getEntityObj($etype, 'guid', $guid, $table,
+        $topic = $this->getEntityInternal($etype, 'guid', $guid, $table,
             FeTopic::topic_relations(), FeTopic::topic_columns(),
             $this->relationCount);
 
         if (!$topic) {
-            // FIXME: Return content
-            return parent::error($etype, 'topic not found');
+            return parent::errorReq($request, 'topic not found');
         }
 
         // Get related offers
@@ -87,22 +85,20 @@ class TopicController extends FeController
             case TT_BRAND:
             case TT_MERCHANT:
             case TT_PRODUCTS:
-                $offers = $topic->offers()->get();
-                break;
             case TT_GENERIC:
             case TT_COUNTRY:
             case TT_CITY:
             case TT_ROUTE:
             case TT_PRODUCT:
-                dd("TODO");
-                break;
             default:
+                // FIXME: Always return offers for all kind of topic
+                $offers = $topic->offers()->get();
                 break;
         }
 
         $topic['offers'] = $offers;
 
-        return parent::successV2($inputs, $etype, $topic);
+        return $this->successReq($request, $topic);
     }
 
     /**

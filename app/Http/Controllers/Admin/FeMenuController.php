@@ -18,8 +18,8 @@ class FeMenuController extends Controller
      */
     public function getFeMenus(Request $request)
     {
-        $json = Menu::get()->toJson();
-        return parent::success($request, $json);
+        $menu = Menu::get();
+        return parent::successReq($request, $menu);
     }
 
     /**
@@ -27,8 +27,8 @@ class FeMenuController extends Controller
      */
     public function getFeMenu(Request $request, $id)
     {
-        $json = Menu::find($id)->toJson();
-        return parent::success($request, $json);
+        $menu = Menu::find($id);
+        return parent::successReq($request, $menu);
     }
 
     /**
@@ -41,9 +41,9 @@ class FeMenuController extends Controller
         $newMenu = Menu::create($input);
 
         if ($newMenu) {
-            return parent::success($request, json_encode($newMenu));
+            return parent::successReq($request, $newMenu);
         } else {
-            return response('FAIL', 401);
+            return parent::errorReq($request, 'post femenu error');
         }
     }
 
@@ -57,9 +57,9 @@ class FeMenuController extends Controller
         $newMenu = Menu::find($id)->update($input);
 
         if ($newMenu) {
-            return $this->getFeMenu($request, $id);
+            return parent::successReq($request, $newMenu);
         } else {
-            return response('FAIL', 401);
+            return parent::errorReq($request, 'put femenu error');
         }
     }
 
@@ -71,8 +71,8 @@ class FeMenuController extends Controller
         $numDeleted = Menu::destroy($id);
 
         if ($numDeleted)
-            return parent::success($request, $id);
+            return parent::successReq($request, $id);
         else
-            return response('FAIL', 401);
+            return parent::errorreq($request, 'delete femenu error');
     }
 }

@@ -9,7 +9,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Traits\EntityFilterTrait;
 use App\Http\Controllers\Traits\PaginatorTrait;
@@ -67,6 +66,11 @@ class EntityController extends Controller
     protected $orderBy;   // Order by 'table column name'
     protected $order;     // Sort by 'desc' or 'asc'
 
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * Get the guard to be used during authentication.
      * @return mixed
@@ -74,58 +78,6 @@ class EntityController extends Controller
     protected function guard()
     {
         return Auth::guard();
-    }
-
-    /**
-     * Overwrite parent function to force caller to always pass etype as
-     * first returned element
-     * @param Request $request
-     * @param $etype - entity type
-     * @param $array - entity record to be returned
-     * @return json string
-     */
-    public function success(Request $request, $etype, $array)
-    {
-        $array['etype'] = $etype;
-        //$ret = array_merge(['etype' => $etype], $array);
-        return parent::success($request, json_encode($array));
-    }
-
-    public function successV2($inputs, $etype, $array)
-    {
-        $array['etype'] = $etype;
-        //$ret = array_merge(['etype' => $etype], $array);
-        return parent::successV2($inputs, json_encode($array));
-    }
-
-    public function error($etype, $msg)
-    {
-        $ret = ['etype' => $etype, 'msg' => $msg];
-        return parent::error(json_encode($ret));
-    }
-
-    /**
-     * Get a list of entities
-     * @param $etype
-     * @param $inputs
-     * @param null $relations
-     * @param null $relCount
-     * @param null $columns
-     * @param string $pagination
-     * @return array json array
-     */
-    protected function getEntities($etype,
-                                   $inputs,
-                                   $relations = null,
-                                   $relCount = null,
-                                   $columns = null,
-                                   $pagination = 'full')
-    {
-        $entities = $this->getArrayEntities($etype, $inputs,
-            $relations, $relCount, $columns, $pagination);
-
-        // Return json array
-        return $this->successV2($inputs, $etype, $entities);
     }
 
     /**
@@ -176,12 +128,12 @@ class EntityController extends Controller
      * @param string $pagination
      * @return array
      */
-    protected function getArrayEntities($etype,
-                                        $inputs,
-                                        $relations = null,
-                                        $relCount = null,
-                                        $columns = null,
-                                        $pagination = 'full')
+    protected function getEntities($etype,
+                                   $inputs,
+                                   $relations = null,
+                                   $relCount = null,
+                                   $columns = null,
+                                   $pagination = 'full')
     {
         $this->pagination = $pagination;
 
@@ -225,30 +177,6 @@ class EntityController extends Controller
         return $ret;
     }
 
-
-    /**
-     * Get an entity with it's relations
-     * @param $etype - entity type
-     * @param $inputs - request inputs
-     * @param $key - 'id' for post or 'guid' topic
-     * @param $table - table to query, optional
-     * @param $relations - entity relation tables to be queried
-     * @param $columns - entity table columns to be queried
-     * @return string
-     */
-    protected function getEntity($etype,
-                                 $inputs, $key, $id,
-                                 $table = null,
-                                 $relations = null,
-                                 $columns = null,
-                                 $count = null)
-    {
-        $entity = $this->getEntityObj($etype, $key, $id,
-            $table, $relations, $columns, $count);
-
-        return $this->successV2($inputs, $etype, $entity);
-    }
-
     /**
      * Get an entity object with it's relations
      * @param $etype - entity type
@@ -258,16 +186,16 @@ class EntityController extends Controller
      * @param $columns - entity table columns to be queried
      * @return string
      */
-    protected function getEntityObj($etype, $key, $id,
-                                    $table = null,
-                                    $relations = null,
-                                    $columns = null,
-                                    $relCount = null)
+    protected function getEntityInternal($etype, $key, $id,
+                                         $table = null,
+                                         $relations = null,
+                                         $columns = null,
+                                         $relCount = null)
     {
         if (!$table) {
             $db = $this->getEntityTable($etype);
             if (!$db)
-                return ['etype' => $etype, 'error' => 'Unhandled entity type'];
+                return false;
         } else {
             $db = $table;
         }
@@ -279,22 +207,6 @@ class EntityController extends Controller
 
         if ($columns)   $entity = $db->first($columns);
         else            $entity = $db->first();
-
-
-        // Shorten topic's offer relationship title to 76 chars
-        // We need to have a read-more at client side
-        /*
-        if (array_search('offers', $relations) !== FALSE) {
-            $relLength = count($entity['offers']);
-            for($j = 0; $j < $relLength; $j++) {
-                $oldRelStr = $entity['offers'][$j]['title'];
-                $newRelStr = mb_substr($oldRelStr, 0, 76);
-                if (mb_substr($newRelStr, -1) != mb_strstr($oldRelStr, -1))
-                    $newRelStr = $newRelStr . '...';
-                $entity['offers'][$j]['title'] = $newRelStr;
-            }
-        }
-        */
 
         return $entity;
     }
@@ -309,24 +221,11 @@ class EntityController extends Controller
                                     $columns = null,
                                     $relCount = null)
     {
-        $inputs = $request->all();
-        return $this->getEntity($inputs['etype'], $inputs, $key, $id,
+        $etype = $request->get('etype');
+        $entity = $this->getEntityInternal($etype, $key, $id,
             $table, $relations, $columns, $relCount);
-    }
 
-    /**
-     * Helper function of getEntity returns an collection
-     */
-    protected function getEntityReqObj(Request $request,
-                                       $key, $id,
-                                       $table = null,
-                                       $relations = null,
-                                       $columns = null,
-                                       $relCount = null)
-    {
-        $inputs = $request->all();
-        return $this->getEntityObj($inputs['etype'], $key, $id,
-            $table, $relations, $columns, $relCount);
+        return $this->responseReq($request, $entity, 'get entity error');
     }
 
     /**
@@ -349,9 +248,7 @@ class EntityController extends Controller
         // Create the entity
         $record = $table->create($inputs);
         if (!$record) {
-            $msg = ['etype' => $etype,
-                'error' => 'Fail to create a entity'];
-            return $this->error(json_encode($msg));
+            return $this->error($inputs['callback'], $etype, 'post entity fail');
         }
 
         // Update entity relations
@@ -360,7 +257,7 @@ class EntityController extends Controller
         // NOTE: We do not need to create revision when create a new entity
 
         // Return newly created entity
-        return $this->getEntity($etype, $inputs, 'id', $record->id, $table);
+        return $this->getEntityInternal($etype, $inputs, 'id', $record->id, $table);
     }
 
     /**
@@ -396,7 +293,7 @@ class EntityController extends Controller
 	
         // Check if user has write permission to the entity
         if (!$this->canUserEditEntity($etype, $record, $user))
-            return $this->error('No permission');
+            return $this->error($inputs['callback'], $etype, 'No permission');
 
         // Update entity relations
         $this->updateRelations($etype, $inputs, $record);
@@ -420,11 +317,11 @@ class EntityController extends Controller
 
         if ($record->update($inputs)) {
             // Return the updated entity
-            return $this->getEntity($etype, $inputs, 'id', $id, $table,
+            $entity = $this->getEntityInternal($etype, $inputs, 'id', $id, $table,
                 $relations, $columns, $relCount);
+            return $this->success($inputs['callback'], $entity);
         } else {
-            $error = ['etype' => $etype, 'error' => 'Update fails'];
-            return parent::error(json_encode($error), 401);
+            return $this->error($inputs['callback'], $etype, 'fail to update');
         }
     }
 
@@ -476,25 +373,6 @@ class EntityController extends Controller
     }
 
     /**
-     * Move a entity to trash by id
-     * @param $etype - entity type
-     * @param $inputs - request inputs
-     * @param $key
-     * @param $id
-     * @return Post
-     */
-    protected function deleteEntity($etype, $inputs, $key, $id)
-    {
-        if ($this->deleteEntityInternal($etype, $key, $id)) {
-            $ret = ['num_of_deleted' => 1];
-            return $this->successV2($inputs, $etype, $ret);
-        } else {
-            $error = ['error' => 'Delete fails'];
-            return $this->error($etype, $error);
-        }
-    }
-
-    /**
      * Same as deleteEntity but with different parameters
      * @param Request $request
      * @param $key
@@ -503,8 +381,9 @@ class EntityController extends Controller
      */
     protected function deleteEntityReq(Request $request, $key, $id)
     {
-        $inputs = $request->all();
-        return $this->deleteEntity($inputs['etype'], $inputs, $key, $id);
+        $etype  = $request->get('etype');
+        $deleted = $this->deleteEntityInternal($etype, $key, $id);
+        return parent::responseReq($request, $deleted, 'delete entity error');
     }
 
     protected function deleteEntitiesReq(Request $request)
@@ -513,10 +392,8 @@ class EntityController extends Controller
         $etype = $request->get('etype');
         $ids   = $request->get('ids');
 
-        $error = ['error' => 'Delete fails'];
-
         if (!$etype || !$ids)
-            return $this->error($etype, $error);
+            return $this->errorReq($request, 'wrong parameter');
 
         $idAry = explode(',', $ids);
 
@@ -525,12 +402,7 @@ class EntityController extends Controller
                 $numDeleted++;
         }
 
-        if ($numDeleted) {
-            $ret = ['num_of_deleted' => $numDeleted];
-            return $this->success($request, $etype, $ret);
-        } else {
-            return $this->error($etype, $error);
-        }
+        return $this->responseReq($request, $numDeleted, 'delete entity error');
     }
 
     /**
@@ -604,11 +476,11 @@ class EntityController extends Controller
      */
     protected function canUserEditEntity($etype, $record, $user)
     {
-	// Author can edit his posts
+        // Author can edit his posts
         if ($etype == ETYPE_POST && $user->hasRole('author'))
             return $record->author_id == $user->id ? true: false;
 
-	// Editor and administrator can edit any content
+        // Editor and administrator can edit any content
         if ($user->hasRole(['editor', 'administrator']))
             return true;
 

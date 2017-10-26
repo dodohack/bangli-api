@@ -18,8 +18,8 @@ class CmsTopicTypeController extends Controller
      */
     public function get(Request $request, $id)
     {
-        $json = TopicType::find($id)->toJson();
-        return parent::success($request, $json);
+        $tt = TopicType::find($id);
+        return parent::successReq($request, $tt);
     }
 
     /**
@@ -32,9 +32,9 @@ class CmsTopicTypeController extends Controller
         $new = TopicType::create($input);
 
         if ($new) {
-            return parent::success($request, json_encode($new));
+            return parent::successReq($request, $new);
         } else {
-            return response('FAIL', 401);
+            return parent::errorReq($request, 'post topic type fail');
         }
     }
 
@@ -48,9 +48,9 @@ class CmsTopicTypeController extends Controller
         $new = TopicType::find($id)->update($input);
 
         if ($new) {
-            return $this->get($request, $id);
+            return parent::successReq($request, $new);
         } else {
-            return response('FAIL', 401);
+            return parent::errorReq($request, 'put topic type error');
         }
     }
 
@@ -62,8 +62,8 @@ class CmsTopicTypeController extends Controller
         $numDeleted = TopicType::destroy($id);
 
         if ($numDeleted)
-            return parent::success($request, $id);
+            return parent::successReq($request, $id);
         else
-            return response('FAIL', 401);
+            return parent::errorReq($request, 'delete topic type error');
     }
 }

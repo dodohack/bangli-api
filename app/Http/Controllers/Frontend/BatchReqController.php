@@ -7,7 +7,6 @@
  */
 namespace App\Http\Controllers\Frontend;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\FeTopic;
@@ -80,7 +79,7 @@ class BatchReqController extends FeController
         }
 
         // This is the only place we do not need to return with toplevel etype
-        return Controller::success($request, json_encode($result));
+        return parent::successReq($request, $result);
     }
 
     /**

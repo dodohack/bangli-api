@@ -69,10 +69,8 @@ class UserController extends Controller
         $paginator = $this->paginator($total, $curPage, $perPage, $users->count());
 
         $ret = ["users" => $users->toArray(), "paginator" => $paginator];
-        $json = json_encode($ret);
-        
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+
+        return parent::successReq($request, $ret);
     }
     
     public function putUsers(Request $request) {
@@ -89,12 +87,12 @@ class UserController extends Controller
     private function getAuthors(Request $request)
     {
         /* Query table 'permissions' via table 'roles' from table 'user' */
-        $json = User::whereHas('role.permissions', function ($query) {
+        $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_own_post');
-        })->with('role')->get()->toJson();
+        })->with('role')->get();
 
 
-        return parent::success($request, $json);
+        return parent::responseReq($request, $ret, 'get authors error');
     }
 
     /**
@@ -105,12 +103,11 @@ class UserController extends Controller
     private function getEditors(Request $request)
     {
         /* Query table 'permissions' via table 'roles' from table 'user' */
-        $json = User::whereHas('role.permissions', function ($query) {
+        $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_post');
-        })->with('role')->get()->toJson();
+        })->with('role')->get();
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return parent::responseReq($request, $ret, 'get editors error');
     }
 
     /**
@@ -128,10 +125,9 @@ class UserController extends Controller
         */
 
         /* Query role name */
-        $json = Role::get(['id','name','display_name'])->toJson();
+        $ret = Role::get(['id','name','display_name']);
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return parent::responseReq($request, $ret, 'get roles error');
     }
 
     /**
@@ -142,22 +138,18 @@ class UserController extends Controller
      */
     public function getUser(Request $request, $uuid)
     {
-        $myUuid = $this->jwt->getPayload()->get('sub');
+        $myUuid = $this->guard()->getPayload()->get('sub');
         if ($myUuid !== $uuid) {
             /* Authenticate current user if it is not get my detail */
-            $user = $this->jwt->authenticate();
+            $user = $this->guard()->user();
             if (!$user->hasRole(['administrator'])) {
                 return response('Unauthorized', 401);
             }
         }
-        
-        $tables = ['role'];
 
-        $json = User::where('uuid', $uuid)->with($tables)
-            ->first()->toJson();
+        $user = User::where('uuid', $uuid)->with(['role'])->first();
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return parent::responseReq($request, $user, 'get user error');
     }
 
     public function postUser(Request $request)

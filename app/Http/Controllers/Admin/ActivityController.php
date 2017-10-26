@@ -21,11 +21,9 @@ use App\Models\Statistic;
 
 class ActivityController extends Controller
 {
-    protected $jwt;
-
-    public function __construct(JWTAuth $jwt)
+    public function __construct()
     {
-        $this->jwt = $jwt;
+        parent::__construct();
     }
 
     /**
@@ -37,14 +35,14 @@ class ActivityController extends Controller
      * type: optional, 'post', 'page', 'topic', 'product', 'newsletter' etc
      * ids: optional, content id of given type
      * @param Request $request
-     * @return Object $json -  always return occupied resource type and id
+     * @return $json -  always return occupied resource type and id
      */
     public function handle(Request $request)
     {
         $action = $request->input('action', null);
         $active = $request->input('active', 'no');
 
-        $user = $this->jwt->authenticate();
+        $user = $this->guard()->user();
 
         // If user can still reach server with a 'ping' type, it means
         // all the locked content by the user can be released, otherwise
@@ -59,14 +57,14 @@ class ActivityController extends Controller
 
                 // Invalid request
                 if (!$idstr || count($ids) === 0)
-                    return response('ERROR', 401);
+                    return $this->errorReq($request, 'wrong parameter');
 
 
                 if (!$this->canUserLockContent($user, $ids))
-                    return response('No permission', 401);
+                    return $this->errorReq($request, 'no permission');
 
                 if (!$this->lockContents($type, $ids, $user->id))
-                    return response('ERROR', 401);
+                    return $this->errorReq($request, 'fail to lock');
 
                 break;
             }
@@ -79,14 +77,14 @@ class ActivityController extends Controller
 
         if ($active === 'yes') {
             // Return list of locked resources, this is not too much
-            $json = Activity::get(['id', 'content_type',
+            $ret = Activity::get(['id', 'content_type',
                 'content_id', 'user_id', 'edit_lock', 'created_at'])
-                ->groupBy('content_type')->toJson();
-            return parent::success($request, $json);
+                ->groupBy('content_type');
+            return $this->successReq($request, $ret);
         } else {
             // No data returns, this is the route client tests if api server
             // is online.
-            return response('OK', 200);
+            return $this->successReq($request, ['msg' => 'ok']);
         }
     }
 

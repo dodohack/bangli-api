@@ -60,20 +60,17 @@ class AttachmentController extends EntityController
      */
     public function putAttachments(Request $request)
     {
-        // Count of thumbs updated
-        $count = 0;
-
         $inputs = $request->all();
 
         // Regenerate thumbnails
         if ($inputs['gen-thumb'] && $inputs['gen-thumb'] == true) {
             $starts = isset($inputs['starts']) ? $inputs['starts'] : null;
             $ends   = isset($inputs['ends']) ? $inputs['ends'] : null;
-            $count = $this->genThumbnails($starts, $ends);
+            $this->genThumbnails($starts, $ends);
         }
 
 
-        return parent::success($request, $inputs['etype'], ['status' => 'ok']);
+        return parent::success($inputs['callback'], $inputs['etype'], ['status' => 'ok']);
     }
 
     /**
@@ -81,7 +78,7 @@ class AttachmentController extends EntityController
      */
     public function postAttachments(Request $request)
     {
-        return response('Posts batch editing API unimplemented', 401);
+        return parent::errorReq($request,'API unimplemented');
     }
 
     /**
@@ -89,15 +86,18 @@ class AttachmentController extends EntityController
      */
     public function deleteAttachments(Request $request)
     {
-        return response('API unimplemented', 401);
+        return parent::errorReq($request, 'API unimplemented');
     }
 
     /**
-     * Return attachment statuss and occurrences
+     * Return attachment status and occurrences
      */
     public function getStates(Request $request)
     {
-        return $this->getEntityStates($request, 'attachments');
+        $status = Attachment::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->responseReq($request, $status, 'get status error');
     }
 
     /**
@@ -119,7 +119,6 @@ class AttachmentController extends EntityController
      */
     public function putAttachment(Request $request, $id)
     {
-        // TODO: Need extra authentication for editing others' files
         return $this->putEntityReq($request, 'id', $id);
     }
 
@@ -132,17 +131,17 @@ class AttachmentController extends EntityController
     public function postAttachment(Request $request)
     {
         if (!$request->hasFile('file'))
-            return response('No image', 400);
+            return parent::errorReq($request, 'No image');
 
         $file = $request->file('file');
 
         if (!$file->isValid())
-            return response('Image is not valid', 400);
+            return parent::errorReq($request, 'Image not valid');
 
         // Get filename extension for the image
         $imgExt = $this->getImageFileExtension($file);
         if (!$imgExt)
-            return response('Unsupported image format', 415);
+            return parent::errorReq($request, 'Unsupported image format');
 
         // Get absolute name with path and extension
         $imgName = $this->generateFilename();
@@ -179,9 +178,9 @@ class AttachmentController extends EntityController
 
         if ($record->save()) {
             $ret = Attachment::find($record->id)->toArray();
-            return parent::success($request, ETYPE_ATTACHMENT, $ret);
+            return parent::successReq($request, $ret);
         } else {
-            return response("Failed to update file", 401);
+            return parent::errrorReq($request, "Update file fail");
         }
     }
 

@@ -60,7 +60,7 @@ class PostController extends EntityController
         $status = Post::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->success($request, $request->get('etype'), $status);
+        return parent::responseReq($request, $status, 'get post status error');
     }
 
     /**

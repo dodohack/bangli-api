@@ -30,7 +30,8 @@ class SysController extends Controller
 
         $positions = config('ads.positions');
 
-        $json = compact('roles', 'thumbs', 'positions');
-        return parent::success($request, $json);
+        $array = compact('roles', 'thumbs', 'positions');
+
+        return parent::successReq($request, $array);
     }
 }

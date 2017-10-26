@@ -60,7 +60,7 @@ class TopicController extends EntityController
         $status = Topic::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->success($request, $request->get('etype'), $status);
+        return $this->responseReq($request, $status, 'get topic status error');
     }
 
     /**

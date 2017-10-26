@@ -70,10 +70,10 @@ class CmsController extends EntityController
             ->select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        $json = compact('authors', 'editors', 'channels', 'locations',
+        $array = compact('authors', 'editors', 'channels', 'locations',
             'categories', 'topic_types', 'post_status',
             'topic_status', 'offer_status', 'page_status');
 
-        return Controller::success($request, $json);
+        return parent::success($request->get('callback'), null, $array);
     }
 }

@@ -17,8 +17,9 @@ class CmsTagController extends Controller
      */
     public function getTag(Request $request, $id)
     {
-        $json = Tag::find($id)->toJson();
-        return parent::success($request, $json);
+        $tag = Tag::where('id', $id)->first();
+
+        return parent::successReq($request, $tag);
     }
     
     /**
@@ -30,11 +31,7 @@ class CmsTagController extends Controller
 
         $newTag = Tag::create($input);
 
-        if ($newTag) {
-            return parent::success($request, json_encode($newTag));
-        } else {
-            return parent::error(json_encode(['msg' => 'post tag error']));
-        }
+        return parent::responseReq($request, $newTag, 'post tag error');
     }
 
     /**
@@ -46,11 +43,7 @@ class CmsTagController extends Controller
 
         $newTag = Tag::find($id)->update($input);
 
-        if ($newTag) {
-            return $this->getTag($request, $id);
-        } else {
-            return response('FAIL', 401);
-        }
+        return parent::responseReq($request, $newTag, 'put tag error');
     }
 
     /**
@@ -60,9 +53,6 @@ class CmsTagController extends Controller
     {
         $numDeleted = Tag::destroy($id);
 
-        if ($numDeleted)
-            return parent::success($request, $id);
-        else
-            return response('FAIL', 401);
+        return parent::responseReq($request, $numDeleted, 'delete tag error');
     }
 }

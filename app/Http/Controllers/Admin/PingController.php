@@ -18,7 +18,6 @@ class PingController extends Controller
     public function handle(Request $request)
     {
         $key = $request->input('key', null);
-        if (!$key) return response('Incorrect parameter', 400);
-        return parent::success($request, json_encode($key));
+        return parent::responseReq($request, $key, 'ping error');
     }
 }

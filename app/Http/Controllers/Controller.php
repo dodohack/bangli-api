@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Lumen\Concerns\RoutesRequests;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
@@ -24,44 +26,78 @@ class Controller extends BaseController
 
     /**
      * Return JSONP or AJAX response based on client request
-     * @param Request $request
-     * @param $json
-     * @return string
+     * I intentionally place $etype in the middle even it has default parameter
+     * @param string $callback
+     * @param string $etype - entity etype if returned data are/is entities/entity
+     * @param $data - data array to be returned to client
+     * @return
      */
-    public function success(Request $request, $json)
+    public function success($callback, $etype = null, $data)
     {
+        // Convert scalar to array
+        if (!is_array($data)) $data = compact('data');
+
+        if ($etype) $data['etype'] = $etype;
+
+        $ret = json_encode($data);
+
         // JSONP response
-        if ($request->has('callback'))
-            return $request->input('callback') . '(' . $json . ')';
+        if ($callback)
+            return $callback . '(' . $ret . ')';
 
         // AJAX response
-        return $json;
+        return $ret;
     }
 
-    /**
-     * Same as function 'success', but with array input
-     * @param $inputs
-     * @param $json
-     * @return string
-     */
-    public function successV2($inputs, $json)
+    public function successReq(Request $request, $data)
     {
-        // JSONP response
-        if (isset($input['callback']))
-            return $inputs['callback'] . '(' . $json . ')';
-
-        // AJAX response
-        return $json;
+        $callback = $request->get('callback');
+        $etype    = $request->get('etype');
+        return $this->success($callback, $etype, $data);
     }
 
     /**
      * Return error message with HTTP 500 error
-     * @param $json
-     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     * @param string $callback
+     * @param string $etype
+     * @param string $msg
+     * @return
      */
-    public function error($json)
+    public function error($callback, $etype = null, $msg)
     {
-        return response($json, 500);
+        $ret = ['error' => $msg];
+        if ($etype) $ret['etype'] = $etype;
+
+        $ret = json_encode($ret);
+
+        // Jsonp
+        if ($callback) $ret = $callback . '(' . $ret . ')';
+
+        return response($ret, 500);
+    }
+
+    public function errorReq(Request $request, $msg)
+    {
+        $callback = $request->get('callback');
+        $etype    = $request->get('etype');
+        return $this->error($callback, $etype, $msg);
+    }
+
+    /**
+     * Response to client with data or error
+     * @param Request $request
+     * @param $data
+     * @param $error
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory|string
+     */
+    public function responseReq(Request $request, $data, $error)
+    {
+        $callback = $request->get('callback');
+        $etype    = $request->get('etype');
+        if ($data)
+            return $this->success($callback, $etype, $data);
+        else
+            return $this->error($callback, $etype, $error);
     }
 
     /**
