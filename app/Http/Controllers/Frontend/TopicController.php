@@ -85,16 +85,14 @@ class TopicController extends FeController
             case TT_BRAND:
             case TT_MERCHANT:
             case TT_PRODUCTS:
-                $offers = $topic->offers()->get();
-                break;
             case TT_GENERIC:
             case TT_COUNTRY:
             case TT_CITY:
             case TT_ROUTE:
             case TT_PRODUCT:
-                dd("TODO");
-                break;
             default:
+		// TODO: Only retrieve offer with some topic type.
+                $offers = $topic->offers()->get();
                 break;
         }
 
