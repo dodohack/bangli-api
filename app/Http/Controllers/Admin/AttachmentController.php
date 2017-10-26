@@ -60,76 +60,19 @@ class AttachmentController extends EntityController
      */
     public function putAttachments(Request $request)
     {
-	// Count of thumbs updated
-	$count = 0;
-	
-        // TODO: Need extra authentication for editing others' files
+        // Count of thumbs updated
+        $count = 0;
 
         $inputs = $request->all();
 
-        // TODO: Retrieve images from request body
-
         // Regenerate thumbnails
-        // TODO: Now we do this for whole images which takes ages to finish.
-        // TODO: Need to support regen thumbnail for portion of images
         if ($inputs['gen-thumb'] && $inputs['gen-thumb'] == true) {
-
-            // TODO: Support thumbnail gen for given images
-            //$images = Attachment::limit(10)->get();
-            Attachment::chunk(20, function ($images, &$count) {
-                foreach ($images as $image) {
-                    $uri = $image->path . $image->filename;
-                    $pi  = pathinfo($image->filename);
-
-                    // Do not touch image which does not exists
-                    if (!$this->disk->exists($uri)) {
-                        continue;
-                    }
-
-		    // Sanity check, ignore files which has image extension names
-		    // but actually are not images.
-		    // Such as html file in .jpg extension.
-		    $mimeType = mime_content_type($uri);
-		    if (substr($mimeType, 0, 5) != 'image')
-			continue;
-
-                    // 1. Get name and path info of old thumbnails
-                    $oldThumbs = json_decode($image->thumbnail, true);
-
-                    if (count($oldThumbs)) {
-                        // Form the full path for each old thumbnails
-                        $thumbNames = array_column($oldThumbs, 'file');
-                        foreach ($thumbNames as $idx => $tn) {
-                            $thumbNames[$idx] = $image->thumb_path . $tn;
-                        }
-
-                        // 2. Remove old thumbnails
-                        $this->disk->delete($thumbNames);
-                    }
-
-                    // 3. Remove old records, [skip this for faster speed]
-                    // $this->thumbnail = null;
-                    // $this->save();
-
-                    // 4. Generate thumbnails
-                    $imgObj = $this->createImage($uri);
-                    foreach ($this->thumbConfig as $tc) {
-                        if ($this->createThumbs($this->disk, $imgObj,
-						$image->thumb_path, $pi['filename'], $pi['extension'],
-						$tc[1], $tc[2])) {
-			    $count++;
-			}
-                    }
-
-                    // 5. Update records
-                    $image->thumbnail =
-                        $this->genThumbRecord($pi['filename'], $pi['extension']);
-                    $image->save();
-                }
-            });
+            $starts = isset($inputs['starts']) ? $inputs['starts'] : null;
+            $ends   = isset($inputs['ends']) ? $inputs['ends'] : null;
+            $count = $this->genThumbnails($starts, $ends);
         }
 
-        return parent::success($request, ['count' => $count]);
+        return parent::success($request);
     }
 
     /**
@@ -259,7 +202,8 @@ class AttachmentController extends EntityController
      * @param $image
      * @return bool|string
      */
-    private function getImageFileExtension($image) {
+    private function getImageFileExtension($image)
+    {
         $mime = $image->getMimeType();
         switch ($mime) {
             case 'image/jpeg':
@@ -276,14 +220,16 @@ class AttachmentController extends EntityController
     /**
      * Return a filename based on current time and a random 4 bytes suffix
      */
-    private function generateFilename() {
+    private function generateFilename()
+    {
         return date('YmdHis') . rand(1000, 9999);
     }
 
     /**
      * Generate thumbnail record
      */
-    private function genThumbRecord($name, $ext) {
+    private function genThumbRecord($name, $ext)
+    {
         $records = [];
         foreach($this->thumbConfig as $t) {
             $records[$t[0]] = [
@@ -295,4 +241,75 @@ class AttachmentController extends EntityController
 
         return json_encode($records);
     }
+
+    /**
+     * Generate thumbnails for images which are created within given range
+     * @param $starts
+     * @param $ends
+     */
+    private function genThumbnails($starts, $ends)
+    {
+        // Regenerate thumbnails
+        $starts = isset($inputs['starts']) ? $inputs['starts'] : null;
+        $ends   = isset($inputs['ends']) ? $inputs['ends'] : null;
+
+        $db = new Attachment;
+        if ($starts) $db = $db->where('updated_at', '>=', $starts);
+        if ($ends)   $db = $db->where('updated_at', '<=', $ends);
+
+        // TODO: Support thumbnail gen for given images
+        //$images = $db->limit(10)->get();
+        $db->chunk(20, function ($images) {
+            foreach ($images as $image) {
+                $uri = $image->path . $image->filename;
+                $pi  = pathinfo($image->filename);
+
+                // Do not touch image which does not exists
+                if (!$this->disk->exists($uri)) {
+                    continue;
+                }
+
+                // Sanity check, ignore files which has image extension names
+                // but actually are not images.
+                // Such as html file in .jpg extension.
+                $mimeType = mime_content_type($uri);
+                if (substr($mimeType, 0, 5) != 'image')
+                    continue;
+
+                // 1. Get name and path info of old thumbnails
+                $oldThumbs = json_decode($image->thumbnail, true);
+
+                if (count($oldThumbs)) {
+                    // Form the full path for each old thumbnails
+                    $thumbNames = array_column($oldThumbs, 'file');
+                    foreach ($thumbNames as $idx => $tn) {
+                        $thumbNames[$idx] = $image->thumb_path . $tn;
+                    }
+
+                    // 2. Remove old thumbnails
+                    $this->disk->delete($thumbNames);
+                }
+
+                // 3. Remove old records, [skip this for faster speed]
+                // $this->thumbnail = null;
+                // $this->save();
+
+                // 4. Generate thumbnails
+                $imgObj = $this->createImage($uri);
+                foreach ($this->thumbConfig as $tc) {
+                    if ($this->createThumbs($this->disk, $imgObj,
+                        $image->thumb_path, $pi['filename'], $pi['extension'],
+                        $tc[1], $tc[2])) {
+                    }
+                }
+
+                // 5. Update records
+                $image->thumbnail =
+                    $this->genThumbRecord($pi['filename'], $pi['extension']);
+                $image->save();
+
+            }
+        });
+    }
+
 }
