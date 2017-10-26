@@ -37,7 +37,9 @@ class FeController extends EntityController
         $result = $this->getArrayEntities($inputs['etype'], $inputs,
             $relations, $relCount, $columns, $pagination);
 
-        $result['key'] = $inputs['key'];
+        // etype should be attached to each group of entities
+        $result['etype'] = $inputs['etype'];
+        $result['key']   = $inputs['key'];
 
         return $result;
     }
@@ -74,10 +76,13 @@ class FeController extends EntityController
             // Get entities for each group
             $result[$key] = $this->getArrayEntities($etype, $params,
                 $relations, null, $columns, $isFullPagination);
+
+            // Entity type should be associated to the group of entities
+            $result[$key]['etype'] = $etype;
         }
 
         // Return entities with 'etype' in top level
-        return ['etype' => $etype, 'data' => $result];
+        return ['data' => $result];
     }
 
     /**

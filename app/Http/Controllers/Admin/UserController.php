@@ -8,9 +8,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
-use App\Models\UserAddress;
-use App\Models\UserBabyProfile;
-use App\Models\UserShopProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\JWTAuth;
@@ -23,14 +20,9 @@ class UserController extends Controller
 {
     use PaginatorTrait;
 
-    /**
-     * @var \Tymon\JWTAuth\JWTAuth
-     */
-    protected $jwt;
-
-    public function __construct(JWTAuth $jwt)
+    public function __construct()
     {
-        $this->jwt = $jwt;
+        parent::__construct();
     }
 
     /**
@@ -154,12 +146,12 @@ class UserController extends Controller
         if ($myUuid !== $uuid) {
             /* Authenticate current user if it is not get my detail */
             $user = $this->jwt->authenticate();
-            if (!$user->hasRole(['administrator', 'shop_manager'])) {
+            if (!$user->hasRole(['administrator'])) {
                 return response('Unauthorized', 401);
             }
         }
         
-        $tables = ['role', 'shopProfile', 'babyProfiles', 'addresses'];
+        $tables = ['role'];
 
         $json = User::where('uuid', $uuid)->with($tables)
             ->first()->toJson();
@@ -177,12 +169,6 @@ class UserController extends Controller
     {
         $body = json_decode($request->getContent(), true);
 
-        $shop_profile  = $body['shop_profile'];
-        $baby_profiles = $body['baby_profiles'];
-        $addresses     = $body['addresses'];
-        unset($body['shop_profile']);
-        unset($body['baby_profiles']);
-        unset($body['addresses']);
         /* This is a pivot record which is not going be stored directly */
         unset($body['role']);
 
@@ -192,25 +178,6 @@ class UserController extends Controller
         if ($user && $user['id']) {
             unset($user['uuid'], $user['updated_at']);
             User::where('id', $user['id'])->update($user);
-        }
-
-        if ($shop_profile && $shop_profile['id']) {
-            unset($shop_profile['updated_at']);
-            UserShopProfile::where('id', $shop_profile['id'])->update($shop_profile);
-        }
-
-        foreach ($addresses as $addr) {
-            if ($addr['id']) {
-                unset($addr['updated_at']);
-                UserAddress::where('id', $addr['id'])->update($addr);
-            }
-        }
-
-        foreach ($baby_profiles as $baby) {
-            if ($baby['id']) {
-                unset($baby['updated_at']);
-                UserBabyProfile::where('id', $baby['id'])->update($baby);
-            }
         }
 
         /* Return ok for now */

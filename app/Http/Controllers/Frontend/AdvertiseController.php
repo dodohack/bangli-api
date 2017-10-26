@@ -6,6 +6,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class AdvertiseController extends FeController
 {
@@ -18,7 +19,7 @@ class AdvertiseController extends FeController
     {
         $result = $this->getArrayEntitiesByKey($request->all(), null, null, null, 'none');
         // FIXME: Error handling.
-        return $this->success($request, json_encode($result));
+        return Controller::success($request, json_encode($result));
     }
 
     /**

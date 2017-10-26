@@ -57,8 +57,10 @@ class TopicController extends EntityController
      */
     public function getStates(Request $request)
     {
-        // FIXME:
-        return $this->getEntityStates($request, 'topics');
+        $status = Topic::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->success($request, $request->get('etype'), $status);
     }
 
     /**

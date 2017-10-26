@@ -9,6 +9,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\EntityController;
 use App\Models\Category;
 use App\Models\TopicType;
@@ -73,6 +74,6 @@ class CmsController extends EntityController
             'categories', 'topic_types', 'post_status',
             'topic_status', 'offer_status', 'page_status');
 
-        return parent::success($request, $json);
+        return Controller::success($request, $json);
     }
 }

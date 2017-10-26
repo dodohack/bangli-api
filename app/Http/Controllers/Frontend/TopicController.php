@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 
+use App\Http\Controllers\Controller;
 use App\Models\FeTopic;
 use App\Models\FeOffer;
 use App\Models\FeViewRelatedTopic;
@@ -45,7 +46,7 @@ class TopicController extends FeController
         $result = $this->getArrayEntitiesByKey($inputs, $relations,
             $this->relationCount, $this->topicsColumns, 'full');
         // FIXME: Error handling.
-        return $this->success($request, json_encode($result));
+        return Controller::success($request, json_encode($result));
     }
 
     /**
@@ -59,7 +60,7 @@ class TopicController extends FeController
         $result = $this->getGroupedEntities($request->all(),
             null, $this->topicsColumns);
 
-        return $this->success($request, json_encode($result));
+        return $this->success($request, $request->get('etype'), $result);
     }
 
     // FIXME: Merge FeToic::topic_relations/topic_columns with
@@ -67,15 +68,16 @@ class TopicController extends FeController
     public function getTopic(Request $request, $guid)
     {
         $inputs = $request->all();
-        $table  = $this->getEntityTable($inputs['etype']);
+        $etype = $inputs['etype'];
+        $table  = $this->getEntityTable($etype);
 
-        $topic = $this->getEntityObj($inputs['etype'], 'guid', $guid, $table,
+        $topic = $this->getEntityObj($etype, 'guid', $guid, $table,
             FeTopic::topic_relations(), FeTopic::topic_columns(),
             $this->relationCount);
 
         if (!$topic) {
             // FIXME: Return content
-            return response("Topic not found", 401);
+            return parent::error($etype, 'topic not found');
         }
 
         // Get related offers
@@ -100,12 +102,7 @@ class TopicController extends FeController
 
         $topic['offers'] = $offers;
 
-        $ret = [
-            "etype"  => $inputs['etype'],
-            "entity" => $topic
-        ];
-
-        return parent::successV2($inputs, json_encode($ret));
+        return parent::successV2($inputs, $etype, $topic);
     }
 
     /**

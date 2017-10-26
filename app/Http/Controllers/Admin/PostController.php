@@ -53,12 +53,14 @@ class PostController extends EntityController
     }
 
     /**
-     * Return post statuss and occurrences
+     * Return post status and occurrences
      */
-    public function getStates(Request $request)
+    public function getStatus(Request $request)
     {
-        // FIXME: Hardcoded table name
-        return $this->getEntityStates($request, 'posts');
+        $status = Post::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->success($request, $request->get('etype'), $status);
     }
 
     /**

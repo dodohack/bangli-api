@@ -72,7 +72,8 @@ class AttachmentController extends EntityController
             $count = $this->genThumbnails($starts, $ends);
         }
 
-        return parent::success($request, ['status' => 'ok']);
+
+        return parent::success($request, $inputs['etype'], ['status' => 'ok']);
     }
 
     /**
@@ -178,7 +179,7 @@ class AttachmentController extends EntityController
 
         if ($record->save()) {
             $ret = Attachment::find($record->id)->toArray();
-            return parent::success($request, $ret);
+            return parent::success($request, ETYPE_ATTACHMENT, $ret);
         } else {
             return response("Failed to update file", 401);
         }

@@ -7,6 +7,7 @@
  */
 namespace App\Http\Controllers\Frontend;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\FeTopic;
@@ -78,7 +79,8 @@ class BatchReqController extends FeController
                     $relCount, null, 'full');
         }
 
-        return $this->success($request, json_encode($result));
+        // This is the only place we do not need to return with toplevel etype
+        return Controller::success($request, json_encode($result));
     }
 
     /**

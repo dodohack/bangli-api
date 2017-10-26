@@ -6,10 +6,10 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
 use App\Models\Tag;
 
-class CmsTagController extends CmsController
+class CmsTagController extends Controller
 {
 
     /**
@@ -33,7 +33,7 @@ class CmsTagController extends CmsController
         if ($newTag) {
             return parent::success($request, json_encode($newTag));
         } else {
-            return response('FAIL', 401);
+            return parent::error(json_encode(['msg' => 'post tag error']));
         }
     }
 

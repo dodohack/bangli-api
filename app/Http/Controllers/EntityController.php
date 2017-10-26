@@ -76,6 +76,33 @@ class EntityController extends Controller
         return Auth::guard();
     }
 
+    /**
+     * Overwrite parent function to force caller to always pass etype as
+     * first returned element
+     * @param Request $request
+     * @param $etype - entity type
+     * @param $array - entity record to be returned
+     * @return json string
+     */
+    public function success(Request $request, $etype, $array)
+    {
+        $array['etype'] = $etype;
+        //$ret = array_merge(['etype' => $etype], $array);
+        return parent::success($request, json_encode($array));
+    }
+
+    public function successV2($inputs, $etype, $array)
+    {
+        $array['etype'] = $etype;
+        //$ret = array_merge(['etype' => $etype], $array);
+        return parent::successV2($inputs, json_encode($array));
+    }
+
+    public function error($etype, $msg)
+    {
+        $ret = ['etype' => $etype, 'msg' => $msg];
+        return parent::error(json_encode($ret));
+    }
 
     /**
      * Get a list of entities
@@ -94,11 +121,11 @@ class EntityController extends Controller
                                    $columns = null,
                                    $pagination = 'full')
     {
-        $ret = $this->getArrayEntities($etype, $inputs,
+        $entities = $this->getArrayEntities($etype, $inputs,
             $relations, $relCount, $columns, $pagination);
 
         // Return json array
-        return parent::successV2($inputs, json_encode($ret));
+        return $this->successV2($inputs, $etype, $entities);
     }
 
     /**
@@ -158,16 +185,13 @@ class EntityController extends Controller
     {
         $this->pagination = $pagination;
 
-        // Sanitize input
-        array_filter($inputs, array($this, 'sanitize'));
-
         // Setup db query parameters
         $this->initInputFilters($inputs);
 
         // Decide which table to query
         $table = $this->getEntityTable($etype);
         if (!$table) {
-            return ['etype' => $etype, 'error' => 'Unknown entity type'];
+            return ['error' => 'Unknown entity type'];
         }
 
         // Decide the table name
@@ -186,21 +210,15 @@ class EntityController extends Controller
         $total    = $res['total'];
         $entities = $res['entities'];
 
+        $ret = [ 'entities' => $entities->toArray() ];
+
         // Return entities w/wo pagination
         if ($this->pagination != 'none') {
             $paginator = $this->paginator($total, $this->curPage,
                 $this->perPage, $entities->count());
 
-            $ret = [
-                "etype" => $etype,
-                "entities" => $entities->toArray(),
-                "paginator" => $paginator
-            ];
-        } else {
-            $ret = [
-                "etype" => $etype,
-                "entities" => $entities->toArray()
-            ];
+            $ret['paginator'] = $paginator;
+            //$ret = array_merge($ret, ["paginator" => $paginator]);
         }
 
         // Return array of entities
@@ -228,13 +246,7 @@ class EntityController extends Controller
         $entity = $this->getEntityObj($etype, $key, $id,
             $table, $relations, $columns, $count);
 
-        $ret = [
-            "etype"     => $etype,
-            "entity"    => $entity
-        ];
-
-        /* Return JSONP or AJAX data */
-        return parent::successV2($inputs, json_encode($ret));
+        return $this->successV2($inputs, $etype, $entity);
     }
 
     /**
@@ -474,11 +486,11 @@ class EntityController extends Controller
     protected function deleteEntity($etype, $inputs, $key, $id)
     {
         if ($this->deleteEntityInternal($etype, $key, $id)) {
-            $ret = ['etype'  => $etype, 'num_of_deleted' => 1];
-            return parent::successV2($inputs, json_encode($ret));
+            $ret = ['num_of_deleted' => 1];
+            return $this->successV2($inputs, $etype, $ret);
         } else {
-            $error = ['etype' => $etype, 'error' => 'Delete fails'];
-            return parent::error(json_encode($error), 401);
+            $error = ['error' => 'Delete fails'];
+            return $this->error($etype, $error);
         }
     }
 
@@ -501,8 +513,10 @@ class EntityController extends Controller
         $etype = $request->get('etype');
         $ids   = $request->get('ids');
 
+        $error = ['error' => 'Delete fails'];
+
         if (!$etype || !$ids)
-            return;
+            return $this->error($etype, $error);
 
         $idAry = explode(',', $ids);
 
@@ -512,11 +526,10 @@ class EntityController extends Controller
         }
 
         if ($numDeleted) {
-            $ret = ['etype'  => $etype, 'num_of_deleted' => $numDeleted];
-            return parent::success($request, json_encode($ret));
+            $ret = ['num_of_deleted' => $numDeleted];
+            return $this->success($request, $etype, $ret);
         } else {
-            $error = ['etype' => $etype, 'error' => 'Delete fails'];
-            return parent::error(json_encode($error), 401);
+            return $this->error($etype, $error);
         }
     }
 
@@ -600,25 +613,6 @@ class EntityController extends Controller
             return true;
 
         return false;
-    }
-
-
-    /**
-     * Get status and occurrence of a entity
-     * @param $request
-     * @param $table
-     * @return object
-     */
-    protected function getEntityStatus($request, $table)
-    {
-        $states = DB::table($table)
-            ->select(DB::raw('status, COUNT(*) as count'))
-            ->groupBy('status')->get();
-
-        $json = json_encode($states);
-
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
     }
 
     /**
