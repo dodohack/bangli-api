@@ -174,7 +174,7 @@ class EntityController extends Controller
         }
 
         // Decide which columns and relations to be queried with
-        $this->setupRelations($db, $relations, true);
+        $this->setupRelations($db, $relations, $relCount, true);
         $this->setupColumns($db, $columns, true);
 
         $db = $db->where($key, $id);
@@ -654,7 +654,7 @@ class EntityController extends Controller
      * @param $full     - If full relations should be queried
      */
     private function setupRelations($table, $relations,
-                                    $relCount, $full = false)
+                                    $relCount, $full)
     {
         if ($relations == null) {
             if ($full) $this->relations = $table->fullRelations();
@@ -672,7 +672,7 @@ class EntityController extends Controller
      * @param $columns  - User specified columns if any
      * @param $full     - If full columns should be queried
      */
-    private function setupColumns($table, $columns, $full = false)
+    private function setupColumns($table, $columns, $full)
     {
         if ($columns == null) {
             if ($full) $this->columns = $table->fullColumns();
