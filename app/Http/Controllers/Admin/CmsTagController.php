@@ -6,19 +6,24 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
 use App\Models\Tag;
 
-class CmsTagController extends CmsController
+class CmsTagController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get a tag
      */
     public function getTag(Request $request, $id)
     {
-        $json = Tag::find($id)->toJson();
-        return parent::success($request, $json);
+        $tag = Tag::find($id)->toArray();
+
+        return $this->response($tag, 'get tag error');
     }
     
     /**
@@ -28,13 +33,9 @@ class CmsTagController extends CmsController
     {
         $input = $request->except('id');
 
-        $newTag = Tag::create($input);
+        $newTag = Tag::create($input)->toArray();
 
-        if ($newTag) {
-            return parent::success($request, json_encode($newTag));
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newTag, 'post tag error');
     }
 
     /**
@@ -44,13 +45,9 @@ class CmsTagController extends CmsController
     {
         $input = $request->except('id');
 
-        $newTag = Tag::find($id)->update($input);
+        $newTag = Tag::find($id)->update($input)->toArray();
 
-        if ($newTag) {
-            return $this->getTag($request, $id);
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newTag, 'put tag error');
     }
 
     /**
@@ -60,9 +57,6 @@ class CmsTagController extends CmsController
     {
         $numDeleted = Tag::destroy($id);
 
-        if ($numDeleted)
-            return parent::success($request, $id);
-        else
-            return response('FAIL', 401);
+        return $this->response($numDeleted, 'delete tag error');
     }
 }

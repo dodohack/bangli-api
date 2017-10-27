@@ -16,14 +16,19 @@ use App\Models\OfferHasCategory;
 
 class CmsCatController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get a category
      */
     public function getCategory(Request $request, $id)
     {
-        $json = Category::find($id)->toJson();
-        return parent::success($request, $json);
+        $ret = Category::find($id)->toArray();
+
+        return $this->response($ret, 'get category error');
     }
 
     /**
@@ -31,15 +36,11 @@ class CmsCatController extends Controller
      */
     public function postCategory(Request $request)
     {
-        $input = $request->except('id');
+        $inputs = $request->except('id');
 
-        $newTag = Category::create($input);
+        $newCat = Category::create($inputs)->toArray();
 
-        if ($newTag) {
-            return parent::success($request, json_encode($newTag));
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newCat, 'post category fail');
     }
 
     /**
@@ -49,13 +50,9 @@ class CmsCatController extends Controller
     {
         $input = $request->except('id');
 
-        $newCat = Category::find($id)->update($input);
+        $newCat = Category::find($id)->update($input)->toArray();
 
-        if ($newCat) {
-            return $this->getCategory($request, $id);
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newCat, 'put category fail');
     }
 
     /**
@@ -79,10 +76,7 @@ class CmsCatController extends Controller
         // Now we can safely destroy the category when relationships are removed
         $ret = Category::destroy($id);
 
-        if ($ret)
-            return parent::success($request, $id);
-        else
-            return response('FAIL', 401);
+        return $this->response($ret, 'delete category error');
     }
 
 

@@ -18,6 +18,12 @@ use App\Models\FeComment;
 
 class FeController extends EntityController
 {
+
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Return an array of published entities indexed by given key
      * @param $inputs
@@ -27,17 +33,17 @@ class FeController extends EntityController
      * @param $pagination
      * @return array of entities indexed by key
      */
-    public function getArrayEntitiesByKey($inputs, $relations, $relCount,
+    public function getEntitiesByKey($inputs, $relations, $relCount,
                                           $columns, $pagination)
     {
         // Always query published entities for frontend.
         $inputs['status'] = 'publish';
 
-        // TODO: should always query entity with 'publish' status.
-        $result = $this->getArrayEntities($inputs['etype'], $inputs,
+        $result = $this->getEntities($inputs,
             $relations, $relCount, $columns, $pagination);
 
-        $result['key'] = $inputs['key'];
+        if ($result)
+            $result['key'] = $inputs['key'];
 
         return $result;
     }
@@ -55,7 +61,6 @@ class FeController extends EntityController
         // Alway query published entities for frontend.
         $inputs['status'] = 'publish';
 
-        $etype  = $inputs['etype'];
         $isFullPagination = isset($inputs['pagination']) ? true : false;
 
         unset($inputs['etype'], $inputs['pagination']);
@@ -71,13 +76,16 @@ class FeController extends EntityController
             // can we call child method from parent method?
             $params['status'] = 'publish';
 
-            // Get entities for each group
-            $result[$key] = $this->getArrayEntities($etype, $params,
+            // Get entities for each group with key as index
+            $result[$key] = $this->getEntities($params,
                 $relations, null, $columns, $isFullPagination);
+
+            // Entity type should be associated to the group of entities
+            $result[$key]['etype'] = $this->etype;
         }
 
         // Return entities with 'etype' in top level
-        return ['etype' => $etype, 'data' => $result];
+        return ['data' => $result];
     }
 
     /**
@@ -123,17 +131,16 @@ class FeController extends EntityController
 
     /**
      * Overload parent function, return frontend specific models
-     * @param $etype
      */
-    protected function getEntityTable($etype)
+    protected function getEntityTable()
     {
-        switch ($etype) {
+        switch ($this->etype) {
             case ETYPE_TOPIC:       return new FeTopic;
             case ETYPE_POST:        return new FePost;
             case ETYPE_OFFER:       return new FeOffer;
             case ETYPE_PAGE:        return new FePage;
             default:
-                return parent::getEntityTable($etype);
+                return parent::getEntityTable();
         }
     }
 

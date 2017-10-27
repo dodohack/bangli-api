@@ -67,6 +67,12 @@ class EntityController extends Controller
     protected $orderBy;   // Order by 'table column name'
     protected $order;     // Sort by 'desc' or 'asc'
 
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+        $this->etype = $request->get('etype');
+    }
+
     /**
      * Get the guard to be used during authentication.
      * @return mixed
@@ -76,109 +82,55 @@ class EntityController extends Controller
         return Auth::guard();
     }
 
-
     /**
-     * Get a list of entities
-     * @param $etype
+     * Get an array of entities matches given filters
      * @param $inputs
      * @param null $relations
      * @param null $relCount
      * @param null $columns
      * @param string $pagination
-     * @return array json array
+     * @return array | bool
      */
-    protected function getEntities($etype,
-                                   $inputs,
+    protected function getEntities($inputs,
                                    $relations = null,
                                    $relCount = null,
                                    $columns = null,
                                    $pagination = 'full')
     {
-        $ret = $this->getArrayEntities($etype, $inputs,
-            $relations, $relCount, $columns, $pagination);
 
-        // Return json array
-        return parent::successV2($inputs, json_encode($ret));
-    }
-
-    /**
-     * A wrapper function of getEntities with different parameters
-     * @param Request $request
-     * @param null $relations
-     * @param null $relCount
-     * @param null $columns
-     * @param string $pagination
-     * @return array
-     */
-    protected function getEntitiesReq(Request $request,
-                                      $relations = null,
-                                      $relCount = null,
-                                      $columns = null,
-                                      $pagination = 'full')
-    {
-        $inputs = $request->all();
-
-        // FIXME: SECURITY ISSUE
         // Client side can control with columns and relationship to retrieve
-        if (array_key_exists("columns", $inputs)) {
+        if (array_key_exists("columns", $inputs) && !$columns) {
             if ($inputs['columns'] != '')
                 $columns = explode(',', $inputs['columns']);
             else
                 $columns = null;
         }
 
-        // FIXME: SECURITY ISSUE
-        if (array_key_exists("relations", $inputs)) {
+        if (array_key_exists("relations", $inputs) && !$relations) {
             if ($inputs['relations'] != '')
                 $relations = explode(',', $inputs['relations']);
             else
                 $relations = null;
         }
 
-        return $this->getEntities($inputs['etype'], $inputs, $relations,
-            $relCount, $columns, $pagination);
-    }
-
-    /**
-     * Get an array of entities matches given filters
-     * @param $etype
-     * @param $inputs
-     * @param null $relations
-     * @param null $relCount
-     * @param null $columns
-     * @param string $pagination
-     * @return array
-     */
-    protected function getArrayEntities($etype,
-                                        $inputs,
-                                        $relations = null,
-                                        $relCount = null,
-                                        $columns = null,
-                                        $pagination = 'full')
-    {
         $this->pagination = $pagination;
-
-        // Sanitize input
-        array_filter($inputs, array($this, 'sanitize'));
 
         // Setup db query parameters
         $this->initInputFilters($inputs);
 
         // Decide which table to query
-        $table = $this->getEntityTable($etype);
-        if (!$table) {
-            return ['etype' => $etype, 'error' => 'Unknown entity type'];
-        }
+        $table = $this->getEntityTable();
+        if (!$table)  return false;
 
         // Decide the table name
-        $tableName = $this->getTableName($etype);
+        $tableName = $this->getTableName();
 
         // Decide columns and relations to be queried with this table
-        $this->initColumnsAndRelations($table, $columns,
-            $relations, $relCount, false);
+        $this->setupColumns($table, $columns, false);
+        $this->setupRelations($table, $relations, $relCount, false);
 
         // 1. Filter entities
-        $table = $this->filterEntities($table, $tableName, $etype);
+        $table = $this->filterEntities($table, $tableName);
 
         // 2. Run the actually query
         $res = $this->getEntitiesInternal($table);
@@ -186,76 +138,37 @@ class EntityController extends Controller
         $total    = $res['total'];
         $entities = $res['entities'];
 
+        $ret = [ 'entities' => $entities->toArray() ];
+
         // Return entities w/wo pagination
         if ($this->pagination != 'none') {
             $paginator = $this->paginator($total, $this->curPage,
                 $this->perPage, $entities->count());
 
-            $ret = [
-                "etype" => $etype,
-                "entities" => $entities->toArray(),
-                "paginator" => $paginator
-            ];
-        } else {
-            $ret = [
-                "etype" => $etype,
-                "entities" => $entities->toArray()
-            ];
+            $ret['paginator'] = $paginator;
         }
 
         // Return array of entities
         return $ret;
     }
 
-
     /**
-     * Get an entity with it's relations
-     * @param $etype - entity type
-     * @param $inputs - request inputs
+     * Get an entity object with it's relations
      * @param $key - 'id' for post or 'guid' topic
      * @param $table - table to query, optional
      * @param $relations - entity relation tables to be queried
      * @param $columns - entity table columns to be queried
-     * @return string
+     * @return array | boolean
      */
-    protected function getEntity($etype,
-                                 $inputs, $key, $id,
+    protected function getEntity($key, $id,
                                  $table = null,
                                  $relations = null,
                                  $columns = null,
-                                 $count = null)
-    {
-        $entity = $this->getEntityObj($etype, $key, $id,
-            $table, $relations, $columns, $count);
-
-        $ret = [
-            "etype"     => $etype,
-            "entity"    => $entity
-        ];
-
-        /* Return JSONP or AJAX data */
-        return parent::successV2($inputs, json_encode($ret));
-    }
-
-    /**
-     * Get an entity object with it's relations
-     * @param $etype - entity type
-     * @param $key - 'id' for post or 'guid' topic
-     * @param $table - table to query, optional
-     * @param $relations - entity relation tables to be queried
-     * @param $columns - entity table columns to be queried
-     * @return string
-     */
-    protected function getEntityObj($etype, $key, $id,
-                                    $table = null,
-                                    $relations = null,
-                                    $columns = null,
-                                    $relCount = null)
+                                 $relCount = null)
     {
         if (!$table) {
-            $db = $this->getEntityTable($etype);
-            if (!$db)
-                return ['etype' => $etype, 'error' => 'Unhandled entity type'];
+            $db = $this->getEntityTable();
+            if (!$db) return false;
         } else {
             $db = $table;
         }
@@ -263,72 +176,31 @@ class EntityController extends Controller
         $db = $db->where($key, $id);
 
         if ($relations) $db = $db->with($relations);
-        if ($relCount)     $db = $db->withCount($relCount);
+        if ($relCount)  $db = $db->withCount($relCount);
 
         if ($columns)   $entity = $db->first($columns);
         else            $entity = $db->first();
-
-
-        // Shorten topic's offer relationship title to 76 chars
-        // We need to have a read-more at client side
-        /*
-        if (array_search('offers', $relations) !== FALSE) {
-            $relLength = count($entity['offers']);
-            for($j = 0; $j < $relLength; $j++) {
-                $oldRelStr = $entity['offers'][$j]['title'];
-                $newRelStr = mb_substr($oldRelStr, 0, 76);
-                if (mb_substr($newRelStr, -1) != mb_strstr($oldRelStr, -1))
-                    $newRelStr = $newRelStr . '...';
-                $entity['offers'][$j]['title'] = $newRelStr;
-            }
-        }
-        */
 
         return $entity;
     }
 
     /**
-     * Helper function of getEntity
-     */
-    protected function getEntityReq(Request $request,
-                                    $key, $id,
-                                    $table = null,
-                                    $relations = null,
-                                    $columns = null,
-                                    $relCount = null)
-    {
-        $inputs = $request->all();
-        return $this->getEntity($inputs['etype'], $inputs, $key, $id,
-            $table, $relations, $columns, $relCount);
-    }
-
-    /**
-     * Helper function of getEntity returns an collection
-     */
-    protected function getEntityReqObj(Request $request,
-                                       $key, $id,
-                                       $table = null,
-                                       $relations = null,
-                                       $columns = null,
-                                       $relCount = null)
-    {
-        $inputs = $request->all();
-        return $this->getEntityObj($inputs['etype'], $key, $id,
-            $table, $relations, $columns, $relCount);
-    }
-
-    /**
      * Create a new entity
-     * @param $etype  - entity type
      * @param $inputs - request inputs
      * @return object
      */
-    protected function postEntity($etype, $inputs)
+    protected function postEntity($inputs)
     {
         // TODO: update column name
         unset($inputs['created_at'], $inputs['updated_at']);
 
-        $table = $this->getEntityTable($etype);
+        $table = $this->getEntityTable();
+
+        // Set default entity author/editor to current user if they are not set
+        $user_id = $this->guard()->user()->id;
+        if ($this->etype == ETYPE_TOPIC)
+            if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $user_id;
+        if (!isset($inputs['author_id'])) $inputs['author_id'] = $user_id;
 
         // Normalize HTML and add Angular specific tags
         if (isset($inputs['content']))
@@ -336,58 +208,52 @@ class EntityController extends Controller
 
         // Create the entity
         $record = $table->create($inputs);
-        if (!$record) {
-            $msg = ['etype' => $etype,
-                'error' => 'Fail to create a entity'];
-            return $this->error(json_encode($msg));
-        }
+
+        // Fail to creat the entity
+        if (!$record) return null;
 
         // Update entity relations
-        $this->updateRelations($etype, $inputs, $record);
+        $this->updateRelations($inputs, $record);
 
         // NOTE: We do not need to create revision when create a new entity
 
         // Return newly created entity
-        return $this->getEntity($etype, $inputs, 'id', $record->id, $table);
-    }
-
-    /**
-     * Helper function of postEntity
-     */
-    protected function postEntityReq(Request $request)
-    {
-        $inputs = $request->all();
-        return $this->postEntity($inputs['etype'], $inputs);
+        return $this->getEntity('id', $record->id, $table);
     }
 
     /**
      * Update entity by given id
-     * @param $etype - entity type
      * @param $inputs - request inputs
      * @param $id - post id to be updated
      * @param $relations - relations to return when 'put' success
      * @param $columns - columns to return when 'put' success
      * @return object
      */
-    protected function putEntity($etype, $inputs, $key, $id,
+    protected function putEntity($inputs, $key, $id,
                                  $relations = null,
                                  $columns = null,
                                  $relCount = null)
     {
         unset($inputs['created_at'], $inputs['updated_at']);
 
-        $table = $this->getEntityTable($etype);
+        $table = $this->getEntityTable();
 
         $record = $table->where($key, $id)->first();
 
         $user = $this->guard()->user();
-	
+
         // Check if user has write permission to the entity
-        if (!$this->canUserEditEntity($etype, $record, $user))
-            return $this->error('No permission');
+        if (!$this->canUserEditEntity($record, $user))
+            return null;
+
+        // Set default entity author/editor to current user if they are not set
+        if ($this->etype == ETYPE_TOPIC && !$record->editor_id)
+            if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $user->id;
+        if (!$record->author_id)
+            if (!isset($inputs['author_id'])) $inputs['author_id'] = $user->id;
 
         // Update entity relations
-        $this->updateRelations($etype, $inputs, $record);
+        $this->updateRelations($inputs, $record);
 
         // Normalize HTML and add Angular2 specific tags
         if (isset($inputs['content']))
@@ -395,7 +261,7 @@ class EntityController extends Controller
 
         // Save old post before updating it, only apply to content support
         // revision and are not autosaved.
-        if (isset($inputs['content']) && $this->supportRevision($etype) &&
+        if (isset($inputs['content']) && $this->supportRevision() &&
             !isset($inputs['auto'])) {
             $record->revisions()->create([
                 'status'       => $record->status,
@@ -408,125 +274,107 @@ class EntityController extends Controller
 
         if ($record->update($inputs)) {
             // Return the updated entity
-            return $this->getEntity($etype, $inputs, 'id', $id, $table,
+            return $this->getEntity($inputs, 'id', $id, $table,
                 $relations, $columns, $relCount);
-        } else {
-            $error = ['etype' => $etype, 'error' => 'Update fails'];
-            return parent::error(json_encode($error), 401);
         }
+
+        // Return null if any error happens
+        return null;
     }
 
     /**
-     * Same as putEntity, but with different parameters
-     * @param Request $request
-     * @param $key
-     * @param $id
-     * @param null $relations
-     * @param null $columns
-     * @return object
-     */
-    protected function putEntityReq(Request $request, $key, $id,
-                                    $relations = null, $columns = null,
-                                    $relationCount = null)
-    {
-        $inputs = $request->all();
-        return $this->putEntity($inputs['etype'], $inputs, $key, $id,
-            $relations, $columns, $relationCount);
-    }
-
-    /**
-     * Do the actually delete work
-     * @param $etype - entity type
+     * Move an entity into trash
      * @param $key   - primary id name
      * @param $id    - primary id
      * @return bool  - true if we've found the record else false
      */
-    protected function deleteEntityInternal($etype, $key, $id)
+    protected function deleteEntity($key, $id)
     {
-        $table = $this->getEntityTable($etype);
+        $table = $this->getEntityTable();
+        if (!$table) return false;
 
         $record = $table->where($key, $id)->first();
 
         if ($record) {
-            if ($record->status == 'trash') {
-                // Physically delete a 'trash'ed entity
-                // TODO: Check if relationship is automatically deleted as we
-                // have FK constraint on it.
-                $table->where($key, $id)->delete();
-            } else {
-                // Move entity to trash
-                $record->status = 'trash';
-                $record->save();
-            }
+            // Move entity to trash
+            $record->status = 'trash';
+            $record->save();
             return true;
         }
         return false;
     }
 
     /**
-     * Move a entity to trash by id
-     * @param $etype - entity type
-     * @param $inputs - request inputs
-     * @param $key
-     * @param $id
-     * @return Post
+     * Physically delete an entity from trash
+     * @param $key   - primary id name
+     * @param $id    - primary id
+     * @return bool  - true if we've found the record else false
      */
-    protected function deleteEntity($etype, $inputs, $key, $id)
+    protected function purgeEntity($key, $id)
     {
-        if ($this->deleteEntityInternal($etype, $key, $id)) {
-            $ret = ['etype'  => $etype, 'num_of_deleted' => 1];
-            return parent::successV2($inputs, json_encode($ret));
-        } else {
-            $error = ['etype' => $etype, 'error' => 'Delete fails'];
-            return parent::error(json_encode($error), 401);
+        $table = $this->getEntityTable();
+        if (!$table) return false;
+
+        $record = $table->where($key, $id)->first();
+
+        if ($record && $record->status == 'trash') {
+            // Physically delete an entity from trash
+            // TODO: Check if relationship is automatically deleted as we
+            // have FK constraint on it.
+            $table->where($key, $id)->delete();
+            return true;
         }
+        return false;
     }
 
     /**
-     * Same as deleteEntity but with different parameters
-     * @param Request $request
-     * @param $key
-     * @param $id
-     * @return Post
+     * Move multiple entities into trash by their IDs
+     * @param $ids
+     * @return bool|int
      */
-    protected function deleteEntityReq(Request $request, $key, $id)
-    {
-        $inputs = $request->all();
-        return $this->deleteEntity($inputs['etype'], $inputs, $key, $id);
-    }
-
-    protected function deleteEntitiesReq(Request $request)
+    protected function deleteEntities($ids)
     {
         $numDeleted = 0;
-        $etype = $request->get('etype');
-        $ids   = $request->get('ids');
 
-        if (!$etype || !$ids)
-            return;
+        if (!$ids) return false;
 
         $idAry = explode(',', $ids);
 
         foreach($idAry as $id) {
-            if ($this->deleteEntityInternal($etype, 'id', $id))
+            if ($this->deleteEntity('id', $id))
                 $numDeleted++;
         }
 
-        if ($numDeleted) {
-            $ret = ['etype'  => $etype, 'num_of_deleted' => $numDeleted];
-            return parent::success($request, json_encode($ret));
-        } else {
-            $error = ['etype' => $etype, 'error' => 'Delete fails'];
-            return parent::error(json_encode($error), 401);
+        return $numDeleted;
+    }
+
+    /**
+     * Physically delete multiple entities from trash by their IDs
+     * @param $ids
+     * @return bool|int
+     */
+    protected function purgeEntities($ids)
+    {
+        $numPurged = 0;
+
+        if (!$ids) return false;
+
+        $idAry = explode(',', $ids);
+
+        foreach($idAry as $id) {
+            if ($this->purgeEntity('id', $id))
+                $numPurged++;
         }
+
+        return $numPurged;
     }
 
     /**
      * Update entity relations.
-     * @param $etype
      * @param $inputs
      * @param $entity
      */
-    protected function updateRelations($etype, $inputs, $entity)
+    protected function updateRelations($inputs, $entity)
     {
         if (isset($inputs['tags'])) {
             $tagIds = array_column($inputs['tags'], 'id');
@@ -547,7 +395,7 @@ class EntityController extends Controller
         if (isset($inputs['topics'])) {
             $topicIds = array_column($inputs['topics'], 'id');
 
-            if ($etype == ETYPE_TOPIC) {
+            if ($this->etype == ETYPE_TOPIC) {
                 // Update topic_has_topic relations in 2 directions
 
                 // The relationship
@@ -584,41 +432,21 @@ class EntityController extends Controller
     /**
      * Check if current user has permission to edit a entity.
      * can be edited by editor and above, post can be edited by author and above
-     * @param $etype  - entity type
      * @param $record - a cms record
      * @param $user - current user
      * @return bool
      */
-    protected function canUserEditEntity($etype, $record, $user)
+    private function canUserEditEntity($record, $user)
     {
-	// Author can edit his posts
-        if ($etype == ETYPE_POST && $user->hasRole('author'))
+        // Author can edit his posts
+        if ($this->etype == ETYPE_POST && $user->hasRole('author'))
             return $record->author_id == $user->id ? true: false;
 
-	// Editor and administrator can edit any content
+        // Editor and administrator can edit any content
         if ($user->hasRole(['editor', 'administrator']))
             return true;
 
         return false;
-    }
-
-
-    /**
-     * Get status and occurrence of a entity
-     * @param $request
-     * @param $table
-     * @return object
-     */
-    protected function getEntityStatus($request, $table)
-    {
-        $states = DB::table($table)
-            ->select(DB::raw('status, COUNT(*) as count'))
-            ->groupBy('status')->get();
-
-        $json = json_encode($states);
-
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
     }
 
     /**
@@ -648,6 +476,7 @@ class EntityController extends Controller
 
         // withCount overwrites columns in get, must use select before it
         if ($this->columns) $db = $db->select($this->columns);
+        else                $db = $db->select($this->getEntityColumns(true));
 
         // Count related model, say the number of offers associated with a topic.
         if ($this->relCount)   $db = $db->withCount($this->relCount);
@@ -656,20 +485,6 @@ class EntityController extends Controller
 
         //var_export(\Illuminate\Support\Facades\DB::getQueryLog());
 
-        // FIXME: We can't do it here as it is shared by both FE and BE.
-        // Shorten entity title to 76 chars if it is too long
-        /*
-        $length = count($records);
-        for($i = 0; $i < $length; $i++) {
-            $record = $records[$i];
-            $oldStr = $record['title'];
-            $newStr = mb_substr($oldStr, 0, 76);
-            if (mb_substr($newStr, -1) != mb_substr($oldStr, -1))
-                $newStr = $newStr . '...';
-            $records[$i]['title'] = $newStr;
-        }
-        */
-
         return ['total' => $total, 'entities' => $records];
     }
 
@@ -677,10 +492,9 @@ class EntityController extends Controller
      * Get list of entities w/wo filters
      * @param $table      - entity table object
      * @param $tableName  - entity table name in string
-     * @param $etype      - entity type
      * @return array
      */
-    private function filterEntities($table, $tableName, $etype)
+    private function filterEntities($table, $tableName)
     {
         $db = $table;
 
@@ -743,7 +557,7 @@ class EntityController extends Controller
 
         // Search entities by given keyword
         if ($this->query)
-            $db = $this->filterBySearchString($db, $etype, $this->query);
+            $db = $this->filterBySearchString($db, $this->etype, $this->query);
 
         return $db;
     }
@@ -831,26 +645,14 @@ class EntityController extends Controller
     }
 
     /**
-     * Determine which columns and relations of the entity to query together
-     * when querying a list of entities or a single entity
-     * FIXME: $full shouldn't control both columns and relations!
+     * Determine what relations of the entity to query together
      *
-     * @param $columns  - User input columns if any
      * @param $relations- User input relations if any
-     * @param $full     - Is full columns/relations should be queried
+     * @param $full     - If full relations should be queried
      */
-    private function initColumnsAndRelations($table, $columns, $relations,
-                                             $relCount, $full = false)
+    private function setupRelations($table, $relations,
+                                    $relCount, $full = false)
     {
-        if ($columns == null) {
-            if ($full)
-                $this->columns = $table->fullColumns();
-            else
-                $this->columns = $table->simpleColumns();
-        } else {
-            $this->columns = $columns;
-        }
-
         if ($relations == null) {
             if ($full)
                 $this->relations = $table->fullRelations();
@@ -864,18 +666,35 @@ class EntityController extends Controller
     }
 
     /**
+     * Determine what columns of the entity to query together
+     *
+     * @param $columns  - User specified columns if any
+     * @param $full     - If full columns should be queried
+     */
+    private function setupColumns($table, $columns, $full = false)
+    {
+        if ($columns == null) {
+            if ($full)
+                $this->columns = $table->fullColumns();
+            else
+                $this->columns = $table->simpleColumns();
+        } else {
+            $this->columns = $columns;
+        }
+    }
+
+    /**
      * OVERLOADED BY CHILD CLASS
      * Get entity table to be queried, reference bangli-admin-spa
      * models/entity.ts ENTITY constant for all possible entity type
      * Largely use database view for frontend request to simplify the code
      * base and boost performance.
      *
-     * @param string $etype - entity type
      * @return object       - entity table
      */
-    protected function getEntityTable($etype)
+    protected function getEntityTable()
     {
-        switch ($etype) {
+        switch ($this->etype) {
             case ETYPE_POST:         return new Post;
             case ETYPE_OFFER:        return new Offer;
             case ETYPE_PAGE:         return new Page;
@@ -891,13 +710,12 @@ class EntityController extends Controller
     /**
      * OVERLOADED BY CHILD CLASS
      * This function return the table name in string, it is used in sql join
-     * @param $etype
      * @return string - table name
      */
-    protected function getTableName($etype)
+    protected function getTableName()
     {
 
-        switch ($etype) {
+        switch ($this->etype) {
             case ETYPE_POST:          return 'posts';
             case ETYPE_OFFER:         return 'offers';
             case ETYPE_PAGE:          return 'pages';
@@ -914,9 +732,9 @@ class EntityController extends Controller
      * If given entity type support revisions
      * @return bool
      */
-    protected function supportRevision($etype)
+    protected function supportRevision()
     {
-        switch ($etype) {
+        switch ($this->etype) {
             case ETYPE_POST:
             case ETYPE_TOPIC:
             case ETYPE_PAGE:

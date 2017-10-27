@@ -13,27 +13,19 @@ use App\Models\Post;
 
 class PostController extends EntityController
 {
-    // FIXME: Hardcoded table columns, move them to Models.
-    /* Columns to be retrieved for posts list */
-    private $postsColumns = ['posts.id', 'editor_id', 'author_id', 'channel_id',
-                          'location_id', 'lock', 'status',
-                          'title', 'excerpt',
-                          'published_at', 'created_at', 'updated_at'];
-
-    /* Relations to be queried with the post/posts */
-    private $postsRelations = ['author', 'editor', 'channel', 'categories',
-        'topics', 'statistics', 'activities'];
-    private $postRelations = ['author', 'editor', 'channel', 'image',
-        'categories', 'topics', 'revisions', 'statistics'];
-
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Return a list of posts
      */
     public function getPosts(Request $request)
     {
-        return $this->getEntitiesReq($request,
-            $this->postsRelations, null, $this->postsColumns);
+        $posts = $this->getEntities($request->all());
+
+        return $this->response($posts, 'get posts error');
     }
 
     /**
@@ -41,7 +33,7 @@ class PostController extends EntityController
      */
     public function putPosts(Request $request)
     {
-        return response('Posts batch editing API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -49,28 +41,45 @@ class PostController extends EntityController
      */
     public function deletePosts(Request $request)
     {
-        return $this->deleteEntitiesReq($request);
+        $ids = $request->get('ids');
+        $numDeleted = $this->deleteEntities($ids);
+
+        return $this->response($numDeleted, 'trash posts error');
     }
 
     /**
-     * Return post statuss and occurrences
+     * Physically delete multiple posts from trash
      */
-    public function getStates(Request $request)
+    public function purgePosts(Request $request)
     {
-        // FIXME: Hardcoded table name
-        return $this->getEntityStates($request, 'posts');
+        $ids = $request->get('ids');
+        $numPurged = $this->purgeEntities($ids);
+
+        return $this->response($numPurged, 'purge posts error');
     }
 
     /**
-     * Get a post with it's relations
+     * Return post status and occurrences
+     */
+    public function getStatus(Request $request)
+    {
+        $status = Post::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->response($status, 'get post status error');
+    }
+
+    /**
+     * Get a post
      * @param Request $request
      * @param $id - post id
      * @return string
      */
     public function getPost(Request $request, $id)
     {
-        return $this->getEntityReq($request,
-            'id', $id, null, $this->postRelations);
+        $post = $this->getEntity('id', $id);
+
+        return $this->response($post, 'get post error');
     }
 
     /**
@@ -81,8 +90,11 @@ class PostController extends EntityController
      */
     public function putPost(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id,
-                                   $this->postRelations, null/* columns */);
+        $inputs = $request->all();
+
+        $post = $this->putEntity($inputs, 'id', $id);
+
+        return $this->response($post, 'put post error');
     }
 
     /**
@@ -92,17 +104,36 @@ class PostController extends EntityController
      */
     public function postPost(Request $request)
     {
-        return $this->postEntityReq($request);
+        $inputs = $request->all();
+
+        $post = $this->postEntity($inputs);
+
+        return $this->response($post, 'post post error');
     }
 
     /**
      * Move a post to trash by id
      * @param Request $request
      * @param $id
-     * @return Post
+     * @return Post | bool
      */
     public function deletePost(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        $deleted = $this->deleteEntity('id', $id);
+
+        return $this->response($deleted, 'trash post error');
+    }
+
+    /**
+     * Physically delete a post from trash by id
+     * @param Request $request
+     * @param $id
+     * @return
+     */
+    public function purgePost(Request $request, $id)
+    {
+        $purged = $this->purgeEntity('id', $id);
+
+        return $this->response($purged, 'purge post error');
     }
 }

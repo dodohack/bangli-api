@@ -9,6 +9,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\EntityController;
 use App\Models\Category;
 use App\Models\TopicType;
@@ -20,6 +21,11 @@ use Illuminate\Support\Facades\Log;
 
 class CmsController extends EntityController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Get a group of CMS related attributes to cache on client at app
      * start up. These cached data are only used as input select, do
@@ -69,10 +75,10 @@ class CmsController extends EntityController
             ->select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        $json = compact('authors', 'editors', 'channels', 'locations',
+        $array = compact('authors', 'editors', 'channels', 'locations',
             'categories', 'topic_types', 'post_status',
             'topic_status', 'offer_status', 'page_status');
 
-        return parent::success($request, $json);
+        return $this->success($array);
     }
 }

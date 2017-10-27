@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Laravel\Lumen\Concerns\RoutesRequests;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
@@ -15,53 +16,78 @@ class Controller extends BaseController
     // Image server address with S3 bracket name
     protected $imgServer;
 
-    public function __construct()
+    // Jsonp callback from incoming request, it is injected by the
+    // constructor from child class
+    protected $callback;
+
+    // Entity type  - Only entity related controller will initialize it
+    protected $etype;
+
+    public function __construct(Request $request)
     {
-        $this->domain = env('ROOT_DOMAIN');
-        $this->www = 'www.' . $this->domain;
+        $this->domain    = env('ROOT_DOMAIN');
+        $this->www       = 'www.' . $this->domain;
         $this->imgServer = env('IMG_SERVER');
+        $this->callback  = $request->get('callback');
+        $this->etype     = null;
     }
 
     /**
      * Return JSONP or AJAX response based on client request
-     * @param Request $request
-     * @param $json
-     * @return string
+     * I intentionally place $etype in the middle even it has default parameter
+     * @param string $callback
+     * @param $data - data array to be returned to client
+     * @return
      */
-    public function success(Request $request, $json)
+    public function success($data)
     {
+        // Convert scalar to array
+        if (!is_array($data)) $data = compact('data');
+
+        if ($this->etype) $data['etype'] = $this->etype;
+
+        $ret = json_encode($data);
+
         // JSONP response
-        if ($request->has('callback'))
-            return $request->input('callback') . '(' . $json . ')';
+        if ($this->callback)
+            return $this->callback . '(' . $ret . ')';
 
         // AJAX response
-        return $json;
-    }
-
-    /**
-     * Same as function 'success', but with array input
-     * @param $inputs
-     * @param $json
-     * @return string
-     */
-    public function successV2($inputs, $json)
-    {
-        // JSONP response
-        if (isset($input['callback']))
-            return $inputs['callback'] . '(' . $json . ')';
-
-        // AJAX response
-        return $json;
+        return $ret;
     }
 
     /**
      * Return error message with HTTP 500 error
-     * @param $json
-     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     * @param string $callback
+     * @param string $msg
+     * @return
      */
-    public function error($json)
+    public function error($msg)
     {
-        return response($json, 500);
+        $ret = ['error' => $msg];
+        if ($this->etype) $ret['etype'] = $this->etype;
+
+        $ret = json_encode($ret);
+
+        // Jsonp response
+        if ($this->callback) $ret = $this->callback . '(' . $ret . ')';
+
+        return response($ret, 500);
+    }
+
+    /**
+     * Response to client with data or error
+     * @param Request $request
+     * @param $data
+     * @param $error
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory|string
+     */
+    public function response($data, $error)
+    {
+        if ($data)
+            return $this->success($data);
+        else
+            return $this->error($error);
     }
 
     /**

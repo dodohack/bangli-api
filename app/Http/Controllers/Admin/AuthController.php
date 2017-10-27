@@ -17,6 +17,11 @@ use App\Models\Role;
 
 class AuthController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /*
      * Process callback request from authentication server
      */
@@ -55,13 +60,13 @@ class AuthController extends Controller
             if ($ret->email) {
                 $user = $this->createUser($ret->email);
             } else {
-                return response("Invalid User", 401);
+                return $this->error("Invalid User");
             }
         }
 
         $result = $user->with(['role'])->first()->toArray();
         $ret = ['user' => $result, 'img_server' => env('IMG_SERVER')];
-        return parent::success($request, json_encode($ret));
+        return $this->success($ret);
     }
 
     /**

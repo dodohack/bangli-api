@@ -18,6 +18,11 @@ use App\Models\FeViewRelatedTopic;
 
 class BatchReqController extends FeController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * The basic idea of the batch request is that each group in the request
      * is a stand alone single request with a key, so each group can be treated
@@ -57,7 +62,6 @@ class BatchReqController extends FeController
         // Decode parameters in each group
         $this->convertParam2Input($groups);
 
-
         // Retrieve entities using standard method
         $result = [];
         $idx    = 0;
@@ -73,12 +77,21 @@ class BatchReqController extends FeController
             if ($group->inputs['etype'] == ETYPE_TOPIC)
                 $relCount = 'offers';
 
-            $result[$idx++] =
-                $this->getArrayEntitiesByKey($group->inputs, $relations,
+            // Entity type for each group should be set
+            $this->etype = $group->inputs['etype'];
+
+            $result[$idx] =
+                $this->getEntitiesByKey($group->inputs, $relations,
                     $relCount, null, 'full');
+
+            // Each group should be associated with etype
+            $result[$idx]['etype'] = $this->etype;
+
+            $idx++;
         }
 
-        return $this->success($request, json_encode($result));
+        // This is the only place we do not need to return with toplevel etype
+        return $this->success($result);
     }
 
     /**

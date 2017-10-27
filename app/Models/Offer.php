@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Offer extends Model
+class Offer extends EntityModel
 {
     protected $table    = 'offers';
     protected $hidden   = ['pivot'];
@@ -12,6 +10,27 @@ class Offer extends Model
         'title', 'tracking_url', 'display_url', 'vouchers',
         'aff_offer_id', 'starts', 'ends',
         'created_at', 'updated_at', 'published_at'];
+
+
+    public function simpleColumns()
+    {
+        return null;
+    }
+
+    public function fullColumns()
+    {
+        return null;
+    }
+
+    public function simpleRelations()
+    {
+        return ['topics'];
+    }
+
+    public function fullRelations()
+    {
+        return ['topics'];
+    }
 
     public function editor()
     {

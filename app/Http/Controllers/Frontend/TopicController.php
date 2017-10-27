@@ -15,19 +15,16 @@ use App\Models\ViewTopicHasPost;
 
 class TopicController extends FeController
 {
-    /* Columns to be retrieved for topics list */
-    private $topicsColumns = ['topics.id', 'topics.channel_id',
-        'type_id', 'ranking', 'guid', 'logo',
-        'title', 'title_cn', 'topics.description', 'updated_at'];
-
-    /* Relations to be queried with topic/topics */
-    private $topicsRelations = [];
-
-
     // FIXME: If enabling querying relationship count, select the column of
     // FIXME: the main table will not work!!
     /* Retrieve number of offers related to given topic */
     private $relationCount = 'offers';
+
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
 
     /**
      * Get a list of published topics
@@ -42,10 +39,10 @@ class TopicController extends FeController
         if (isset($inputs['relations']))
             $relations = $this->setupRelations($inputs['relations']);
 
-        $result = $this->getArrayEntitiesByKey($inputs, $relations,
-            $this->relationCount, $this->topicsColumns, 'full');
-        // FIXME: Error handling.
-        return $this->success($request, json_encode($result));
+        $topics = $this->getEntitiesByKey($inputs, $relations,
+            $this->relationCount, null, 'full');
+
+        return $this->response($topics, 'get topics error');
     }
 
     /**
@@ -56,31 +53,31 @@ class TopicController extends FeController
      */
     public function getGroupTopics(Request $request)
     {
-        $result = $this->getGroupedEntities($request->all(),
-            null, $this->topicsColumns);
+        $topicGroups = $this->getGroupedEntities($request->all(),
+            null, null);
 
-        return $this->success($request, json_encode($result));
+        return $this->success($topicGroups);
     }
 
+    /**
+     * Get a single topic
+     * @param Request $request
+     * @param $guid
+     * @return mixed
+     */
     // FIXME: Merge FeToic::topic_relations/topic_columns with
     // the definition relations/columns of data member.
     public function getTopic(Request $request, $guid)
     {
-        $inputs = $request->all();
-        $table  = $this->getEntityTable($inputs['etype']);
+        $table  = $this->getEntityTable();
+        if (!$table) return $this->error('get topic error');
 
-        $topic = $this->getEntityObj($inputs['etype'], 'guid', $guid, $table,
-            FeTopic::topic_relations(), FeTopic::topic_columns(),
-            $this->relationCount);
+        $topic = $this->getEntity('guid', $guid, $table,
+            null, null, $this->relationCount);
 
-        if (!$topic) {
-            // FIXME: Return content
-            return response("Topic not found", 401);
-        }
+        if (!$topic) return $this->error('topic not found');
 
         // Get related offers
-        $offers = Array();
-
         switch ($topic->type['slug']) {
             case TT_BRAND:
             case TT_MERCHANT:
@@ -91,19 +88,14 @@ class TopicController extends FeController
             case TT_ROUTE:
             case TT_PRODUCT:
             default:
-		// TODO: Only retrieve offer with some topic type.
-                $offers = $topic->offers()->get();
+                // FIXME: Always return offers for all kind of topic
+                $offers = $topic->offers()->get()->toArray();
                 break;
         }
 
         $topic['offers'] = $offers;
 
-        $ret = [
-            "etype"  => $inputs['etype'],
-            "entity" => $topic
-        ];
-
-        return parent::successV2($inputs, json_encode($ret));
+        return $this->success($topic);
     }
 
     /**
@@ -177,7 +169,7 @@ class TopicController extends FeController
      * @param $num - max related topics to return
      * @return $ret - list of related topics
      */
-    protected function getRelatedTopics($tid, $cat_ids, $ttype_id, $num = 20)
+    private function getRelatedTopics($tid, $cat_ids, $ttype_id, $num = 20)
     {
         $cols = ['title', 'anchor_text', 'guid'];
         if (!$cat_ids || !count($cat_ids) || !$ttype_id) return [];
@@ -195,7 +187,7 @@ class TopicController extends FeController
      * @param $tid
      * @param $num_post
      */
-    protected function getHotPosts($tid, $num_post)
+    private function getHotPosts($tid, $num_post)
     {
         $cols = ['post_id', 'title', 'published_at'];
         return ViewTopicHasPost::where('topic_id', $tid)
@@ -209,7 +201,7 @@ class TopicController extends FeController
      * @param $tid
      * @param $num_post
      */
-    protected function getLatestPosts($tid, $num_post)
+    private function getLatestPosts($tid, $num_post)
     {
         $cols = ['post_id', 'title', 'published_at'];
         return ViewTopicHasPost::where('topic_id', $tid)
@@ -226,7 +218,7 @@ class TopicController extends FeController
      * @param $num_group
      * @return $ret - series of posts within each topic
      */
-    protected function getPostSeries($series, $num_group, $num_item)
+    private function getPostSeries($series, $num_group, $num_item)
     {
         $cols = ['post_id', 'title', 'published_at'];
         $ret = array_slice($series, 0, $num_group);
@@ -246,7 +238,7 @@ class TopicController extends FeController
      * @param $topic_id
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    protected function getOffers($topic_id)
+    private function getOffers($topic_id)
     {
         $table = new FeTopic();
         return $table->where('id', $topic_id)->offers();

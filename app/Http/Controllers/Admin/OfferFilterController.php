@@ -15,35 +15,27 @@ class OfferFilterController extends Controller
 
     public function getAll(Request $request)
     {
-        $ret = OfferFilter::get()->toJson();
-        return parent::success($request, $ret);
+        $ret = OfferFilter::get();
+        return parent::responseReq($request, $ret, 'get all offer filter error');
     }
 
     public function get(Request $request, $type)
     {
-        $ret = OfferFilter::where('type', $type)->first()->toJson();
-        return parent::success($request, $ret);
+        $ret = OfferFilter::where('type', $type)->first();
+        return parent::responseReq($request, $ret, 'get offer filter error');
     }
 
     public function put(Request $request, $type)
     {
         $content = $request->get('content');
         $ret = OfferFilter::where('type', $type)->update(['content' => $content]);
-        if ($ret) {
-            return $this->get($request, $type);
-        } else {
-            return response('FAIL', 401);
-        }
+        return parent::responseReq($request, $ret, 'put offer filter error');
     }
 
     public function post(Request $request)
     {
         $input = $request->except('id');
         $ret = OfferFilter::create($input);
-        if ($ret) {
-            return parent::success($request, json_encode($ret));
-        } else {
-            return resopnse('FAIL', 401);
-        }
+        return parent::responseReq($request, $ret, 'post offer filter error');
     }
 }

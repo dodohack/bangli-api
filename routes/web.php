@@ -24,8 +24,8 @@ $router->group(
     $router->get('/topics/{guid}',  'TopicController@getTopic');
 
     // Offer
-    $router->get('/offer/{id}',     'OfferController@getOffer');
-    $router->get('/offers',         'OfferController@getOffers');
+    //$router->get('/offer/{id}',     'OfferController@getOffer');
+    //$router->get('/offers',         'OfferController@getOffers');
 
     // Advertisement
     $router->get('/advertises',       'AdvertiseController@getAds');
@@ -44,6 +44,7 @@ include('routes.admin.php');
 
 /////////////////////////////////////////////////////////////////
 // Test
+/*
 $router->group(
     ['namespace' => '\App\Http\Controllers\Backend'], function () use ($router) {
     $router->get('/awin-get-merchants', 'AffiliateWindowController@testGetMerchants');
@@ -52,3 +53,4 @@ $router->group(
     $router->get('/awin-update-merchants', 'AffiliateWindowController@updateMerchants');
     $router->get('/awin-update-offers', 'AffiliateWindowController@updateOffers');
 });
+*/

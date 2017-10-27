@@ -12,14 +12,18 @@ use App\Models\Menu;
 
 class FeMenuController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get list of menus
      */
     public function getFeMenus(Request $request)
     {
-        $json = Menu::get()->toJson();
-        return parent::success($request, $json);
+        $menu = Menu::get()->toArray();
+        return $this->response($menu, 'get femenus error');
     }
 
     /**
@@ -27,8 +31,8 @@ class FeMenuController extends Controller
      */
     public function getFeMenu(Request $request, $id)
     {
-        $json = Menu::find($id)->toJson();
-        return parent::success($request, $json);
+        $menu = Menu::find($id)->toArray();
+        return $this->response($menu, 'get femnu error');
     }
 
     /**
@@ -38,13 +42,9 @@ class FeMenuController extends Controller
     {
         $input = $request->except('id');
 
-        $newMenu = Menu::create($input);
+        $newMenu = Menu::create($input)->toArray();
 
-        if ($newMenu) {
-            return parent::success($request, json_encode($newMenu));
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newMenu, 'post femenu error');
     }
 
     /**
@@ -54,13 +54,9 @@ class FeMenuController extends Controller
     {
         $input = $request->except('id');
 
-        $newMenu = Menu::find($id)->update($input);
+        $newMenu = Menu::find($id)->update($input)->toArray();
 
-        if ($newMenu) {
-            return $this->getFeMenu($request, $id);
-        } else {
-            return response('FAIL', 401);
-        }
+        return $this->response($newMenu, 'put femenu error');
     }
 
     /**
@@ -70,9 +66,6 @@ class FeMenuController extends Controller
     {
         $numDeleted = Menu::destroy($id);
 
-        if ($numDeleted)
-            return parent::success($request, $id);
-        else
-            return response('FAIL', 401);
+        return $this->response($numDeleted, 'delete femenu error');
     }
 }

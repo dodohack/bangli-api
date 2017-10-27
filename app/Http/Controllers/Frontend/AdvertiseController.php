@@ -10,24 +10,32 @@ use Illuminate\Http\Request;
 class AdvertiseController extends FeController
 {
 
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
     /**
      * Return a list of published advertisements
      * @param Request $request
+     * @return object
      */
     public function getAds(Request $request)
     {
-        $result = $this->getArrayEntitiesByKey($request->all(), null, null, null, 'none');
-        // FIXME: Error handling.
-        return $this->success($request, json_encode($result));
+        $ads = $this->getEntitiesByKey($request->all(), null, null, null, 'none');
+
+        return $this->response($ads, 'get ads error');
     }
 
     /**
      * Get an advertisement
      * @param Request $request
      * @param $id
+     * @return object
      */
     public function getAd(Request $request, $id)
     {
+        $ad = $this->getEntity('id', $id);
 
+        return $this->response($ad, 'get ad error');
     }
 }

@@ -5,8 +5,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 /*
 |--------------------------------------------------------------------------
 | Attachment, include all kind of uploaded files except images used by
@@ -15,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 |
 |
 */
-class Attachment extends Model
+class Attachment extends EntityModel
 {
     protected $table = 'attachments';
 

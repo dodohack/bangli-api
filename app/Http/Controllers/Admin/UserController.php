@@ -8,9 +8,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
-use App\Models\UserAddress;
-use App\Models\UserBabyProfile;
-use App\Models\UserShopProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\JWTAuth;
@@ -23,14 +20,9 @@ class UserController extends Controller
 {
     use PaginatorTrait;
 
-    /**
-     * @var \Tymon\JWTAuth\JWTAuth
-     */
-    protected $jwt;
-
-    public function __construct(JWTAuth $jwt)
+    public function __construct(Request $request)
     {
-        $this->jwt = $jwt;
+        parent::__construct($request);
     }
 
     /**
@@ -47,15 +39,15 @@ class UserController extends Controller
     public function getUsers(Request $request)
     {
         /* Current page */
-        $curPage = $request->has('page') ? intval($request->input('page')) : 0;
+        $curPage = intval($request->get('page', 0));
         /* User role/ role_id */
-        $roleId =  $request->has('role_id') ? intval($request->input('role_id')) : 0;
-        $role   =  $request->has('role') ? intval($request->input('role')) : null;
+        $roleId =  intval($request->get('role_id', 0));
+        $role   =  $request->get('role');
         /* Number of users per page, get it from input, default is 20 */
-        $perPage = $request->has('per_page') ? intval($request->input('per_page')) : 20;
+        $perPage = intval($request->get('per_page', 20));
 
         if ($role && $roleId)
-            return response('You cannot specify both role and role_id', 401);
+            return $this->error('You cannot specify both role and role_id');
 
         /* Number of skipped records for current page */
         $skipNum = ($curPage - 1) * $perPage;
@@ -77,18 +69,16 @@ class UserController extends Controller
         $paginator = $this->paginator($total, $curPage, $perPage, $users->count());
 
         $ret = ["users" => $users->toArray(), "paginator" => $paginator];
-        $json = json_encode($ret);
-        
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+
+        return $this->success($ret);
     }
     
     public function putUsers(Request $request) {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 
     public function deleteUsers(Request $request) {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }    
 
     /**
@@ -97,12 +87,12 @@ class UserController extends Controller
     private function getAuthors(Request $request)
     {
         /* Query table 'permissions' via table 'roles' from table 'user' */
-        $json = User::whereHas('role.permissions', function ($query) {
+        $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_own_post');
-        })->with('role')->get()->toJson();
+        })->with('role')->get()->toArray();
 
 
-        return parent::success($request, $json);
+        return $this->response($ret, 'get authors error');
     }
 
     /**
@@ -113,12 +103,11 @@ class UserController extends Controller
     private function getEditors(Request $request)
     {
         /* Query table 'permissions' via table 'roles' from table 'user' */
-        $json = User::whereHas('role.permissions', function ($query) {
+        $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_post');
-        })->with('role')->get()->toJson();
+        })->with('role')->get()->toArray();
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return $this->response($ret, 'get editors error');
     }
 
     /**
@@ -136,10 +125,9 @@ class UserController extends Controller
         */
 
         /* Query role name */
-        $json = Role::get(['id','name','display_name'])->toJson();
+        $ret = Role::get(['id','name','display_name'])->toArray();
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return $this->response($ret, 'get roles error');
     }
 
     /**
@@ -150,75 +138,46 @@ class UserController extends Controller
      */
     public function getUser(Request $request, $uuid)
     {
-        $myUuid = $this->jwt->getPayload()->get('sub');
+        $myUuid = $this->guard()->getPayload()->get('sub');
         if ($myUuid !== $uuid) {
             /* Authenticate current user if it is not get my detail */
-            $user = $this->jwt->authenticate();
-            if (!$user->hasRole(['administrator', 'shop_manager'])) {
+            $user = $this->guard()->user();
+            if (!$user->hasRole(['administrator'])) {
                 return response('Unauthorized', 401);
             }
         }
-        
-        $tables = ['role', 'shopProfile', 'babyProfiles', 'addresses'];
 
-        $json = User::where('uuid', $uuid)->with($tables)
-            ->first()->toJson();
+        $user = User::where('uuid', $uuid)->with(['role'])->first();
 
-        /* Return JSONP or AJAX data */
-        return parent::success($request, $json);
+        return $this->response($user, 'get user error');
     }
 
     public function postUser(Request $request)
     {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 
     public function putUser(Request $request, $uuid)
     {
         $body = json_decode($request->getContent(), true);
 
-        $shop_profile  = $body['shop_profile'];
-        $baby_profiles = $body['baby_profiles'];
-        $addresses     = $body['addresses'];
-        unset($body['shop_profile']);
-        unset($body['baby_profiles']);
-        unset($body['addresses']);
         /* This is a pivot record which is not going be stored directly */
         unset($body['role']);
 
         /* All relationships are striped, this is a bare user record */
         $user = $body;
 
+        $newUser = null;
         if ($user && $user['id']) {
             unset($user['uuid'], $user['updated_at']);
-            User::where('id', $user['id'])->update($user);
+            $newUser = User::where('id', $user['id'])->update($user)->toArray();
         }
 
-        if ($shop_profile && $shop_profile['id']) {
-            unset($shop_profile['updated_at']);
-            UserShopProfile::where('id', $shop_profile['id'])->update($shop_profile);
-        }
-
-        foreach ($addresses as $addr) {
-            if ($addr['id']) {
-                unset($addr['updated_at']);
-                UserAddress::where('id', $addr['id'])->update($addr);
-            }
-        }
-
-        foreach ($baby_profiles as $baby) {
-            if ($baby['id']) {
-                unset($baby['updated_at']);
-                UserBabyProfile::where('id', $baby['id'])->update($baby);
-            }
-        }
-
-        /* Return ok for now */
-        return $this->getUser($request, $uuid);
+        return $this->response($newUser, 'put user error');
     }
 
     public function deleteUser(Request $request, $uuid)
     {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 }

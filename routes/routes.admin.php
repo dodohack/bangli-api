@@ -32,7 +32,7 @@ $router->group([
     $router->get('/sys/attributes',     'SysController@getAttributes');
 
     /* Get list of post states */
-    $router->get('/posts/states',    'PostController@getStates');
+    $router->get('/posts/states',    'PostController@getStatus');
 
 
     /************************************************************************
@@ -125,7 +125,7 @@ $router->group([
     /* Get a cut down version of topics for posts */
     $router->get('/topic_cats',  'PostController@getTopicCats');
     /* Topic states */
-    $router->get('/topics/states', 'TopicController@getStates');
+    $router->get('/topics/states', 'TopicController@getStatus');
 });
 
 

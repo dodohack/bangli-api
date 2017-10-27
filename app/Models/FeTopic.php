@@ -16,7 +16,7 @@ class FeTopic extends Topic
     {
         return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'topics.description', 'content', 'published_at',
+            'title', 'title_cn', 'topics.description', 'published_at',
             'created_at', 'updated_at'];
     }
 
@@ -41,33 +41,7 @@ class FeTopic extends Topic
     public function fullRelations()
     {
         // All relations are needed by default
-        return ['type', 'channel', 'location', 'categories'];
-    }
-
-    /**
-     * Columns return to client for single topic page
-     */
-    static public function topic_columns()
-    {
-        return ['id', 'type_id', 'channel_id', 'location_id', 'guid', 'ranking',
-            'logo', 'display_url', 'tracking_url', 'title', 'title_cn',
-            'description', 'content', 'updated_at'];
-    }
-
-    /**
-     * Columns return to client for list of topics
-     */
-    static public function topics_columns()
-    {
-        return ['topics.id', 'guid', 'title'];
-    }
-
-    /**
-     * Relations return to client with single topic page
-     */
-    static public function topic_relations()
-    {
-        return ['type', 'channel', 'offers', 'location', 'categories'];
+        return ['type', 'channel','offers', 'location', 'categories'];
     }
 
     /////////////////////////////////////////////////////////////////////////

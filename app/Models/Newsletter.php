@@ -2,12 +2,29 @@
 
 namespace App\Models;
 
-
-use Illuminate\Database\Eloquent\Model;
-
-class Newsletter extends Model
+class Newsletter extends EntityModel
 {
     protected $table = 'newsletters';
+
+    public function simpleColumns()
+    {
+        return null;
+    }
+
+    public function fullColumns()
+    {
+        return null;
+    }
+
+    public function simpleRelations()
+    {
+        return null;
+    }
+
+    public function fullRelations()
+    {
+        return null;
+    }
 
     /*
      * Get a list of newsletter's revisions

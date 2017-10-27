@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Topic extends Model
+class Topic extends EntityModel
 {
     protected $table = 'topics';
     // Make all attributes mass assignable
@@ -15,6 +13,30 @@ class Topic extends Model
         'published_at'];
 
     protected $hidden = ['pivot'];
+
+    public function simpleColumns()
+    {
+        return ['topics.id', 'topics.channel_id',
+            'type_id', 'ranking', 'guid', 'logo',
+            'title', 'title_cn', 'topics.description', 'updated_at'];
+    }
+
+    public function fullColumns()
+    {
+        return null;
+    }
+
+    public function simpleRelations()
+    {
+        return ['editor', 'images', 'categories', 'topics',
+            'offers', 'channel', 'type', 'location', 'revisions', 'statistics'];
+    }
+
+    public function fullRelations()
+    {
+        return ['editor', 'categories', 'topics',
+            'channel', 'type', 'statistics', 'activities'];
+    }
 
     public function editor()
     {
