@@ -16,6 +16,7 @@ namespace App\Models;
 class Attachment extends EntityModel
 {
     protected $table = 'attachments';
+    protected $hidden   = ['pivot'];
 
     public function simpleColumns()
     {

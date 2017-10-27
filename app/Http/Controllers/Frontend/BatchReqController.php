@@ -91,6 +91,8 @@ class BatchReqController extends FeController
         }
 
         // This is the only place we do not need to return with toplevel etype
+        // so unset it before return
+        $this->etype = null;
         return $this->success($result);
     }
 

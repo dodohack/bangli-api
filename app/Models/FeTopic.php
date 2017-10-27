@@ -16,8 +16,7 @@ class FeTopic extends Topic
     {
         return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'topics.description', 'published_at',
-            'created_at', 'updated_at'];
+            'title', 'title_cn', 'topics.description', 'updated_at'];
     }
 
     /*
@@ -59,23 +58,32 @@ class FeTopic extends Topic
     {
         return $this->belongsToMany('App\Models\Topic',
             'topic_has_topic', 'topic2_id', 'topic1_id')
-            ->select(['topics.id', 'channel_id', 'type_id', 'title'])
-            ->publish();
+            ->publish()
+            ->select(['topics.id', 'channel_id', 'type_id', 'title']);
     }
 
     public function topics_reverse()
     {
         return $this->belongsToMany('App\Models\Topic',
             'topic_has_topic', 'topic1_id', 'topic2_id')
-            ->select(['topics.id', 'channel_id', 'type_id', 'title'])
-            ->publish();
+            ->publish()
+            ->select(['topics.id', 'channel_id', 'type_id', 'title']);
     }
 
     public function offers()
     {
         return $this->belongsToMany('App\Models\Offer',
             'topic_has_offer', 'topic_id', 'offer_id')
-            ->publish()->valid();
+            ->publish()->valid()
+            ->select(['offer.id', 'title', 'tracking_url', 'vouchers',
+                'starts', 'ends']);
     }
 
+    public function images()
+    {
+        return $this->belongsToMany('App\Models\Attachment',
+            'topic_has_image', 'topic_id', 'image_id')
+            ->select(['attachments.id', 'path', 'thumb_path', 'title',
+                'filename', 'thumbnail']);
+    }
 }
