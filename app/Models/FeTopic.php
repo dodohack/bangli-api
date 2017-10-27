@@ -75,7 +75,7 @@ class FeTopic extends Topic
         return $this->belongsToMany('App\Models\Offer',
             'topic_has_offer', 'topic_id', 'offer_id')
             ->publish()->valid()
-            ->select(['offer.id', 'title', 'tracking_url', 'vouchers',
+            ->select(['offers.id', 'title', 'tracking_url', 'vouchers',
                 'starts', 'ends']);
     }
 
