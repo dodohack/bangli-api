@@ -300,7 +300,7 @@ class EntityController extends Controller
 
         $record = $table->where($key, $id)->first();
 
-        if ($record && $record->status == 'trash') {
+        if ($record && $record->status != 'trash') {
             // Move entity to trash
             $record->status = 'trash';
             $record->save();

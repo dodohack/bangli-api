@@ -16,7 +16,7 @@ class Topic extends EntityModel
 
     public function simpleColumns()
     {
-        return ['topics.id', 'topics.channel_id',
+        return ['topics.id', 'topics.channel_id', 'status', 'featured',
             'type_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
             'title', 'title_cn', 'topics.description', 'updated_at'];
     }
