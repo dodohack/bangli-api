@@ -28,8 +28,10 @@ class AttachmentController extends EntityController
     protected $thumbPath;
     protected $thumbConfig;
 
-    public function __construct()
+    public function __construct(Request $request)
     {
+        parent::__construct($request);
+
         // Default image storage for production is api_server/public/images.
         $this->disk = Storage::disk('public');
 
@@ -50,8 +52,9 @@ class AttachmentController extends EntityController
     {
         // We need to add extra columns to the returned array, which is the
         // image server address.
-        $inputs = $request->all();
-        return $this->getEntitiesReq($request);
+        $ret = $this->getEntities($request->all());
+
+        return $this->response($ret, 'get attachments error');
     }
 
     /**
@@ -70,7 +73,7 @@ class AttachmentController extends EntityController
         }
 
 
-        return parent::success($inputs['callback'], $inputs['etype'], ['status' => 'ok']);
+        return $this->success();
     }
 
     /**
@@ -78,7 +81,7 @@ class AttachmentController extends EntityController
      */
     public function postAttachments(Request $request)
     {
-        return parent::errorReq($request,'API unimplemented');
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -86,18 +89,18 @@ class AttachmentController extends EntityController
      */
     public function deleteAttachments(Request $request)
     {
-        return parent::errorReq($request, 'API unimplemented');
+        return $this->error('API unimplemented');
     }
 
     /**
      * Return attachment status and occurrences
      */
-    public function getStates(Request $request)
+    public function getStatus(Request $request)
     {
         $status = Attachment::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->responseReq($request, $status, 'get status error');
+        return $this->response($status, 'get status error');
     }
 
     /**
@@ -108,7 +111,9 @@ class AttachmentController extends EntityController
      */
     public function getAttachment(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id, null);
+        $ret = $this->getEntity('id', $id, null);
+
+        return $this->response($ret, 'get attachment error');
     }
 
     /**
@@ -119,7 +124,9 @@ class AttachmentController extends EntityController
      */
     public function putAttachment(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        $ret = $this->putEntity($request->all(), 'id', $id);
+
+        return $this->response($ret, 'put attachment error');
     }
 
     /**
@@ -131,17 +138,17 @@ class AttachmentController extends EntityController
     public function postAttachment(Request $request)
     {
         if (!$request->hasFile('file'))
-            return parent::errorReq($request, 'No image');
+            return $this->error('No image');
 
         $file = $request->file('file');
 
         if (!$file->isValid())
-            return parent::errorReq($request, 'Image not valid');
+            return $this->error('Image not valid');
 
         // Get filename extension for the image
         $imgExt = $this->getImageFileExtension($file);
         if (!$imgExt)
-            return parent::errorReq($request, 'Unsupported image format');
+            return $this->error('Unsupported image format');
 
         // Get absolute name with path and extension
         $imgName = $this->generateFilename();
@@ -178,10 +185,10 @@ class AttachmentController extends EntityController
 
         if ($record->save()) {
             $ret = Attachment::find($record->id)->toArray();
-            return parent::successReq($request, $ret);
-        } else {
-            return parent::errrorReq($request, "Update file fail");
+            return $this->success($ret);
         }
+
+        return $this->error("Update file fail");
     }
 
     /**
@@ -192,8 +199,7 @@ class AttachmentController extends EntityController
      */
     public function deleteAttachment(Request $request, $id)
     {
-        // TODO: Need extra authentication for deleting others' files
-        return $this->deleteEntityReq($request, 'id', $id);
+        return $this->error("Unimplemented: need to delete both file and record");
     }
 
     /**

@@ -12,6 +12,11 @@ use App\Models\Advertise;
 
 class AdvertiseController extends EntityController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Return a list of advertises
      * @param Request $request
@@ -19,7 +24,9 @@ class AdvertiseController extends EntityController
      */
     public function getAdvertises(Request $request)
     {
-        return $this->getEntitiesReq($request);
+        $ads = $this->getEntities($request->all());
+
+        return $this->response($ads, 'get ads error');
     }
 
     /**
@@ -27,7 +34,7 @@ class AdvertiseController extends EntityController
      */
     public function putAdvertises(Request $request)
     {
-        return response('Posts batch editing API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -35,15 +42,34 @@ class AdvertiseController extends EntityController
      */
     public function deleteAdvertises(Request $request)
     {
-        return response('API unimplemented', 401);
+        $ids = $request->get('ids');
+        $numDeleted = $this->deleteEntities($ids);
+
+        return $this->response($numDeleted, 'trash ads error');
     }
 
     /**
-     * Return advertise statuss and occurrences
+     * Physically delete advertises from trash
+     * @param Request $request
+     * @return
      */
-    public function getStates(Request $request)
+    public function purgeAdvertises(Request $request)
     {
-        return $this->getEntityStates($request, 'advertises');
+        $ids = $request->get('ids');
+        $numPurged = $this->purgeEntities($ids);
+
+        return $this->response($numPurged, 'purge ads error');
+    }
+
+    /**
+     * Return advertise status and occurrences
+     */
+    public function getStatus(Request $request)
+    {
+        $status = Advertise::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->response($status, 'get ad status error');
     }
 
     /**
@@ -54,7 +80,9 @@ class AdvertiseController extends EntityController
      */
     public function getAdvertise(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id, null);
+        $ad = $this->getEntity('id', $id, null);
+
+        return $this->response($ad, 'get ad error');
     }
 
     /**
@@ -65,7 +93,9 @@ class AdvertiseController extends EntityController
      */
     public function putAdvertise(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        $ad = $this->putEntity($request->all(), 'id', $id);
+
+        return $this->response($ad, 'put ad error');
     }
 
     /**
@@ -75,17 +105,34 @@ class AdvertiseController extends EntityController
      */
     public function postAdvertise(Request $request)
     {
-        return $this->postEntityReq($request);
+        $ad = $this->postEntity($request->all());
+
+        return $this->response($ad, 'post ad error');
     }
 
     /**
      * Move a advertise to trash by id
      * @param Request $request
      * @param $id
-     * @return Advertise
+     * @return Advertise | bool
      */
     public function deleteAdvertise(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        $deleted = $this->deleteEntity('id', $id);
+
+        return $this->response($deleted, 'trash ad error');
+    }
+
+    /**
+     * Physically delete a advertise from trash
+     * @param Request $request
+     * @param $id
+     * @return
+     */
+    public function purgeAdvertise(Request $request, $id)
+    {
+        $purged = $this->purgeEntity('id', $id);
+
+        return $this->response($purged, 'purge ad error');
     }
 }

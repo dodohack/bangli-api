@@ -12,14 +12,18 @@ use App\Models\TopicType;
 
 class CmsTopicTypeController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get a topic_type
      */
     public function get(Request $request, $id)
     {
-        $tt = TopicType::find($id);
-        return parent::successReq($request, $tt);
+        $tt = TopicType::find($id)->toArray();
+        return $this->response($tt, 'get topic type error');
     }
 
     /**
@@ -29,13 +33,9 @@ class CmsTopicTypeController extends Controller
     {
         $input = $request->except('id');
 
-        $new = TopicType::create($input);
+        $tt = TopicType::create($input)->toArray();
 
-        if ($new) {
-            return parent::successReq($request, $new);
-        } else {
-            return parent::errorReq($request, 'post topic type fail');
-        }
+        return $this->response($tt, 'post topic type error');
     }
 
     /**
@@ -45,13 +45,9 @@ class CmsTopicTypeController extends Controller
     {
         $input = $request->except('id');
 
-        $new = TopicType::find($id)->update($input);
+        $tt = TopicType::find($id)->update($input)->toArray();
 
-        if ($new) {
-            return parent::successReq($request, $new);
-        } else {
-            return parent::errorReq($request, 'put topic type error');
-        }
+        return $this->response($tt, 'put topic type error');
     }
 
     /**
@@ -61,9 +57,6 @@ class CmsTopicTypeController extends Controller
     {
         $numDeleted = TopicType::destroy($id);
 
-        if ($numDeleted)
-            return parent::successReq($request, $id);
-        else
-            return parent::errorReq($request, 'delete topic type error');
+        return $this->response($numDeleted, 'delete topic type error');
     }
 }

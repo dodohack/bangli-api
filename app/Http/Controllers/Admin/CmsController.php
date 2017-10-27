@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\Log;
 
 class CmsController extends EntityController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Get a group of CMS related attributes to cache on client at app
      * start up. These cached data are only used as input select, do
@@ -74,6 +79,6 @@ class CmsController extends EntityController
             'categories', 'topic_types', 'post_status',
             'topic_status', 'offer_status', 'page_status');
 
-        return parent::success($request->get('callback'), null, $array);
+        return $this->success($array);
     }
 }

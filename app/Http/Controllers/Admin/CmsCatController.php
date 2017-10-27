@@ -16,15 +16,19 @@ use App\Models\OfferHasCategory;
 
 class CmsCatController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get a category
      */
     public function getCategory(Request $request, $id)
     {
-        $ret = Category::where('id', $id)->first();
+        $ret = Category::find($id)->toArray();
 
-        return parent::success($request->get('callback'), null, $ret);
+        return $this->response($ret, 'get category error');
     }
 
     /**
@@ -34,9 +38,9 @@ class CmsCatController extends Controller
     {
         $inputs = $request->except('id');
 
-        $newTag = Category::create($inputs);
+        $newCat = Category::create($inputs)->toArray();
 
-        return parent::responseReq($request, $newTag, 'post category fail');
+        return $this->response($newCat, 'post category fail');
     }
 
     /**
@@ -46,9 +50,9 @@ class CmsCatController extends Controller
     {
         $input = $request->except('id');
 
-        $newCat = Category::find($id)->update($input);
+        $newCat = Category::find($id)->update($input)->toArray();
 
-        return parent::responseReq($request, $newCat, 'put category fail');
+        return $this->response($newCat, 'put category fail');
     }
 
     /**
@@ -72,7 +76,7 @@ class CmsCatController extends Controller
         // Now we can safely destroy the category when relationships are removed
         $ret = Category::destroy($id);
 
-        return parent::responseReq($request, $ret, 'delete category error');
+        return $this->response($ret, 'delete category error');
     }
 
 

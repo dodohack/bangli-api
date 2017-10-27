@@ -20,9 +20,9 @@ class UserController extends Controller
 {
     use PaginatorTrait;
 
-    public function __construct()
+    public function __construct(Request $request)
     {
-        parent::__construct();
+        parent::__construct($request);
     }
 
     /**
@@ -39,15 +39,15 @@ class UserController extends Controller
     public function getUsers(Request $request)
     {
         /* Current page */
-        $curPage = $request->has('page') ? intval($request->input('page')) : 0;
+        $curPage = intval($request->get('page', 0));
         /* User role/ role_id */
-        $roleId =  $request->has('role_id') ? intval($request->input('role_id')) : 0;
-        $role   =  $request->has('role') ? intval($request->input('role')) : null;
+        $roleId =  intval($request->get('role_id', 0));
+        $role   =  $request->get('role');
         /* Number of users per page, get it from input, default is 20 */
-        $perPage = $request->has('per_page') ? intval($request->input('per_page')) : 20;
+        $perPage = intval($request->get('per_page', 20));
 
         if ($role && $roleId)
-            return response('You cannot specify both role and role_id', 401);
+            return $this->error('You cannot specify both role and role_id');
 
         /* Number of skipped records for current page */
         $skipNum = ($curPage - 1) * $perPage;
@@ -70,15 +70,15 @@ class UserController extends Controller
 
         $ret = ["users" => $users->toArray(), "paginator" => $paginator];
 
-        return parent::successReq($request, $ret);
+        return $this->success($ret);
     }
     
     public function putUsers(Request $request) {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 
     public function deleteUsers(Request $request) {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }    
 
     /**
@@ -89,10 +89,10 @@ class UserController extends Controller
         /* Query table 'permissions' via table 'roles' from table 'user' */
         $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_own_post');
-        })->with('role')->get();
+        })->with('role')->get()->toArray();
 
 
-        return parent::responseReq($request, $ret, 'get authors error');
+        return $this->response($ret, 'get authors error');
     }
 
     /**
@@ -105,9 +105,9 @@ class UserController extends Controller
         /* Query table 'permissions' via table 'roles' from table 'user' */
         $ret = User::whereHas('role.permissions', function ($query) {
             $query->where('name', 'edit_post');
-        })->with('role')->get();
+        })->with('role')->get()->toArray();
 
-        return parent::responseReq($request, $ret, 'get editors error');
+        return $this->response($ret, 'get editors error');
     }
 
     /**
@@ -125,9 +125,9 @@ class UserController extends Controller
         */
 
         /* Query role name */
-        $ret = Role::get(['id','name','display_name']);
+        $ret = Role::get(['id','name','display_name'])->toArray();
 
-        return parent::responseReq($request, $ret, 'get roles error');
+        return $this->response($ret, 'get roles error');
     }
 
     /**
@@ -149,12 +149,12 @@ class UserController extends Controller
 
         $user = User::where('uuid', $uuid)->with(['role'])->first();
 
-        return parent::responseReq($request, $user, 'get user error');
+        return $this->response($user, 'get user error');
     }
 
     public function postUser(Request $request)
     {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 
     public function putUser(Request $request, $uuid)
@@ -167,17 +167,17 @@ class UserController extends Controller
         /* All relationships are striped, this is a bare user record */
         $user = $body;
 
+        $newUser = null;
         if ($user && $user['id']) {
             unset($user['uuid'], $user['updated_at']);
-            User::where('id', $user['id'])->update($user);
+            $newUser = User::where('id', $user['id'])->update($user)->toArray();
         }
 
-        /* Return ok for now */
-        return $this->getUser($request, $uuid);
+        return $this->response($newUser, 'put user error');
     }
 
     public function deleteUser(Request $request, $uuid)
     {
-        return response('Unimplemented API', 401);
+        return $this->error('Unimplemented API');
     }
 }

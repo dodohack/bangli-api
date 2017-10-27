@@ -12,14 +12,18 @@ use App\Models\Menu;
 
 class FeMenuController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get list of menus
      */
     public function getFeMenus(Request $request)
     {
-        $menu = Menu::get();
-        return parent::successReq($request, $menu);
+        $menu = Menu::get()->toArray();
+        return $this->response($menu, 'get femenus error');
     }
 
     /**
@@ -27,8 +31,8 @@ class FeMenuController extends Controller
      */
     public function getFeMenu(Request $request, $id)
     {
-        $menu = Menu::find($id);
-        return parent::successReq($request, $menu);
+        $menu = Menu::find($id)->toArray();
+        return $this->response($menu, 'get femnu error');
     }
 
     /**
@@ -38,13 +42,9 @@ class FeMenuController extends Controller
     {
         $input = $request->except('id');
 
-        $newMenu = Menu::create($input);
+        $newMenu = Menu::create($input)->toArray();
 
-        if ($newMenu) {
-            return parent::successReq($request, $newMenu);
-        } else {
-            return parent::errorReq($request, 'post femenu error');
-        }
+        return $this->response($newMenu, 'post femenu error');
     }
 
     /**
@@ -54,13 +54,9 @@ class FeMenuController extends Controller
     {
         $input = $request->except('id');
 
-        $newMenu = Menu::find($id)->update($input);
+        $newMenu = Menu::find($id)->update($input)->toArray();
 
-        if ($newMenu) {
-            return parent::successReq($request, $newMenu);
-        } else {
-            return parent::errorReq($request, 'put femenu error');
-        }
+        return $this->response($newMenu, 'put femenu error');
     }
 
     /**
@@ -70,9 +66,6 @@ class FeMenuController extends Controller
     {
         $numDeleted = Menu::destroy($id);
 
-        if ($numDeleted)
-            return parent::successReq($request, $id);
-        else
-            return parent::errorreq($request, 'delete femenu error');
+        return $this->response($numDeleted, 'delete femenu error');
     }
 }

@@ -12,24 +12,19 @@ use App\Models\Topic;
 
 class OfferController extends EntityController
 {
-    /* Columns to be retrieved for offers list, we need a full content  */
-    private $offersColumns = ['offers.id', 'author_id', 'channel_id', 'status',
-        'featured', 'title', 'tracking_url', 'display_url', 'vouchers',
-        'aff_offer_id', 'starts', 'ends',
-        'created_at', 'updated_at', 'published_at'];
-
-    /* Relations to be queried with the offer/offers */
-    private $offersRelations = ['topics'];
-    private $offerRelations  = ['topics'];
-
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Return a list of offers
      */
     public function getOffers(Request $request)
     {
-        return $this->getEntitiesReq($request,
-            $this->offersRelations, null, $this->offersColumns);
+        $ret = $this->getEntities($request->all());
+
+        return $this->response($ret, 'get offers error');
     }
 
     /**
@@ -37,23 +32,42 @@ class OfferController extends EntityController
      */
     public function putOffers(Request $request)
     {
-        return response('Offers batch editing API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
-     * Move multiple offers into trash, by entity type and ids
+     * Move multiple offers into trash, by offer ids
      */
     public function deleteOffers(Request $request)
     {
-        return $this->deleteEntitiesReq($request);
+        $ids = $request->get('ids');
+        $numDeleted = $this->deleteEntities($ids);
+        return $this->response($numDeleted, 'trash offers error');
     }
+
+    /**
+     * Physically delete offers from the trash
+     * @param Request $request
+     * @return
+     */
+    public function purgeTopics(Request $request)
+    {
+        $ids = $request->get('ids');
+        $numPurged = $this->purgeEntities($ids);
+
+        return $this->response($numPurged, 'purge offers error');
+    }
+
 
     /**
      * Return offer statuss and occurrences
      */
-    public function getStates(Request $request)
+    public function getStatus(Request $request)
     {
-        return $this->getEntityStates($request, 'offers');
+        $status = Offer::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->response($status, 'get offer status error');
     }
 
     /**
@@ -64,8 +78,8 @@ class OfferController extends EntityController
      */
     public function getOffer(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id, null, 
-            $this->offerRelations);
+        $offer = $this->getEntityReq('id', $id);
+        return $this->response($offer, 'get offer error');
     }
 
     /**
@@ -77,8 +91,6 @@ class OfferController extends EntityController
     public function putOffer(Request $request, $id)
     {
         $inputs = $request->all();
-        // Set author_id for offer as indicate of manually modified.
-        $inputs['author_id'] = $this->guard()->user()->id;
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
@@ -88,7 +100,10 @@ class OfferController extends EntityController
             if ($tracking_url)
                 $inputs['tracking_url'] = $tracking_url;
         }
-        return $this->putEntity($inputs['etype'], $inputs, 'id', $id);
+
+        $offer = $this->putEntity($inputs, 'id', $id);
+
+        return $this->response($offer, 'put offer error');
     }
 
     /**
@@ -99,8 +114,6 @@ class OfferController extends EntityController
     public function postOffer(Request $request)
     {
         $inputs = $request->all();
-        // Set author_id for offer as indicate of manually modified.
-        $inputs['author_id'] = $this->guard()->user()->id;
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
@@ -111,19 +124,37 @@ class OfferController extends EntityController
                 $inputs['tracking_url'] = $tracking_url;
         }
 
-        return $this->postEntity($inputs['etype'], $inputs);
+        $offer = $this->postEntity($inputs);
+
+        return $this->response($offer, 'post offer error');
     }
 
     /**
-     * Move a offer to trash by id
+     * Move an offer to trash by id
      * @param Request $request
      * @param $id
-     * @return Post
+     * @return
      */
     public function deleteOffer(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        $deleted = $this->deleteEntity('id', $id);
+
+        return $this->response($deleted, 'trash offer error');
     }
+
+    /**
+     * Physically delete an offer from trash by id
+     * @param Request $request
+     * @param $id
+     * @return
+     */
+    public function purgeOffer(Request $request, $id)
+    {
+        $purged = $this->purgeEntity('id', $id);
+
+        return $this->response($purged, 'purge offer error');
+    }
+
 
     /**
      * Update offer's tracking_url automatically

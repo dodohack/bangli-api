@@ -11,15 +11,19 @@ use App\Models\Tag;
 
 class CmsTagController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get a tag
      */
     public function getTag(Request $request, $id)
     {
-        $tag = Tag::where('id', $id)->first();
+        $tag = Tag::find($id)->toArray();
 
-        return parent::successReq($request, $tag);
+        return $this->response($tag, 'get tag error');
     }
     
     /**
@@ -29,9 +33,9 @@ class CmsTagController extends Controller
     {
         $input = $request->except('id');
 
-        $newTag = Tag::create($input);
+        $newTag = Tag::create($input)->toArray();
 
-        return parent::responseReq($request, $newTag, 'post tag error');
+        return $this->response($newTag, 'post tag error');
     }
 
     /**
@@ -41,9 +45,9 @@ class CmsTagController extends Controller
     {
         $input = $request->except('id');
 
-        $newTag = Tag::find($id)->update($input);
+        $newTag = Tag::find($id)->update($input)->toArray();
 
-        return parent::responseReq($request, $newTag, 'put tag error');
+        return $this->response($newTag, 'put tag error');
     }
 
     /**
@@ -53,6 +57,6 @@ class CmsTagController extends Controller
     {
         $numDeleted = Tag::destroy($id);
 
-        return parent::responseReq($request, $numDeleted, 'delete tag error');
+        return $this->response($numDeleted, 'delete tag error');
     }
 }

@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Page extends Model
+class Page extends EntityModel
 {
     protected $table = 'pages';
     // Make all attributes mass assignable.

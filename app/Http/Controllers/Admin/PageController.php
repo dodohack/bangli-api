@@ -24,79 +24,87 @@ class PageController extends CmsController
     private $pagesRelations = ['statistics', 'activities'];
     private $pageRelations = ['revisions', 'statistics'];
 
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Return a list of pages, no need to validate incoming parameters
      * cause this route is protected by middleware.
      */
     public function getPages(Request $request)
     {
-        return $this->getEntitiesReq($request,
-            $this->pagesRelations, null, $this->pagesColumns);
+        $pages = $this->getEntities($request->all(), $this->pagesRelations,
+            null, $this->pagesColumns);
+
+        return $this->response($pages, 'get pages error');
     }
 
     public function putPages(Request $request)
     {
-        return response('unimplemented API', 401);
+        return $this->error('API unimplemented');
     }
 
     public function deletePages(Request $request)
     {
-        return $this->deleteEntitiesReq($request);
+        $ids = $request->get('ids');
+        $numDeleted = $this->deleteEntities($ids);
+
+        return $this->response($numDeleted, 'trash pages error');
     }
 
-    /**
-     * Return page statuss
-     *
-     * @param Request $request
-     * @return object $json: jsonified pagination
-     */
-    public function getStates(Request $request)
+    public function purgePages(Request $request)
     {
-        // FIXME
-        return $this->getEntityStates($request, 'pages');
+        $ids = $request->get('ids');
+        $numPurged = $this->purgeEntities($ids);
+
+        return $this->response($numPurged, 'purge pages error');
     }
 
-    /**
-     * Get a page
-     * @param Request $request
-     * @param $id
-     * @return object
-     */
+    public function getStatus(Request $request)
+    {
+        $status = Page::select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
+        return $this->response($status, 'get page status error');
+    }
+
     public function getPage(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id,
-            null, $this->pageRelations);
+        $page = $this->getEntity('id', $id, null, $this->pageRelations);
+        return $this->response($page, 'get page error');
     }
 
-    /**
-     * Update page by given guid
-     * @param Request $request
-     * @param $id - page id to be updated
-     * @return object
-     */
     public function putPage(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        $inputs = $request->all();
+
+        $page = $this->putEntity($inputs, 'id', $id);
+
+        return $this->response($page, 'put page error');
     }
 
-    /**
-     * Create a new page
-     * @param Request $request
-     * @return object
-     */
     public function postPage(Request $request)
     {
-        return $this->postEntityReq($request);
+        $inputs = $request->all();
+
+        $page = $this->postEntity($inputs);
+
+        return $this->response($page, 'post page error');
     }
 
-    /**
-     * Move a page to trash by uuid
-     * @param Request $request
-     * @param $id
-     * @return Page
-     */
     public function deletePage(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        $deleted = $this->deleteEntity('id', $id);
+
+        return $this->response($deleted, 'trash page error');
+    }
+
+    public function purgePage(Request $request, $id)
+    {
+        $purged = $this->purgeEntity('id', $id);
+
+        return $this->response($purged, 'purge page error');
     }
 }

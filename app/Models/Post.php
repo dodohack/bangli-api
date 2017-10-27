@@ -1,9 +1,7 @@
 <?php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Post extends Model
+class Post extends EntityModel
 {
     protected $table = 'posts';
     // Make all attributes mass assignable.
@@ -18,7 +16,7 @@ class Post extends Model
      */
     public function simpleColumns()
     {
-        return ['post.id', 'editor_id', 'author_id', 'image_id',
+        return ['post.id', 'editor_id', 'author_id',
             'channel_id', 'location_id', 'lock', 'featured', 'status',
             'title', 'published_at', 'created_at', 'updated_at'];
     }
@@ -35,14 +33,14 @@ class Post extends Model
 
     public function simpleRelations()
     {
-        // No relationship by default
-        return null;
+        return ['author', 'editor', 'channel', 'categories',
+        'topics', 'statistics', 'activities'];
     }
 
     public function fullRelations()
     {
-        // No relationship by default
-        return null;
+        return ['author', 'editor', 'channel', 'image',
+            'categories', 'topics', 'revisions', 'statistics'];
     }
 
     ////////////////////////////////////////////////////////////////////////

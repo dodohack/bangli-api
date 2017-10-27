@@ -14,20 +14,13 @@ use App\Models\Topic;
 
 class TopicController extends EntityController
 {
-
-    /* Columns to be retrieved for topics list */
-    private $topicsColumns = ['topics.id', 'editor_id', 'channel_id',
-        'type_id', 'location_id', 'lock', 'ranking', 'status', 'guid',
-        'title', 'title_cn', 'created_at', 'updated_at'];
-
-    /* Relations to be queried with topic/topics */
-    private $topicsRelations = ['editor', 'categories', 'topics',
-        'channel', 'type', 'statistics', 'activities'];
-    private $topicRelations = ['editor', 'images', 'categories', 'topics',
-        'offers', 'channel', 'type', 'location', 'revisions', 'statistics'];
-
     /* Retrieve number of offers related to given topic */
     private $relationCount = 'offers';
+
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Return a list of topics, no need to validate incoming parameters
@@ -35,32 +28,59 @@ class TopicController extends EntityController
      */
     public function getTopics(Request $request)
     {
-        return $this->getEntitiesReq($request,
-            $this->topicsRelations, $this->relationCount, $this->topicsColumns);
+        $topics = $this->getEntities($request->all(),
+            null, $this->relationCount, null);
+
+        return $this->response($topics, 'get topics error');
     }
 
+    /**
+     * Update multiple topics
+     * @param Request $request
+     * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory
+     */
     public function putTopics(Request $request)
     {
-        return response('unimplemented API', 401);
+        return $this->error('API unimplemented');
     }
 
+    /**
+     * Move multiple topics into trash
+     * @param Request $request
+     * @return
+     */
     public function deleteTopics(Request $request)
     {
-        return $this->deleteEntitiesReq($request);
+        $ids = $request->get('ids');
+        $numDeleted = $this->deleteEntities($ids);
+
+        return $this->response($numDeleted, 'trash topics error');
+    }
+
+    /**
+     * Physically delete topics from trash
+     * @param Request $request
+     * @return
+     */
+    public function purgeTopics(Request $request)
+    {
+        $ids = $request->get('ids');
+        $numPurged = $this->purgeEntities($ids);
+
+        return $this->response($numPurged, 'purge topics error');
     }
 
     /**
      * Return topic statuss
      *
-     * @param Request $request
      * @return object $json: jsonified pagination
      */
-    public function getStates(Request $request)
+    public function getStatus()
     {
         $status = Topic::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->responseReq($request, $status, 'get topic status error');
+        return $this->response($status, 'get topic status error');
     }
 
     /**
@@ -71,9 +91,10 @@ class TopicController extends EntityController
      */
     public function getTopic(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id,
-            null/* table */, $this->topicRelations, null/* columns */,
-            $this->relationCount);
+        $topic = $this->getEntity('id', $id,
+            null, null, null, $this->relationCount);
+
+        return $this->response($topic, 'get topic error');
     }
 
     /**
@@ -84,16 +105,10 @@ class TopicController extends EntityController
      */
     public function putTopic(Request $request, $id)
     {
-        $inputs = $request->all();
+        $topic = $this->putEntity($request->all(), 'id', $id,
+            null, null, $this->relationCount);
 
-        // Set editor_id if client does not set, this is required.
-        // Affiliate related cronjob will look into editor_id as a flag of
-        // if a topic is modified manually or not.
-        $editor_id = $this->guard()->user()->id;
-        if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $editor_id;
-
-        return $this->putEntity($inputs['etype'], $inputs, 'id', $id,
-            $this->topicRelations, null/* columns */, $this->relationCount);
+        return $this->response($topic, 'put topic error');
     }
 
     /**
@@ -103,25 +118,34 @@ class TopicController extends EntityController
      */
     public function postTopic(Request $request)
     {
-        $inputs = $request->all();
+        $topic = $this->postEntity($request->all());
 
-        // Set editor_id if client does not set, this is required.
-        // Affiliate related cronjob will look into editor_id as a flag of
-        // if a topic is modified manually or not.
-        $editor_id = $this->guard()->user()->id;
-        if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $editor_id;
-
-        return $this->postEntity($inputs['etype'], $inputs);
+        return $this->response($topic, 'post topic error');
     }
 
     /**
-     * Move a topic to trash by uuid
+     * Move a topic to trash by id
      * @param Request $request
      * @param $id
-     * @return Topic
+     * @return Topic | bool
      */
     public function deleteTopic(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        $deleted = $this->deleteEntity('id', $id);
+
+        return $this->response($deleted, 'trash topic error');
+    }
+
+    /**
+     * Physically delete a topic from trash
+     * @param Request $request
+     * @param $id
+     * @return
+     */
+    public function purgeTopic(Request $request, $id)
+    {
+        $purged = $this->purgeEntity('id', $id);
+
+        return $this->response($purged, 'purge topic error');
     }
 }

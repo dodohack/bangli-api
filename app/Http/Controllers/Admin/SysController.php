@@ -15,6 +15,11 @@ use App\Models\Role;
 
 class SysController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Get a group of system related attributes to cache on client at app
      * start up, includes:
@@ -23,7 +28,7 @@ class SysController extends Controller
     public function getAttributes(Request $request)
     {
         // Available user roles
-        $roles = Role::get()->toArray();
+        $roles = Role::get();
 
         // Available thumbnail configs
         $thumbs = config('filesystems.thumbs');
@@ -32,6 +37,6 @@ class SysController extends Controller
 
         $array = compact('roles', 'thumbs', 'positions');
 
-        return parent::successReq($request, $array);
+        return $this->success($array);
     }
 }
