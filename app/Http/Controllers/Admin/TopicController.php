@@ -45,7 +45,7 @@ class TopicController extends EntityController
     }
 
     /**
-     * Move multiple topics into trash
+     * Move multiple topics into trash or physically delete topics from trash
      * @param Request $request
      * @return
      */
@@ -54,20 +54,7 @@ class TopicController extends EntityController
         $ids = $request->get('ids');
         $numDeleted = $this->deleteEntities($ids);
 
-        return $this->response($numDeleted, 'trash topics error');
-    }
-
-    /**
-     * Physically delete topics from trash
-     * @param Request $request
-     * @return
-     */
-    public function purgeTopics(Request $request)
-    {
-        $ids = $request->get('ids');
-        $numPurged = $this->purgeEntities($ids);
-
-        return $this->response($numPurged, 'purge topics error');
+        return $this->response($numDeleted, 'delete topics error');
     }
 
     /**
@@ -124,7 +111,7 @@ class TopicController extends EntityController
     }
 
     /**
-     * Move a topic to trash by id
+     * Move a topic to trash or physically delete a topic from trash
      * @param Request $request
      * @param $id
      * @return Topic | bool
@@ -133,19 +120,6 @@ class TopicController extends EntityController
     {
         $deleted = $this->deleteEntity('id', $id);
 
-        return $this->response($deleted, 'trash topic error');
-    }
-
-    /**
-     * Physically delete a topic from trash
-     * @param Request $request
-     * @param $id
-     * @return
-     */
-    public function purgeTopic(Request $request, $id)
-    {
-        $purged = $this->purgeEntity('id', $id);
-
-        return $this->response($purged, 'purge topic error');
+        return $this->response($deleted, 'delete topic error');
     }
 }

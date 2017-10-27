@@ -287,7 +287,8 @@ class EntityController extends Controller
     }
 
     /**
-     * Move an entity into trash
+     * Move an entity into trash, or physically delete an entity from trash
+     * This function can't be used by Attachment.
      * @param $key   - primary id name
      * @param $id    - primary id
      * @return bool  - true if we've found the record else false
@@ -299,35 +300,19 @@ class EntityController extends Controller
 
         $record = $table->where($key, $id)->first();
 
-        if ($record) {
+        if ($record && $record->status == 'trash') {
             // Move entity to trash
             $record->status = 'trash';
             $record->save();
             return true;
-        }
-        return false;
-    }
-
-    /**
-     * Physically delete an entity from trash
-     * @param $key   - primary id name
-     * @param $id    - primary id
-     * @return bool  - true if we've found the record else false
-     */
-    protected function purgeEntity($key, $id)
-    {
-        $table = $this->getEntityTable();
-        if (!$table) return false;
-
-        $record = $table->where($key, $id)->first();
-
-        if ($record && $record->status == 'trash') {
+        } else if ($record && $record->status == 'trash') {
             // Physically delete an entity from trash
             // TODO: Check if relationship is automatically deleted as we
             // have FK constraint on it.
             $table->where($key, $id)->delete();
             return true;
         }
+
         return false;
     }
 
@@ -350,27 +335,6 @@ class EntityController extends Controller
         }
 
         return $numDeleted;
-    }
-
-    /**
-     * Physically delete multiple entities from trash by their IDs
-     * @param $ids
-     * @return bool|int
-     */
-    protected function purgeEntities($ids)
-    {
-        $numPurged = 0;
-
-        if (!$ids) return false;
-
-        $idAry = explode(',', $ids);
-
-        foreach($idAry as $id) {
-            if ($this->purgeEntity('id', $id))
-                $numPurged++;
-        }
-
-        return $numPurged;
     }
 
     /**

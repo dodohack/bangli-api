@@ -28,7 +28,7 @@ class Topic extends EntityModel
 
     public function simpleRelations()
     {
-        return ['images', 'categories'];
+        return ['editor', 'images', 'categories'];
 
     }
 
