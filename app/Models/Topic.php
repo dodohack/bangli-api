@@ -17,7 +17,7 @@ class Topic extends EntityModel
     public function simpleColumns()
     {
         return ['topics.id', 'topics.channel_id',
-            'type_id', 'ranking', 'guid', 'logo',
+            'type_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
             'title', 'title_cn', 'topics.description', 'updated_at'];
     }
 
@@ -28,14 +28,14 @@ class Topic extends EntityModel
 
     public function simpleRelations()
     {
-        return ['editor', 'images', 'categories', 'topics',
-            'offers', 'channel', 'type', 'location', 'revisions', 'statistics'];
+        return ['images', 'categories'];
+
     }
 
     public function fullRelations()
     {
-        return ['editor', 'categories', 'topics',
-            'channel', 'type', 'statistics', 'activities'];
+        return ['categories', 'location', 'topics', 'images',
+            'statistics', 'activities'];
     }
 
     public function editor()

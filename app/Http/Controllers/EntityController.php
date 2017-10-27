@@ -173,13 +173,17 @@ class EntityController extends Controller
             $db = $table;
         }
 
+        // Decide which columns and relations to be queried with
+        $this->setupRelations($db, $relations, true);
+        $this->setupColumns($db, $columns, true);
+
         $db = $db->where($key, $id);
 
-        if ($relations) $db = $db->with($relations);
-        if ($relCount)  $db = $db->withCount($relCount);
+        if ($this->relations) $db = $db->with($this->relations);
+        if ($this->relCount)  $db = $db->withCount($this->relCount);
 
-        if ($columns)   $entity = $db->first($columns);
-        else            $entity = $db->first();
+        if ($this->columns)   $entity = $db->first($this->columns);
+        else                  $entity = $db->first();
 
         return $entity;
     }
@@ -274,8 +278,8 @@ class EntityController extends Controller
 
         if ($record->update($inputs)) {
             // Return the updated entity
-            return $this->getEntity($inputs, 'id', $id, $table,
-                $relations, $columns, $relCount);
+            return $this->getEntity('id', $id, $table, $relations,
+                $columns, $relCount);
         }
 
         // Return null if any error happens
@@ -476,7 +480,6 @@ class EntityController extends Controller
 
         // withCount overwrites columns in get, must use select before it
         if ($this->columns) $db = $db->select($this->columns);
-        else                $db = $db->select($this->getEntityColumns(true));
 
         // Count related model, say the number of offers associated with a topic.
         if ($this->relCount)   $db = $db->withCount($this->relCount);
@@ -654,10 +657,8 @@ class EntityController extends Controller
                                     $relCount, $full = false)
     {
         if ($relations == null) {
-            if ($full)
-                $this->relations = $table->fullRelations();
-            else
-                $this->relations = $table->simpleRelations();
+            if ($full) $this->relations = $table->fullRelations();
+            else       $this->relations = $table->simpleRelations();
         } else {
             $this->relations = $relations;
         }
@@ -674,10 +675,8 @@ class EntityController extends Controller
     private function setupColumns($table, $columns, $full = false)
     {
         if ($columns == null) {
-            if ($full)
-                $this->columns = $table->fullColumns();
-            else
-                $this->columns = $table->simpleColumns();
+            if ($full) $this->columns = $table->fullColumns();
+            else       $this->columns = $table->simpleColumns();
         } else {
             $this->columns = $columns;
         }

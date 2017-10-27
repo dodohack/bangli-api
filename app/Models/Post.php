@@ -16,7 +16,7 @@ class Post extends EntityModel
      */
     public function simpleColumns()
     {
-        return ['post.id', 'editor_id', 'author_id',
+        return ['posts.id', 'editor_id', 'author_id',
             'channel_id', 'location_id', 'lock', 'featured', 'status',
             'title', 'published_at', 'created_at', 'updated_at'];
     }
