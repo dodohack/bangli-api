@@ -38,7 +38,7 @@ trait ThumbnailTrait
         $thumbRatio = $thumbWidth / $thumbHeight;
         $srcRatio   = $width / $height;
 
-        if ($thumbRatio > $srcRatio) {
+        if ($thumbRatio >= $srcRatio) {
             // We are generate a thumbnail with width:height > src's
             // width:height, it normally means we are generate a landscape thumb
             // from a portrait image,

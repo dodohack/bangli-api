@@ -255,8 +255,8 @@ class AttachmentController extends EntityController
     private function genThumbnails($starts, $ends)
     {
         $db = new Attachment;
-        if ($starts) $db = $db->where('updated_at', '>=', $starts);
-        if ($ends)   $db = $db->where('updated_at', '<=', $ends);
+        if ($starts) $db = $db->where('created_at', '>=', $starts);
+        if ($ends)   $db = $db->where('created_at', '<=', $ends);
 
         // TODO: Support thumbnail gen for given images
         //$images = $db->limit(10)->get();
