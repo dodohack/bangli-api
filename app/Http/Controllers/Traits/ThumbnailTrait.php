@@ -51,7 +51,7 @@ trait ThumbnailTrait
             // width:height, it normally means we are generate a portrait thumb
             // from a landscape image
             // We will keep height unchanged and reduce src width and x properly
-            $tmpWidth = floor($height / $thumbRatio);
+            $tmpWidth = floor($height * $thumbRatio);
             $srcX     = floor(($width - $tmpWidth) / 2);
             $width    = $tmpWidth;
         }
@@ -60,7 +60,7 @@ trait ThumbnailTrait
         $tmpImg = imagecreatetruecolor($thumbWidth, $thumbHeight);
 
         // Copy and resize old image into new image
-        $success = imagecopyresized($tmpImg, $image,
+        $success = imagecopyresampled($tmpImg, $image,
             0/* dst x*/, 0/* dst y*/, $srcX, $srcY,
             $thumbWidth, $thumbHeight, $width, $height);
 
