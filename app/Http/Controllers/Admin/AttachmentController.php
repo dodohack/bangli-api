@@ -72,8 +72,7 @@ class AttachmentController extends EntityController
             $this->genThumbnails($starts, $ends);
         }
 
-
-        return $this->success();
+        return $this->success(['status' =>  'ok']);
     }
 
     /**
