@@ -79,7 +79,7 @@ class AuthController extends Controller
      */
     public function postInvalidateTokens(Request $request)
     {
-
+        return $this->error('API unimplemented');
     }
 
     /**

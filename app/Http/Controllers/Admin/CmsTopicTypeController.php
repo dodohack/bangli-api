@@ -45,7 +45,8 @@ class CmsTopicTypeController extends Controller
     {
         $input = $request->except('id');
 
-        $tt = TopicType::find($id)->update($input)->toArray();
+        $tt = TopicType::find($id);
+        $tt->update($input);
 
         return $this->response($tt, 'put topic type error');
     }
@@ -55,8 +56,11 @@ class CmsTopicTypeController extends Controller
      */
     public function delete(Request $request, $id)
     {
-        $numDeleted = TopicType::destroy($id);
+        $delete = TopicType::destroy($id);
 
-        return $this->response($numDeleted, 'delete topic type error');
+        if ($delete)
+            return $this->success(['id' => $id]);
+
+        return $this->error('delete topic type error');
     }
 }

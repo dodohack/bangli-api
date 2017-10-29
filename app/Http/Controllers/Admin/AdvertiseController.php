@@ -6,7 +6,7 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\EntityController;
 use App\Models\Advertise;
 
@@ -38,7 +38,7 @@ class AdvertiseController extends EntityController
     }
 
     /**
-     * Move multiple advertises into trash
+     * Move multiple advertises into trash or physically delete them from trash
      */
     public function deleteAdvertises(Request $request)
     {
@@ -49,19 +49,6 @@ class AdvertiseController extends EntityController
     }
 
     /**
-     * Physically delete advertises from trash
-     * @param Request $request
-     * @return
-     */
-    public function purgeAdvertises(Request $request)
-    {
-        $ids = $request->get('ids');
-        $numPurged = $this->purgeEntities($ids);
-
-        return $this->response($numPurged, 'purge ads error');
-    }
-
-    /**
      * Return advertise status and occurrences
      */
     public function getStatus(Request $request)
@@ -69,7 +56,7 @@ class AdvertiseController extends EntityController
         $status = Advertise::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->response($status, 'get ad status error');
+        return $this->response(['status' => $status], 'get ad status error');
     }
 
     /**
@@ -111,7 +98,7 @@ class AdvertiseController extends EntityController
     }
 
     /**
-     * Move a advertise to trash by id
+     * Move a advertise to trash of physically delete it from trash
      * @param Request $request
      * @param $id
      * @return Advertise | bool
@@ -121,18 +108,5 @@ class AdvertiseController extends EntityController
         $deleted = $this->deleteEntity('id', $id);
 
         return $this->response($deleted, 'trash ad error');
-    }
-
-    /**
-     * Physically delete a advertise from trash
-     * @param Request $request
-     * @param $id
-     * @return
-     */
-    public function purgeAdvertise(Request $request, $id)
-    {
-        $purged = $this->purgeEntity('id', $id);
-
-        return $this->response($purged, 'purge ad error');
     }
 }

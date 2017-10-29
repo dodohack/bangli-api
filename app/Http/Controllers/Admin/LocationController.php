@@ -5,13 +5,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 use App\Http\Controllers\EntityController;
 use App\Models\Location;
+use League\Flysystem\Adapter\Local;
 
 class LocationController extends EntityController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Return a list of locations
      * @param Request $request
@@ -19,7 +26,9 @@ class LocationController extends EntityController
      */
     public function getLocations(Request $request)
     {
-        return $this->getEntitiesReq($request);
+        $ret = Location::all()->toArray();
+
+        return $this->response($ret, 'get geo locations error');
     }
 
     /**
@@ -27,7 +36,7 @@ class LocationController extends EntityController
      */
     public function putLocations(Request $request)
     {
-        return response('Posts batch editing API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -35,15 +44,7 @@ class LocationController extends EntityController
      */
     public function deleteLocations(Request $request)
     {
-        return response('API unimplemented', 401);
-    }
-
-    /**
-     * Return location statuss and occurrences
-     */
-    public function getStates(Request $request)
-    {
-        return $this->getEntityStates($request, 'locations');
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -54,7 +55,9 @@ class LocationController extends EntityController
      */
     public function getLocation(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id, null);
+        $ret = Location::find($id)->toArray();
+
+        return $this->response($ret, 'get geo location error');
     }
 
     /**
@@ -65,7 +68,11 @@ class LocationController extends EntityController
      */
     public function putLocation(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        $inputs = $request->except('id');
+        $loc = Location::find($id);
+        $loc->update($inputs);
+
+        return $this->response($loc, 'put loc fail');
     }
 
     /**
@@ -75,17 +82,24 @@ class LocationController extends EntityController
      */
     public function postLocation(Request $request)
     {
-        return $this->postEntityReq($request);
+        $inputs = $request->except('id');
+
+        $newLoc = Location::create($inputs)->toArray();
+
+        return $this->response($newLoc, 'post geo location fail');
     }
 
     /**
      * Move a location to trash by id
      * @param Request $request
      * @param $id
-     * @return Location
+     * @return
      */
     public function deleteLocation(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        if (Location::destroy($id))
+            return $this->success(['id' => $id]);
+
+        return $this->error('delete geo location error');
     }
 }

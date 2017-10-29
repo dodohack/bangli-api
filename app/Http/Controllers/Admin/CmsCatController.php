@@ -22,6 +22,17 @@ class CmsCatController extends Controller
     }
 
     /**
+     * Get categories
+     */
+    public function getCategories(Request $request)
+    {
+        $ret = Category::all()->toArray();
+
+        return $this->response($ret, 'get category error');
+    }
+
+
+    /**
      * Get a category
      */
     public function getCategory(Request $request, $id)
@@ -48,11 +59,13 @@ class CmsCatController extends Controller
      */
     public function putCategory(Request $request, $id)
     {
-        $input = $request->except('id');
+        $inputs = $request->except('id');
 
-        $newCat = Category::find($id)->update($input)->toArray();
+        $record = Category::find($id);
+        $record->update($inputs);
+        $cat = $record->toArray();
 
-        return $this->response($newCat, 'put category fail');
+        return $this->response($cat, 'put category fail');
     }
 
     /**
@@ -74,9 +87,12 @@ class CmsCatController extends Controller
         }
 
         // Now we can safely destroy the category when relationships are removed
-        $ret = Category::destroy($id);
+        $deleted = Category::destroy($id);
 
-        return $this->response($ret, 'delete category error');
+        if ($deleted)
+            return $this->success(['id' => $id]);
+
+        return $this->error('delete category error');
     }
 
 

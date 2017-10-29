@@ -54,20 +54,12 @@ class PageController extends CmsController
         return $this->response($numDeleted, 'trash pages error');
     }
 
-    public function purgePages(Request $request)
-    {
-        $ids = $request->get('ids');
-        $numPurged = $this->purgeEntities($ids);
-
-        return $this->response($numPurged, 'purge pages error');
-    }
-
     public function getStatus(Request $request)
     {
         $status = Page::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->response($status, 'get page status error');
+        return $this->response(['status' => $status], 'get page status error');
     }
 
     public function getPage(Request $request, $id)
@@ -99,12 +91,5 @@ class PageController extends CmsController
         $deleted = $this->deleteEntity('id', $id);
 
         return $this->response($deleted, 'trash page error');
-    }
-
-    public function purgePage(Request $request, $id)
-    {
-        $purged = $this->purgeEntity('id', $id);
-
-        return $this->response($purged, 'purge page error');
     }
 }

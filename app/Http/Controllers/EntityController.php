@@ -206,11 +206,22 @@ class EntityController extends Controller
 
         $table = $this->getEntityTable();
 
+        // TODO: Merge following logic with putEntity.
+
         // Set default entity author/editor to current user if they are not set
         $user_id = $this->guard()->user()->id;
         if ($this->etype == ETYPE_TOPIC)
             if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $user_id;
         if (!isset($inputs['author_id'])) $inputs['author_id'] = $user_id;
+
+        if (isset($inputs['status'])) {
+            // Set published_at to now
+            if ($inputs['status'] == 'publish')
+                $inputs['published_at'] = date('Y-m-d H:i:s');
+            // Set published_at to null
+            else
+                $inputs['published_at'] = null;
+        }
 
         // Normalize HTML and add Angular specific tags
         if (isset($inputs['content']))
@@ -262,6 +273,15 @@ class EntityController extends Controller
         if (!$record->author_id)
             if (!isset($inputs['author_id'])) $inputs['author_id'] = $user->id;
 
+        if (isset($inputs['status'])) {
+            // Set published_at to now
+            if ($inputs['status'] == 'publish')
+                $inputs['published_at'] = date('Y-m-d H:i:s');
+            // Set published_at to null
+            else
+                $inputs['published_at'] = null;
+        }
+
         // Update entity relations
         $this->updateRelations($inputs, $record);
 
@@ -309,6 +329,7 @@ class EntityController extends Controller
         if ($record && $record->status != 'trash') {
             // Move entity to trash
             $record->status = 'trash';
+            $record->published_at = null;
             $record->save();
             return ['id' => $id, 'status' => 'trash'];
         } else if ($record && $record->status == 'trash') {

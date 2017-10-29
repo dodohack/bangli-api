@@ -7,6 +7,7 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\EntityController;
 
 use App\Models\Topic;
@@ -67,7 +68,7 @@ class TopicController extends EntityController
         $status = Topic::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->response($status, 'get topic status error');
+        return $this->response(['status' => $status], 'get topic status error');
     }
 
     /**

@@ -19,7 +19,7 @@ class OfferFilterController extends Controller
 
     public function getAll(Request $request)
     {
-        $ret = OfferFilter::get();
+        $ret = OfferFilter::get()->toArray();
         return $this->response($ret, 'get all offer filter error');
     }
 
@@ -32,7 +32,9 @@ class OfferFilterController extends Controller
     public function put(Request $request, $type)
     {
         $content = $request->get('content');
-        $ret = OfferFilter::where('type', $type)->update(['content' => $content]);
+        $record = OfferFilter::where('type', $type);
+        $record->update(['content' => $content]);
+        $ret = $record->get()->toArray();
         return $this->response($ret, 'put offer filter error');
     }
 

@@ -45,9 +45,10 @@ class CmsTagController extends Controller
     {
         $input = $request->except('id');
 
-        $newTag = Tag::find($id)->update($input)->toArray();
+        $tag = Tag::find($id);
+        $tag->update($input);
 
-        return $this->response($newTag, 'put tag error');
+        return $this->response($tag, 'put tag error');
     }
 
     /**
@@ -55,8 +56,11 @@ class CmsTagController extends Controller
      */
     public function deleteTag(Request $request, $id)
     {
-        $numDeleted = Tag::destroy($id);
+        $deleted = Tag::destroy($id);
 
-        return $this->response($numDeleted, 'delete tag error');
+        if ($deleted)
+            return $this->success(['id' => $id]);
+
+        return $this->error('delete tag error');
     }
 }

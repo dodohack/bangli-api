@@ -54,7 +54,8 @@ class FeMenuController extends Controller
     {
         $input = $request->except('id');
 
-        $newMenu = Menu::find($id)->update($input)->toArray();
+        $newMenu = Menu::find($id);
+        $newMenu->update($input);
 
         return $this->response($newMenu, 'put femenu error');
     }

@@ -12,5 +12,8 @@ use App\Http\Controllers\Controller;
 
 class MenuController extends Controller
 {
-
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
 }

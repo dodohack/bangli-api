@@ -31,9 +31,23 @@ $router->group([
     /* System level attributes */
     $router->get('/sys/attributes',     'SysController@getAttributes');
 
-    /* Get list of post states */
-    $router->get('/posts/states',    'PostController@getStatus');
+    /* Get list of post status */
+    $router->get('/cms/posts/status',    'PostController@getStatus');
 
+    /* Get list of topic status */
+    $router->get('/cms/topics/status',   'TopicController@getStatus');
+
+    /* Get list of page status */
+    $router->get('/cms/pages/status',    'PageController@getStatus');
+
+    /* Get list of offer status */
+    $router->get('/cms/offers/status',   'OfferController@getStatus');
+
+    /* Get list of advertise status */
+    $router->get('/advertises/status',   'AdvertiseController@getStatus');
+
+    /* Get list of comment status */
+    $router->get('/comments/status',     'CommentController@getStatus');
 
     /************************************************************************
      * Extra authentication is needed for getting/putting user info(if the
@@ -124,8 +138,6 @@ $router->group([
 
     /* Get a cut down version of topics for posts */
     $router->get('/topic_cats',  'PostController@getTopicCats');
-    /* Topic states */
-    $router->get('/topics/states', 'TopicController@getStatus');
 });
 
 
