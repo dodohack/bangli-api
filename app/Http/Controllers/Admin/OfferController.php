@@ -94,11 +94,17 @@ class OfferController extends EntityController
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
+
+            // Trim white space
+            $inputs['display_url'] = trim($inputs['display_url']);
+
+            // Generate trcking link
             $tracking_url = $this->autoTrackingUrl(
                 $inputs['display_url'], $inputs['topics'][0]);
 
             if ($tracking_url)
                 $inputs['tracking_url'] = $tracking_url;
+            
         }
 
         $offer = $this->putEntity($inputs, 'id', $id);
