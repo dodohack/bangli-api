@@ -155,13 +155,14 @@ class EntityController extends Controller
     /**
      * Get an entity object with it's relations
      * @param $key - 'id' for post or 'guid' topic
+     * @param $id -  id/guid the value
      * @param $table - Entity table object
      * @param $relations - entity relation tables to be queried
      * @param $columns - entity table columns to be queried
      * @param $relCount - string or array of the name of relationships.
      * @return array | boolean
      */
-    protected function getEntity(string $key, int $id,
+    protected function getEntity(string $key, $id,
                                  $table = null,
                                  array $relations = null,
                                  array $columns = null,
