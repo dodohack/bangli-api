@@ -253,7 +253,7 @@ class AttachmentController extends EntityController
      * @param $starts
      * @param $ends
      */
-    private function genThumbnails($starts, $ends)
+    private function genThumbnails(string $starts, string $ends)
     {
         // Number of images
         $count = 0;

@@ -104,7 +104,7 @@ class OfferController extends EntityController
 
             if ($tracking_url)
                 $inputs['tracking_url'] = $tracking_url;
-            
+
         }
 
         $offer = $this->putEntity($inputs, 'id', $id);
