@@ -75,9 +75,14 @@ class CmsController extends EntityController
             ->select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
+        // Ad status and occurrences
+        $ad_status = DB::table('advertises')
+            ->select(DB::raw('status, COUNT(*) as count'))
+            ->groupBy('status')->get();
+
         $array = compact('authors', 'editors', 'channels', 'locations',
             'categories', 'topic_types', 'post_status',
-            'topic_status', 'offer_status', 'page_status');
+            'topic_status', 'offer_status', 'page_status', 'ad_status');
 
         return $this->success($array);
     }
