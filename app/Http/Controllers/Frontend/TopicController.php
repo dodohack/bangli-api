@@ -69,33 +69,10 @@ class TopicController extends FeController
     // the definition relations/columns of data member.
     public function getTopic(Request $request, $guid)
     {
-        $table  = $this->getEntityTable();
-        if (!$table) return $this->error('get topic error');
+        $topic = $this->getEntity('guid', $guid, null,
+            ['offers'], null, $this->relationCount);
 
-        $topic = $this->getEntity('guid', $guid, $table,
-            null, null, $this->relationCount);
-
-        if (!$topic) return $this->error('topic not found');
-
-        // Get related offers
-        switch ($topic->type['slug']) {
-            case TT_BRAND:
-            case TT_MERCHANT:
-            case TT_PRODUCTS:
-            case TT_GENERIC:
-            case TT_COUNTRY:
-            case TT_CITY:
-            case TT_ROUTE:
-            case TT_PRODUCT:
-            default:
-                // FIXME: Always return offers for all kind of topic
-                $offers = $topic->offers()->get()->toArray();
-                break;
-        }
-
-        $topic['offers'] = $offers;
-
-        return $this->success($topic);
+        return $this->response($topic, 'topic not found');
     }
 
     /**
