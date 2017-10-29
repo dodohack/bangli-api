@@ -69,10 +69,11 @@ class AttachmentController extends EntityController
         if ($inputs['gen-thumb'] && $inputs['gen-thumb'] == true) {
             $starts = isset($inputs['starts']) ? $inputs['starts'] : null;
             $ends   = isset($inputs['ends']) ? $inputs['ends'] : null;
-            $this->genThumbnails($starts, $ends);
+            $ret = $this->genThumbnails($starts, $ends);
+            return $this->success($ret);
         }
 
-        return $this->success(['status' =>  'ok']);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -254,14 +255,27 @@ class AttachmentController extends EntityController
      */
     private function genThumbnails($starts, $ends)
     {
+        // Number of images
+        $count = 0;
+        // Number of images processed
+        $countPass = 0;
+        // Number of images failed to process
+        $countFail = 0;
+
         $db = new Attachment;
         if ($starts) $db = $db->where('created_at', '>=', $starts);
         if ($ends)   $db = $db->where('created_at', '<=', $ends);
 
         // TODO: Support thumbnail gen for given images
         //$images = $db->limit(10)->get();
-        $db->chunk(20, function ($images) {
+        $db->chunk(20, function ($images) use($count, $countPass, $countFail) {
             foreach ($images as $image) {
+                // If thumbnails of current image all generated successfully
+                $success = true;
+
+                // Increase number of image
+                $count++;
+
                 $uri = $image->path . $image->filename;
                 $pi  = pathinfo($image->filename);
 
@@ -291,26 +305,30 @@ class AttachmentController extends EntityController
                     $this->disk->delete($thumbNames);
                 }
 
-                // 3. Remove old records, [skip this for faster speed]
-                // $this->thumbnail = null;
-                // $this->save();
-
-                // 4. Generate thumbnails
+                // 3. Generate thumbnails
                 $imgObj = $this->createImage($uri);
                 foreach ($this->thumbConfig as $tc) {
-                    if ($this->createThumbs($this->disk, $imgObj,
+                    if (!$this->createThumbs($this->disk, $imgObj,
                         $image->thumb_path, $pi['filename'], $pi['extension'],
                         $tc[1], $tc[2])) {
+                        $success = false;
                     }
                 }
 
-                // 5. Update records
-                $image->thumbnail =
-                    $this->genThumbRecord($pi['filename'], $pi['extension']);
-                $image->save();
-
+                if ($success) {
+                    // Increase the succeed image counter
+                    $countPass++;
+                    // Update records
+                    $image->thumbnail =
+                        $this->genThumbRecord($pi['filename'], $pi['extension']);
+                    $image->save();
+                } else {
+                    $countFail++;
+                }
             }
         });
+
+        return ['total' => $count, 'ok' => $countPass, 'fail' => $countFail];
     }
 
 }

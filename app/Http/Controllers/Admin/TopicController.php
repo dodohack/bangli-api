@@ -52,9 +52,9 @@ class TopicController extends EntityController
     public function deleteTopics(Request $request)
     {
         $ids = $request->get('ids');
-        $numDeleted = $this->deleteEntities($ids);
+        $records = $this->deleteEntities($ids);
 
-        return $this->response($numDeleted, 'delete topics error');
+        return $this->response($records, 'delete topics error');
     }
 
     /**
@@ -118,8 +118,8 @@ class TopicController extends EntityController
      */
     public function deleteTopic(Request $request, $id)
     {
-        $deleted = $this->deleteEntity('id', $id);
+        $record = $this->deleteEntity('id', $id);
 
-        return $this->response($deleted, 'delete topic error');
+        return $this->response($record, 'delete topic error');
     }
 }

@@ -291,7 +291,7 @@ class EntityController extends Controller
      * This function can't be used by Attachment.
      * @param $key   - primary id name
      * @param $id    - primary id
-     * @return bool  - true if we've found the record else false
+     * @return array | bool - true if we've found the record else false
      */
     protected function deleteEntity($key, $id)
     {
@@ -304,13 +304,13 @@ class EntityController extends Controller
             // Move entity to trash
             $record->status = 'trash';
             $record->save();
-            return true;
+            return ['id' => $id, 'status' => 'trash'];
         } else if ($record && $record->status == 'trash') {
             // Physically delete an entity from trash
             // TODO: Check if relationship is automatically deleted as we
             // have FK constraint on it.
             $table->where($key, $id)->delete();
-            return true;
+            return ['id' => $id, 'status' => 'deleted'];
         }
 
         return false;
@@ -319,22 +319,27 @@ class EntityController extends Controller
     /**
      * Move multiple entities into trash by their IDs
      * @param $ids
-     * @return bool|int
+     * @return bool|array
      */
     protected function deleteEntities($ids)
     {
-        $numDeleted = 0;
-
         if (!$ids) return false;
 
         $idAry = explode(',', $ids);
 
+        $ret = [];
+
         foreach($idAry as $id) {
-            if ($this->deleteEntity('id', $id))
-                $numDeleted++;
+            $status = $this->deleteEntity('id', $id);
+            if ($status) {
+                $ret[] = $status;
+            }
         }
 
-        return $numDeleted;
+        if (count($ret))
+            return $ret;
+        else
+            return false;
     }
 
     /**
