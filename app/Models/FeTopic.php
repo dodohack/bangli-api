@@ -76,7 +76,7 @@ class FeTopic extends Topic
             'topic_has_offer', 'topic_id', 'offer_id')
             ->publish()->valid()
             ->select(['offers.id', 'title', 'tracking_url', 'vouchers',
-                'starts', 'ends']);
+                'featured', 'starts', 'ends']);
     }
 
     public function images()

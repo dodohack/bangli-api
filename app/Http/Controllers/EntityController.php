@@ -156,15 +156,17 @@ class EntityController extends Controller
     /**
      * Get an entity object with it's relations
      * @param $key - 'id' for post or 'guid' topic
-     * @param $table - table to query, optional
+     * @param $id -  id/guid the value
+     * @param $table - Entity table object
      * @param $relations - entity relation tables to be queried
      * @param $columns - entity table columns to be queried
+     * @param $relCount - string or array of the name of relationships.
      * @return array | boolean
      */
-    protected function getEntity($key, $id,
+    protected function getEntity(string $key, $id,
                                  $table = null,
-                                 $relations = null,
-                                 $columns = null,
+                                 array $relations = null,
+                                 array $columns = null,
                                  $relCount = null)
     {
         if (!$table) {
@@ -186,26 +188,42 @@ class EntityController extends Controller
         if ($this->columns)   $entity = $db->first($this->columns);
         else                  $entity = $db->first();
 
-        return $entity;
+        if ($entity)
+            return ['entity' => $entity];
+        else
+            return false;
     }
+
+
 
     /**
      * Create a new entity
      * @param $inputs - request inputs
-     * @return object
+     * @return array | bool
      */
-    protected function postEntity($inputs)
+    protected function postEntity(array $inputs)
     {
         // TODO: update column name
         unset($inputs['created_at'], $inputs['updated_at']);
 
         $table = $this->getEntityTable();
 
+        // TODO: Merge following logic with putEntity.
+
         // Set default entity author/editor to current user if they are not set
         $user_id = $this->guard()->user()->id;
         if ($this->etype == ETYPE_TOPIC)
             if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $user_id;
         if (!isset($inputs['author_id'])) $inputs['author_id'] = $user_id;
+
+        if (isset($inputs['status'])) {
+            // Set published_at to now
+            if ($inputs['status'] == 'publish')
+                $inputs['published_at'] = date('Y-m-d H:i:s');
+            // Set published_at to null
+            else
+                $inputs['published_at'] = null;
+        }
 
         // Normalize HTML and add Angular specific tags
         if (isset($inputs['content']))
@@ -214,8 +232,8 @@ class EntityController extends Controller
         // Create the entity
         $record = $table->create($inputs);
 
-        // Fail to creat the entity
-        if (!$record) return null;
+        // Fail to create the entity
+        if (!$record) return false;
 
         // Update entity relations
         $this->updateRelations($inputs, $record);
@@ -232,11 +250,11 @@ class EntityController extends Controller
      * @param $id - post id to be updated
      * @param $relations - relations to return when 'put' success
      * @param $columns - columns to return when 'put' success
-     * @return object
+     * @return array | bool
      */
-    protected function putEntity($inputs, $key, $id,
-                                 $relations = null,
-                                 $columns = null,
+    protected function putEntity(array $inputs, string $key, int $id,
+                                 array $relations = null,
+                                 array $columns = null,
                                  $relCount = null)
     {
         unset($inputs['created_at'], $inputs['updated_at']);
@@ -249,13 +267,22 @@ class EntityController extends Controller
 
         // Check if user has write permission to the entity
         if (!$this->canUserEditEntity($record, $user))
-            return null;
+            return false;
 
         // Set default entity author/editor to current user if they are not set
         if ($this->etype == ETYPE_TOPIC && !$record->editor_id)
             if (!isset($inputs['editor_id'])) $inputs['editor_id'] = $user->id;
         if (!$record->author_id)
             if (!isset($inputs['author_id'])) $inputs['author_id'] = $user->id;
+
+        if (isset($inputs['status'])) {
+            // Set published_at to now
+            if ($inputs['status'] == 'publish')
+                $inputs['published_at'] = date('Y-m-d H:i:s');
+            // Set published_at to null
+            else
+                $inputs['published_at'] = null;
+        }
 
         // Update entity relations
         $this->updateRelations($inputs, $record);
@@ -283,8 +310,8 @@ class EntityController extends Controller
                 $columns, $relCount);
         }
 
-        // Return null if any error happens
-        return null;
+        // Return false if any error happens
+        return false;
     }
 
     /**
@@ -292,26 +319,27 @@ class EntityController extends Controller
      * This function can't be used by Attachment.
      * @param $key   - primary id name
      * @param $id    - primary id
-     * @return bool  - true if we've found the record else false
+     * @return array | bool - true if we've found the record else false
      */
-    protected function deleteEntity($key, $id)
+    protected function deleteEntity(string $key, int $id)
     {
         $table = $this->getEntityTable();
         if (!$table) return false;
 
         $record = $table->where($key, $id)->first();
 
-        if ($record && $record->status == 'trash') {
+        if ($record && $record->status != 'trash') {
             // Move entity to trash
             $record->status = 'trash';
+            $record->published_at = null;
             $record->save();
-            return true;
+            return ['id' => $id, 'status' => 'trash'];
         } else if ($record && $record->status == 'trash') {
             // Physically delete an entity from trash
             // TODO: Check if relationship is automatically deleted as we
             // have FK constraint on it.
             $table->where($key, $id)->delete();
-            return true;
+            return ['id' => $id, 'status' => 'deleted'];
         }
 
         return false;
@@ -320,22 +348,27 @@ class EntityController extends Controller
     /**
      * Move multiple entities into trash by their IDs
      * @param $ids
-     * @return bool|int
+     * @return bool|array
      */
     protected function deleteEntities($ids)
     {
-        $numDeleted = 0;
-
         if (!$ids) return false;
 
         $idAry = explode(',', $ids);
 
+        $ret = [];
+
         foreach($idAry as $id) {
-            if ($this->deleteEntity('id', $id))
-                $numDeleted++;
+            $status = $this->deleteEntity('id', $id);
+            if ($status) {
+                $ret[] = $status;
+            }
         }
 
-        return $numDeleted;
+        if (count($ret))
+            return ['entities' => $ret];
+        else
+            return false;
     }
 
     /**

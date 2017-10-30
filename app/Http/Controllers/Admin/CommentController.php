@@ -7,12 +7,17 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\EntityController;
 use App\Models\Comment;
 
 class CommentController extends EntityController
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * Return a list of posts
      * @param Request $request
@@ -20,7 +25,7 @@ class CommentController extends EntityController
      */
     public function getComments(Request $request)
     {
-        return $this->getEntitiesReq($request);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -28,7 +33,7 @@ class CommentController extends EntityController
      */
     public function putComments(Request $request)
     {
-        return response('Posts batch editing API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -36,15 +41,15 @@ class CommentController extends EntityController
      */
     public function deleteComments(Request $request)
     {
-        return response('API unimplemented', 401);
+        return $this->error('API unimplemented');
     }
 
     /**
-     * Return comment statuss and occurrences
+     * Return comment status and occurrences
      */
-    public function getStates(Request $request)
+    public function getStatus(Request $request)
     {
-        return $this->getEntityStates($request, 'comments');
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -55,7 +60,7 @@ class CommentController extends EntityController
      */
     public function getComment(Request $request, $id)
     {
-        return $this->getEntityReq($request, 'id', $id, null);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -66,7 +71,7 @@ class CommentController extends EntityController
      */
     public function putComment(Request $request, $id)
     {
-        return $this->putEntityReq($request, 'id', $id);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -76,7 +81,7 @@ class CommentController extends EntityController
      */
     public function postComment(Request $request)
     {
-        return $this->postEntityReq($request);
+        return $this->error('API unimplemented');
     }
 
     /**
@@ -87,6 +92,6 @@ class CommentController extends EntityController
      */
     public function deleteComment(Request $request, $id)
     {
-        return $this->deleteEntityReq($request, 'id', $id);
+        return $this->error('API unimplemented');
     }
 }

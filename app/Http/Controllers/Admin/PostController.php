@@ -7,6 +7,7 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\EntityController;
 
 use App\Models\Post;
@@ -37,7 +38,7 @@ class PostController extends EntityController
     }
 
     /**
-     * Move multiple posts into trash
+     * Move multiple posts into trash or physically delete them from trash
      */
     public function deletePosts(Request $request)
     {
@@ -48,17 +49,6 @@ class PostController extends EntityController
     }
 
     /**
-     * Physically delete multiple posts from trash
-     */
-    public function purgePosts(Request $request)
-    {
-        $ids = $request->get('ids');
-        $numPurged = $this->purgeEntities($ids);
-
-        return $this->response($numPurged, 'purge posts error');
-    }
-
-    /**
      * Return post status and occurrences
      */
     public function getStatus(Request $request)
@@ -66,7 +56,7 @@ class PostController extends EntityController
         $status = Post::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->response($status, 'get post status error');
+        return $this->response(['status' => $status], 'get post status error');
     }
 
     /**
@@ -112,7 +102,7 @@ class PostController extends EntityController
     }
 
     /**
-     * Move a post to trash by id
+     * Move a post to trash or physically delete it from trash
      * @param Request $request
      * @param $id
      * @return Post | bool
@@ -122,18 +112,5 @@ class PostController extends EntityController
         $deleted = $this->deleteEntity('id', $id);
 
         return $this->response($deleted, 'trash post error');
-    }
-
-    /**
-     * Physically delete a post from trash by id
-     * @param Request $request
-     * @param $id
-     * @return
-     */
-    public function purgePost(Request $request, $id)
-    {
-        $purged = $this->purgeEntity('id', $id);
-
-        return $this->response($purged, 'purge post error');
     }
 }

@@ -7,8 +7,10 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\EntityController;
 use App\Models\Topic;
+use App\Models\Offer;
 
 class OfferController extends EntityController
 {
@@ -36,7 +38,7 @@ class OfferController extends EntityController
     }
 
     /**
-     * Move multiple offers into trash, by offer ids
+     * Move multiple offers into trash or physically delete them from trash
      */
     public function deleteOffers(Request $request)
     {
@@ -46,20 +48,6 @@ class OfferController extends EntityController
     }
 
     /**
-     * Physically delete offers from the trash
-     * @param Request $request
-     * @return
-     */
-    public function purgeTopics(Request $request)
-    {
-        $ids = $request->get('ids');
-        $numPurged = $this->purgeEntities($ids);
-
-        return $this->response($numPurged, 'purge offers error');
-    }
-
-
-    /**
      * Return offer statuss and occurrences
      */
     public function getStatus(Request $request)
@@ -67,7 +55,7 @@ class OfferController extends EntityController
         $status = Offer::select(DB::raw('status, COUNT(*) as count'))
             ->groupBy('status')->get();
 
-        return $this->response($status, 'get offer status error');
+        return $this->response(['status' => $status], 'get offer status error');
     }
 
     /**
@@ -78,7 +66,7 @@ class OfferController extends EntityController
      */
     public function getOffer(Request $request, $id)
     {
-        $offer = $this->getEntityReq('id', $id);
+        $offer = $this->getEntity('id', $id);
         return $this->response($offer, 'get offer error');
     }
 
@@ -94,11 +82,17 @@ class OfferController extends EntityController
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
+
+            // Trim white space
+            $inputs['display_url'] = trim($inputs['display_url']);
+
+            // Generate trcking link
             $tracking_url = $this->autoTrackingUrl(
                 $inputs['display_url'], $inputs['topics'][0]);
 
             if ($tracking_url)
                 $inputs['tracking_url'] = $tracking_url;
+
         }
 
         $offer = $this->putEntity($inputs, 'id', $id);
@@ -130,7 +124,7 @@ class OfferController extends EntityController
     }
 
     /**
-     * Move an offer to trash by id
+     * Move an offer to trash or physically delete it from trash
      * @param Request $request
      * @param $id
      * @return
@@ -141,20 +135,6 @@ class OfferController extends EntityController
 
         return $this->response($deleted, 'trash offer error');
     }
-
-    /**
-     * Physically delete an offer from trash by id
-     * @param Request $request
-     * @param $id
-     * @return
-     */
-    public function purgeOffer(Request $request, $id)
-    {
-        $purged = $this->purgeEntity('id', $id);
-
-        return $this->response($purged, 'purge offer error');
-    }
-
 
     /**
      * Update offer's tracking_url automatically

@@ -35,15 +35,13 @@ class Controller extends BaseController
 
     /**
      * Return JSONP or AJAX response based on client request
-     * I intentionally place $etype in the middle even it has default parameter
-     * @param string $callback
-     * @param $data - data array to be returned to client
-     * @return
+     * @param $data - key-value array of returned data
+     * @return string - json string like '{etype: ...}, data'
      */
-    public function success($data)
+    public function success(array $data)
     {
-        // Convert scalar to array
-        if (!is_array($data)) $data = compact('data');
+        // Must be array
+        assert(is_array($data), "Array expected");
 
         if ($this->etype) $data['etype'] = $this->etype;
 
@@ -63,8 +61,11 @@ class Controller extends BaseController
      * @param string $msg
      * @return
      */
-    public function error($msg)
+    public function error(string $msg)
     {
+        // Must be scalar or string.
+        assert(is_string($msg), "String expected");
+
         $ret = ['error' => $msg];
         if ($this->etype) $ret['etype'] = $this->etype;
 
@@ -83,9 +84,9 @@ class Controller extends BaseController
      * @param $error
      * @return \Illuminate\Http\Response|\Laravel\Lumen\Http\ResponseFactory|string
      */
-    public function response($data, $error)
+    public function response(array $data, string $error)
     {
-        if ($data)
+        if (is_array($data))
             return $this->success($data);
         else
             return $this->error($error);

@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 
 class PingController extends Controller
 {
+    public function __construct(Request $request)
+    {
+        parent::__construct($request);
+    }
+
     /**
      * This function handles ping service, it just return the key sent from
      * client, or error if key is not specified
