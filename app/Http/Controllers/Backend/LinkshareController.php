@@ -168,6 +168,9 @@ class LinkShareController extends AffiliateController
      */
     private function putMerchant($mid, $mname)
     {
+        // Do not add filtered merchant
+        if (!$this->merchantIdFilter(LINKSHARE, $mid)) return false;
+
         // Topic title
         $title = htmlspecialchars_decode($mname);
         // Topic guid
@@ -297,6 +300,19 @@ class LinkShareController extends AffiliateController
                 $i++;
             }
 
+            //
+            // Validate offer quality
+            //
+            // 1. start date
+            if (!$this->dateFilter($offer['starts'], true)) continue;
+            // 2. end date
+            if (!$this->dateFilter($offer['ends'], false)) continue;
+            // 3. offer merchant id
+            if (!$this->merchantIdFilter(LINKSHARE, $offer['aff_id'])) continue;
+            // 4. offer description
+            if (!$this->contentFilter($offer['title'])) continue;
+
+            // Save the offer
             if ($this->putOffer($offer)) $count++;
         }
 

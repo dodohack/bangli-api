@@ -123,10 +123,10 @@ class AffiliateController extends BaseController
     }
 
     /**
-     * Test if the offer belongs to the merchant we don't want to collect
-     * their offer, this is mainly because they have out-dated or unmaintained
+     * Test if the merchant or offer we don't want to add to our database
+     * this is mainly because they have out-dated or unmaintained offers.
      * feeds.
-     * @params platform - affiliate platform, 'AWIN', 'LINKSHARE' etc
+     * @params platform - affiliate platform, 'AWIN', 'LINKSHARE', 'WEBGAIN' etc
      * @params mid  - merchant ID on given platform
      * @return bool - true if the offer passes the test
      */

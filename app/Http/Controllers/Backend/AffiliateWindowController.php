@@ -118,6 +118,9 @@ class AffiliateWindowController extends AffiliateController
      */
     private function putMerchant(Array $metadata)
     {
+        // Skip filtered merchants
+        if (!$this->merchantIdFilter(AWIN, $metadata[0])) return false;
+
         // Skip in-active merchants
         if (count($metadata) < 15 || $metadata[3] != 'yes') return false;
 
