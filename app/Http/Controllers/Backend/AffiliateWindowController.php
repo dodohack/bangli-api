@@ -7,7 +7,10 @@ namespace App\Http\Controllers\Backend;
 
 use Illuminate\Support\Facades\Storage;
 
-USE App\Models\Category;
+use App\Models\Category;
+use App\Models\Topic;
+use App\Models\Offer;
+
 
 class AffiliateWindowController extends AffiliateController
 {
@@ -63,11 +66,11 @@ class AffiliateWindowController extends AffiliateController
         if ($res) {
             // Save a copy for debug purpose
             Storage::disk('local')->put('awin_offers.xls', $res);
-            // Update datebase
+            // Update offer table
             $count = $this->putOffers($res);
         }
 
-        return response($count);
+        Storage::disk('local')->put('awin_offers.log', 'offer updated: ' . $count);
     }
 
     /**
@@ -116,75 +119,81 @@ class AffiliateWindowController extends AffiliateController
         // Skip in-active merchants
         if (count($metadata) < 15 || $metadata[3] != 'yes') return false;
 
+        // Topic title
+        $title = htmlspecialchars_decode($metadata[1]);
         // Topic guid
         $guid = $this->urlfy($metadata[1]);
 
-        // Check if we already have the topic in the table
-        $table = $this->getEntityTable();
-        // Check if we have already had this merchant
-        $record = $table->where('guid', $guid)->first();
-        if (!$record)
-            $record = $table->where('aff_id', $metadata[0])
-                ->where('aff_platform', AWIN)->first();
+        $table = new Topic;
 
-        $merchantShort = array(
-            'logo'   => $metadata[2],
-            'aff_id' => $metadata[0],
-            'aff_platform' => AWIN,
-            'tracking_url' => $metadata[7],
-            'display_url'  => $metadata[14]
-        );
+        // Check if we can find the merchant
+        $topic = $table->where('aff_id', $metadata[0])
+            ->where('aff_platform', AWIN)->first();
+        if (!$topic)
+            $topic = $table->where('guid', $guid)
+                ->orWhere('title', $title)->first();
 
-        $merchant = array_merge(
-            [
-                'guid'   => $guid,
+        if ($topic) {
+            //
+            // For existing topic, we only update a few empty entries of it
+            //
+
+            $input = [];
+            // Check for empty columns
+            if (!$topic->logo)         $input['logo'] = $metadata[2];
+            if (!$topic->aff_id)       $input['aff_id'] = $metadata[0];
+            if (!$topic->aff_platform) $input['aff_platform'] = AWIN;
+            if (!$topic->tracking_url) $input['tracking_url'] = $metadata[7];
+            if (!$topic->display_url)  $input['display_url'] = $metadata[14];
+
+            // Update tracking/display_url only when them are empty
+            if (count($input)) {
+                $topic->update($input);
+                return true;
+            }
+        } else {
+
+            //
+            // Create a new record if we can't find one.
+            //
+
+            $merchant = [
+                'guid' => $guid,
                 // TODO: Need to create an editor for auto-content
                 //'editor_id' => 1,
-                'title'   => htmlspecialchars_decode($metadata[1]),
+                'title' => $title,
                 // TODO: Need to support different channels: shopping, travel
                 'channel_id' => 1,
                 // topic type 2: merchant
                 'type_id' => 2,
                 // TODO: region of the
                 'location_id' => 1, // $metadata[15]
-                // TODO: After introducing more criteria, we can safely set this to 'publish'
-                'status' => 'publish',
+
+                // Auto created topic should be set to draft
+                'status' => 'draft',
+
+                'logo' => $metadata[2],
+                'aff_id' => $metadata[0],
+                'aff_platform' => AWIN,
+                'tracking_url' => $metadata[7],
+                'display_url' => $metadata[14],
+
                 'description' => $metadata[5],
                 'content' => $metadata[6]
-            ],
-            $merchantShort
-        );
+            ];
 
-        if ($record) {
-            // Update the entry only when the editor is null
-            // Otherwise we don't update the topic which may be modified manually.
-            if ($record->editor_id == null) {
-                if ($table->where('id', $record->id)->update($merchant))
-                    return true;
-                else
-                    return false;
-            }
 
-            // Partially update old topic with affiliate info.
-            if ($record->aff_id == null) {
-                if ($table->where('id', $record->id)->update($merchantShort))
-                    return true;
-                else
-                    return false;
-            }
-
-            return false;
-        } else {
             // Create the entry
-            $record = $table->create($merchant);
+            $topic = $table->create($merchant);
             // Setup merchant's category
             $catId = $this->getCategoryId($metadata[8]);
-            $record->categories()->sync([$catId]);
-            if (!$record)
-                return false;
-            else
+            if ($topic) {
+                $topic->categories()->sync([$catId]);
                 return true;
+            }
         }
+
+        return false;
     }
 
     /**
@@ -248,10 +257,11 @@ class AffiliateWindowController extends AffiliateController
      */
     private function putOffer(Array $offer)
     {
-        $input = array(
+        $input = [
             'channel_id' => 1,
             // TODO: After introducing more criteria, we can safely set this to 'publish'
             'status'     => 'publish',
+            'published_at' => date('Y-m-d H:i:s'),
             'title'      => htmlspecialchars_decode(substr($offer[5], 0, 1024)),
             'vouchers'   => $offer[4],
             'aff_offer_id' => $offer[0],
@@ -259,15 +269,14 @@ class AffiliateWindowController extends AffiliateController
             'ends'       => $this->AWinDate2MySQLDate($offer[7]),
             'tracking_url' => $offer[11],
             'display_url'  => $offer[12]
-        );
+        ];
 
-        $this->etype = ETYPE_TOPIC;
-        $topicTable = $this->getEntityTable();
+        $topicTable = new Topic;
         $merchant = $topicTable->where('aff_id', $offer[2])
             ->where('aff_platform', AWIN)
             ->with(['categories', 'offers'])->first();
 
-        // We may can't find the merchant if merchant table is relative old.
+        // We may not able to find the merchant if merchant table is relative old.
         if (!$merchant) return false;
 
         // If we can find the same offer
@@ -291,8 +300,7 @@ class AffiliateWindowController extends AffiliateController
         }
 
         // Get offer table
-        $this->etype = ETYPE_OFFER;
-        $table = $this->getEntityTable();
+        $table = new Offer;
 
         // Remove old offer we just found
         if ($canUpdate) {
@@ -374,7 +382,7 @@ class AffiliateWindowController extends AffiliateController
     public function testPostMerchant($metadata)
     {
         // Delete record before create
-        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $table = new Topic;
         $entity = $table->where('aff_id', $metadata[0])
             ->where('aff_platform', AWIN)->first();
 
@@ -391,7 +399,7 @@ class AffiliateWindowController extends AffiliateController
 
     public function testPostOffer($input)
     {
-        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $table = new Topic;
         $entity = $table->where('aff_id', $input[2])
             ->where('aff_platform', AWIN)->first();
 

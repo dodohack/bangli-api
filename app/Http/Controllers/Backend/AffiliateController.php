@@ -6,14 +6,14 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\EntityController;
+use App\Http\Controllers\Controller;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
 use App\Models\Offer;
 use App\Models\OfferFilter;
 
-class AffiliateController extends EntityController
+class AffiliateController extends Controller
 {
     private $contentFilters;
     private $merchantIds = array();
@@ -21,6 +21,8 @@ class AffiliateController extends EntityController
 
     public function __construct()
     {
+        parent::__construct(null);
+
         $record = OfferFilter::where('type', 'CONTENT')->first(['content']);
         $this->contentFilters = explode(PHP_EOL, $record['content']);
 
@@ -55,12 +57,18 @@ class AffiliateController extends EntityController
         Offer::where('ends', '<', $yesterday)->delete();
     }
 
-    protected function retrieveData($api)
+    /**
+     * Retrieve data from given api endpoint, with optional $options
+     * @param $api
+     * @param null $options
+     * @return bool|string
+     */
+    protected function retrieveData($api, $options = null)
     {
         $client = new Client();
 
         try {
-            $res = $client->request('GET', $api);
+            $res = $client->request('GET', $api, $options);
         } catch (ServerException $e) {
             // TODO: handle network exception
             return false;
