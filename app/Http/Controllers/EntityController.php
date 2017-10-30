@@ -70,7 +70,8 @@ class EntityController extends Controller
     public function __construct(Request $request)
     {
         parent::__construct($request);
-        $this->etype = $request->get('etype');
+        if ($request)
+            $this->etype = $request->get('etype');
     }
 
     /**

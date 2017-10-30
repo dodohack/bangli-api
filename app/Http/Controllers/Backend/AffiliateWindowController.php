@@ -120,7 +120,7 @@ class AffiliateWindowController extends AffiliateController
         $guid = $this->urlfy($metadata[1]);
 
         // Check if we already have the topic in the table
-        $table = $this->getEntityTable(ETYPE_TOPIC);
+        $table = $this->getEntityTable();
         // Check if we have already had this merchant
         $record = $table->where('guid', $guid)->first();
         if (!$record)
@@ -261,7 +261,8 @@ class AffiliateWindowController extends AffiliateController
             'display_url'  => $offer[12]
         );
 
-        $topicTable = $this->getEntityTable(ETYPE_TOPIC);
+        $this->etype = ETYPE_TOPIC;
+        $topicTable = $this->getEntityTable();
         $merchant = $topicTable->where('aff_id', $offer[2])
             ->where('aff_platform', AWIN)
             ->with(['categories', 'offers'])->first();
@@ -289,16 +290,18 @@ class AffiliateWindowController extends AffiliateController
             }
         }
 
+        // Get offer table
+        $this->etype = ETYPE_OFFER;
+        $table = $this->getEntityTable();
+
         // Remove old offer we just found
         if ($canUpdate) {
-            $table = $this->getEntityTable(ETYPE_OFFER);
             $table->where('id', $offerId)->delete();
         }
 
         // Create the offer
         if (!$merchant->offers->count() || !$found || ($found && $canUpdate)) {
             // There is no offers attached to the topic
-            $table = $this->getEntityTable(ETYPE_OFFER);
             $record = $table->create($input);
             // Update the pivot table
             $record->topics()->sync([$merchant->id]);

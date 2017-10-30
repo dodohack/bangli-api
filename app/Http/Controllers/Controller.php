@@ -28,7 +28,8 @@ class Controller extends BaseController
         $this->domain    = env('ROOT_DOMAIN');
         $this->www       = 'www.' . $this->domain;
         $this->imgServer = env('IMG_SERVER');
-        $this->callback  = $request->get('callback');
+        if ($request)
+            $this->callback  = $request->get('callback');
         $this->etype     = null;
     }
 
