@@ -6,16 +6,16 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Http\Controllers\Backend\AffiliateWindowController;
+use App\Http\Controllers\Backend\LinkShareController;
 
-class UpdateOffers extends Command
+class UpdateLinkshareOffers extends Command
 {
     /**
      * The name and signature of the console command
      */
-    protected $signature = 'offer:update';
+    protected $signature = 'offer:update-linkshare';
 
-    protected $description = 'Update affiliates offers';
+    protected $description = 'Update Linkshare offers';
 
     public function __construct()
     {
@@ -27,7 +27,7 @@ class UpdateOffers extends Command
      */
     public function handle()
     {
-        $awin = new AffiliateWindowController();
-        $awin->updateOffers();
+        $ls = new LinkShareController();
+        $ls->updateOffers();
     }
 }

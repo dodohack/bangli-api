@@ -6,14 +6,14 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Http\Controllers\Controller;
+use Laravel\Lumen\Routing\Controller as BaseController;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Client;
 
 use App\Models\Offer;
 use App\Models\OfferFilter;
 
-class AffiliateController extends Controller
+class AffiliateController extends BaseController
 {
     private $contentFilters;
     private $merchantIds = array();
@@ -21,8 +21,6 @@ class AffiliateController extends Controller
 
     public function __construct()
     {
-        parent::__construct(null);
-
         $record = OfferFilter::where('type', 'CONTENT')->first(['content']);
         $this->contentFilters = explode(PHP_EOL, $record['content']);
 
@@ -60,10 +58,10 @@ class AffiliateController extends Controller
     /**
      * Retrieve data from given api endpoint, with optional $options
      * @param $api
-     * @param null $options
+     * @param $options
      * @return bool|string
      */
-    protected function retrieveData($api, $options = null)
+    protected function retrieveData($api, Array $options = [])
     {
         $client = new Client();
 

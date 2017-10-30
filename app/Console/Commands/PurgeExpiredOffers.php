@@ -6,7 +6,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Http\Controllers\Backend\AffiliateWindowController;
+use App\Http\Controllers\Backend\AffiliateController;
 
 class PurgeExpiredOffers extends Command
 {
@@ -27,7 +27,7 @@ class PurgeExpiredOffers extends Command
      */
     public function handle()
     {
-        $awin = new AffiliateWindowController();
+        $awin = new AffiliateController();
         $awin->purgeExpiredOffers();
     }
 }

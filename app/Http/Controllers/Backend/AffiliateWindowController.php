@@ -28,6 +28,9 @@ class AffiliateWindowController extends AffiliateController
         $this->awin_pro_id  = env('AWIN_PROMOTION_ID');
         $this->awin_ads_pwd = env('AWIN_ADVERTISER_API_PWD');
 
+        assert($this->awin_id && $this->awin_pro_id && $this->awin_ads_pwd &&
+            'Incorrect AWIN setting in .env');
+
         // TODO: Get offers from all merchants even we are not joined.
         $this->awin_pro_api = env('AWIN_PROMOTION_API') . '/' .
             $this->awin_id . '/' . $this->awin_pro_id .
@@ -53,7 +56,8 @@ class AffiliateWindowController extends AffiliateController
             $count = $this->putMerchants($res);
         }
 
-        return response($count);
+        Storage::disk('local')
+            ->put('awin_merchants.log', 'merchant updated: ' . $count);
     }
 
     /**
@@ -87,9 +91,7 @@ class AffiliateWindowController extends AffiliateController
             if (!$line) continue;
             // Convert CSV string into array
             $metadata = str_getcsv($line);
-            if ($this->putMerchant($metadata)) {
-                $count++;
-            }
+            if ($this->putMerchant($metadata)) $count++;
         }
 
         return $count;
@@ -185,12 +187,8 @@ class AffiliateWindowController extends AffiliateController
 
             // Create the entry
             $topic = $table->create($merchant);
-            // Setup merchant's category
-            $catId = $this->getCategoryId($metadata[8]);
-            if ($topic) {
-                $topic->categories()->sync([$catId]);
+            if ($topic)
                 return true;
-            }
         }
 
         return false;
@@ -302,22 +300,23 @@ class AffiliateWindowController extends AffiliateController
         // Get offer table
         $table = new Offer;
 
-        // Remove old offer we just found
+        // Remove old offer we just found if we can update it
         if ($canUpdate) {
             $table->where('id', $offerId)->delete();
         }
 
+        if ($found && !$canUpdate) return false;
+
         // Create the offer
-        if (!$merchant->offers->count() || !$found || ($found && $canUpdate)) {
-            // There is no offers attached to the topic
-            $record = $table->create($input);
-            // Update the pivot table
-            $record->topics()->sync([$merchant->id]);
-            // FIXME: Some merchants have empty categories!
-            // Update offer category
-            if(count($merchant->categories))
-                $record->categories()->sync([$merchant->categories[0]->id]);
-        }
+        $record = $table->create($input);
+        if (!$record) return false;
+
+        // Update the pivot table
+        $record->topics()->sync([$merchant->id]);
+        // FIXME: Some merchants have empty categories!
+        // Update offer category
+        if(count($merchant->categories))
+            $record->categories()->sync([$merchant->categories[0]->id]);
 
         return true;
     }
@@ -327,29 +326,6 @@ class AffiliateWindowController extends AffiliateController
         // Awin date format: 'dd/mm/yyyy hh:mm'
         return preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $date);
     }
-
-    /**
-     * Map awin category to our local category
-     */
-    private function getCategoryId($acat)
-    {
-        $cat = 'other-stuff';
-        $acat = strtolower($acat);
-        if (strpos($acat, 'food') !== false) $cat = 'cooking'; // 厨房分类
-        else if (strpos($acat, 'cloth') !== false) $cat = 'clothes-bag';
-        else if (strpos($acat, 'travel') !== false) $cat = 'travel';
-        else if (strpos($acat, 'gift') !== false) $cat = 'beauty';
-        else if (strpos($acat, 'health') !== false) $cat = 'healthcare';
-        //else if (strpos($acat, 'mobile') !== false ||
-        //    strpos($acat, 'isp') !== false) $cat = 'telecom'; // 电信业务分类
-        //else if (strpos($acat, 'ticket')) return '';
-        //else if (strpos($acat, 'sport')) return '';
-
-        // TODO: Redo our category!!
-
-        return Category::where('slug', $cat)->first()->id;
-    }
-
 
     /**************************************************************************
      * Test only API

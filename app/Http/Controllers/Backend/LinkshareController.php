@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Exception\ServerException;
 Use GuzzleHttp\Client;
 
+use App\Models\Category;
+use App\Models\Topic;
+use App\Models\Offer;
+
 class LinkShareController extends AffiliateController
 {
     private $ls_id;        // Linkshare site ID
@@ -55,7 +59,8 @@ class LinkShareController extends AffiliateController
             $count = $this->putMerchants($res);
         }
 
-        return response($count);
+        Storage::disk('local')
+            ->put('ls_merchants.log', 'merchants updated: ' . $count);
     }
 
     public function updateOffers()
@@ -92,15 +97,15 @@ class LinkShareController extends AffiliateController
                 $updatedOfferCount += $this->putOffers($res);
             }
 
+            $filename = 'ls_offers_' . $pageNum . '.log';
+            Storage::disk('local')->put($filename,
+                'offer updated: ' . $updatedOfferCount);
+
             // Increase page number
             $pageNum++;
 
             // Deduce the count
             $offerCount -= $perPage;
-
-            $filename = 'ls_offers_' . $pageNum . '.log';
-            Storage::disk('local')->put($filename,
-                'offer updated: ' . $updatedOfferCount);
         }
     }
 
@@ -149,8 +154,10 @@ class LinkShareController extends AffiliateController
             // Get merchant name
             $MNAME = $results[$i]['value'];
 
-            $this->putMerchant($MID, $MNAME);
+            if ($this->putMerchant($MID, $MNAME)) $count++;
         }
+
+        return $count;
     }
 
     /**
@@ -290,8 +297,10 @@ class LinkShareController extends AffiliateController
                 $i++;
             }
 
-            $this->putOffer($offer);
+            if ($this->putOffer($offer)) $count++;
         }
+
+        return $count;
     }
 
     /**
@@ -327,7 +336,6 @@ class LinkShareController extends AffiliateController
                 if ($o->tracking_url == $offer['tracking_url'] &&
                     $o->starts == $offer['starts'] &&
                     $o->ends == $offer['ends']) {
-                    // TODO:
                     $found = true;
                     break;
                 }
@@ -339,7 +347,15 @@ class LinkShareController extends AffiliateController
 
         // Get offer table
         $table = new Offer;
+        $record = $table->create($input);
+        if (!$record) return false;
 
+        // Update the pivot table
+        $record->topics()->sync($merchant->id);
+        // FIXME: Some merchants has empty categories
+        if (count($merchant->categories))
+            $record->categories()->sync([$merchant->categories[0]->id]);
+        return true;
     }
 
 
