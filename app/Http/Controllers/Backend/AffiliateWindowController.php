@@ -51,13 +51,11 @@ class AffiliateWindowController extends AffiliateController
         $res = $this->retrieveData($this->awin_ads_api);
         if ($res) {
             // Save a copy for debug purpose
-            Storage::disk('local')->put('awin_merchants.xls', $res);
+            file_put_contents('/tmp/awin_merchants.xls', $res);
             // Update database
             $count = $this->putMerchants($res);
         }
-
-        Storage::disk('local')
-            ->put('awin_merchants.log', 'merchant updated: ' . $count);
+        return $count;
     }
 
     /**
@@ -69,12 +67,12 @@ class AffiliateWindowController extends AffiliateController
         $res = $this->retrieveData($this->awin_pro_api);
         if ($res) {
             // Save a copy for debug purpose
-            Storage::disk('local')->put('awin_offers.xls', $res);
+            file_put_contents('/tmp/awin_offers.xls', $res);
             // Update offer table
             $count = $this->putOffers($res);
         }
 
-        Storage::disk('local')->put('awin_offers.log', 'offer updated: ' . $count);
+        return $count;
     }
 
     /**
@@ -206,9 +204,14 @@ class AffiliateWindowController extends AffiliateController
      */
     private function putOffers($res)
     {
-        $count = 0;
+        // Counter of added and not added
+        $countOk  = 0;
+        $countBad = 0;
         // Explode the string into lines
         $lines = explode(PHP_EOL, $res);
+
+        $logOk  = fopen('/tmp/awin_offers_not_added.log', 'w');
+        $logBad = fopen('/tmp/awin_offers_added.log', 'w');
 
         foreach ($lines as $line) {
             // Skip empty line
@@ -233,11 +236,22 @@ class AffiliateWindowController extends AffiliateController
             // Extend offer description when it is short
             if (strlen($offer[5]) < 40) $offer[5] = $this->contentExtender($offer[5]);
 
-            // Save the offer
-            if ($this->putOffer($offer)) $count++;
+            // Save the offer, and we keep a record
+            if ($this->putOffer($offer)) {
+                $countOk++;
+                fwrite($logOk, $line . PHP_EOL);
+            } else {
+                $countBad++;
+                fwrite($logBad, $line. PHP_EOL);
+            }
         }
 
-        return $count;
+        fwrite($logOk, 'Total: ' . $countOk);
+        fwrite($logBad, 'Total: ' . $countBad);
+        fclose($logOk);
+        fclose($logBad);
+
+        return $countOk;
     }
 
     /**
@@ -284,17 +298,16 @@ class AffiliateWindowController extends AffiliateController
         $found = false;
         // If the offer we found can be updated automatically, if it is
         // already modified by user, we will not overwrite it
-        $canUpdate = false;
-        $offerId = null;
+        $canUpdate = true;
+        $offerId = 0;
 
         if ($merchant->offers->count()) {
             foreach($merchant->offers as $o) {
                 if ($o->aff_offer_id == $offer[0]) {
                     $found = true;
-                    if ($o->author_id == null) {
-                        $offerId = $o->id;
-                        $canUpdate = true;
-                    }
+                    $offerId = $o->id;
+                    if ($o->author_id)
+                        $canUpdate = false;
                     break;
                 }
             }
@@ -303,12 +316,13 @@ class AffiliateWindowController extends AffiliateController
         // Get offer table
         $table = new Offer;
 
-        // Remove old offer we just found if we can update it
-        if ($canUpdate) {
-            $table->where('id', $offerId)->delete();
-        }
-
+        // Do not update the same offer if it is modified
         if ($found && !$canUpdate) return false;
+
+        // Remove old offer we just found if we can update it
+        if ($found && $canUpdate) {
+            $table->find($offerId)->delete();
+        }
 
         // Create the offer
         $record = $table->create($input);

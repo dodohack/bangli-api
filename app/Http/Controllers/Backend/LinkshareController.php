@@ -55,12 +55,11 @@ class LinkShareController extends AffiliateController
         $res = $this->retrieveData($this->ls_ads_api, $options);
         if ($res) {
             // Save a copy of merchant list for debug purpose
-            Storage::disk('local')->put('ls_merchants.xml', $res);
+            file_put_contents('/tmp/ls_merchants.xml', $res);
             $count = $this->putMerchants($res);
         }
 
-        Storage::disk('local')
-            ->put('ls_merchants.log', 'merchants updated: ' . $count);
+        return $count;
     }
 
     public function updateOffers()
@@ -92,14 +91,10 @@ class LinkShareController extends AffiliateController
             if ($res) {
                 $filename = 'ls_offers_' . $pageNum . '.xml';
                 // Save a copy for debug purpose
-                Storage::disk('local')->put($filename, $res);
+                file_put_contents('/tmp/'. $filename, $res);
                 // Update offer table
-                $updatedOfferCount += $this->putOffers($res);
+                $updatedOfferCount += $this->putOffers($res, $pageNum);
             }
-
-            $filename = 'ls_offers_' . $pageNum . '.log';
-            Storage::disk('local')->put($filename,
-                'offer updated: ' . $updatedOfferCount);
 
             // Increase page number
             $pageNum++;
@@ -107,6 +102,8 @@ class LinkShareController extends AffiliateController
             // Deduce the count
             $offerCount -= $perPage;
         }
+
+        return $updatedOfferCount;
     }
 
     private function putMerchants($xmlResult)
@@ -234,9 +231,14 @@ class LinkShareController extends AffiliateController
         return false;
     }
 
-    private function putOffers($xml)
+    private function putOffers($xml, $pageNum)
     {
-        $count = 0;
+        // Counter of added and not added
+        $countOk = 0;
+        $countBad = 0;
+
+        $logOk  = fopen('/tmp/linkshare_offers_p' . $pageNum. '_not_added.log', 'w');
+        $logBad = fopen('/tmp/linkshare_offers_p' . $pageNum. '_added.log', 'w');
 
         $xmlparser = xml_parser_create();
         xml_parse_into_struct($xmlparser, $xml, $results);
@@ -312,11 +314,22 @@ class LinkShareController extends AffiliateController
             // 4. offer description
             if (!$this->contentFilter($offer['title'])) continue;
 
-            // Save the offer
-            if ($this->putOffer($offer)) $count++;
+            // Save the offer and keep a record to debug
+            if ($this->putOffer($offer)) {
+                $countOk++;
+                fwrite($logOk, json_encode($offer) . PHP_EOL);
+            } else {
+                $countBad++;
+                fwrite($logBad, json_encode($offer) . PHP_EOL);
+            }
         }
 
-        return $count;
+        fwrite($logOk, 'Total: ' . $countOk);
+        fwrite($logBad, 'Total: ' . $countBad);
+        fclose($logOk);
+        fclose($logBad);
+
+        return $countOk;
     }
 
     /**
@@ -347,22 +360,31 @@ class LinkShareController extends AffiliateController
         // Linkshare doesn't provide offer id, we use tracking url to identical
         // if the offers are same
         $found = false;
+        $canBeUpdated = true;
+        $offerId = 0;
         if ($merchant->offers->count()) {
             foreach($merchant->offers as $o) {
-                if ($o->tracking_url == $offer['tracking_url'] &&
-                    $o->starts == $offer['starts'] &&
-                    $o->ends == $offer['ends']) {
+                if ($o->tracking_url == $offer['tracking_url']) {
                     $found = true;
+                    $offerId = $o->id;
+                    if ($o->author_id)
+                        $canBeUpdated = false;
                     break;
                 }
             }
         }
 
-        // Do not update the same offer
-        if ($found) return false;
-
         // Get offer table
         $table = new Offer;
+
+        // Do not update the same offer
+        if ($found && !$canBeUpdated) return false;
+
+        if ($found && $canBeUpdated) {
+            $table->find($offerId)->delete();
+        }
+
+        // Create the offer
         $record = $table->create($input);
         if (!$record) return false;
 
