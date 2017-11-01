@@ -40,6 +40,7 @@ class EntityController extends Controller
     protected $pagination;
 
     // Input filters, different entities use some of them
+    protected $ids;       // Entity ids
     protected $status;    // Entity status
     protected $author;    // Entity author if applicable
     protected $editor;    // Entity editor if applicable
@@ -499,6 +500,10 @@ class EntityController extends Controller
     {
         $db = $table;
 
+        // Query entities by given ids
+        if ($this->ids)
+            $db = $db->whereIn('id', $this->ids);
+
         // Query with date from/to
         if (isset($this->date['type']))
             $db = $db->whereBetween($this->date['type'],
@@ -569,8 +574,12 @@ class EntityController extends Controller
      */
     private function initInputFilters($inputs)
     {
+        // Entity ids, always return as array or null
+        $this->ids = isset($inputs['ids']) ? explode(",", $inputs['ids']) : null;
+
         /* Number of posts per page, default 20 */
         $this->perPage = isset($inputs['per_page']) ? intval($inputs['per_page']) : 20;
+
         /* Current page index, default 1 */
         $this->curPage = isset($inputs['page']) ? intval($inputs['page']) : 1;
 
