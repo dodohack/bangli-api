@@ -25,7 +25,6 @@ class TopicController extends FeController
         parent::__construct($request);
     }
 
-
     /**
      * Get a list of published topics
      * @param Request $request

@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
             'post'     => 'App\Models\Post',
             'page'     => 'App\Models\Page',
             'topic'    => 'App\Models\Topic',
-            'deal'     => 'App\Models\Deal',
+            'offer'    => 'App\Models\Offer',
             'newsletter' => 'App\Models\Newsletter',
         ]);
     }
