@@ -53,6 +53,7 @@ class EntityController extends Controller
     protected $eId;       // Entity relation id ???
     protected $query;     // User input search string
     protected $skipNum;   // Number of skipped records of current page
+    protected $channel;   // Entity channel
     protected $category;
     protected $featured;
     protected $topic;
@@ -64,7 +65,7 @@ class EntityController extends Controller
     protected $position;  // Advertise position
 
     // Sorting
-    protected $orderBy;   // Order by 'table column name'
+    protected $orderBy;   // Order by 'table column name' or rand()
     protected $order;     // Sort by 'desc' or 'asc'
 
     public function __construct(Request $request)
@@ -508,8 +509,8 @@ class EntityController extends Controller
         if ($this->status) $db = $db->where('status', $this->status);
 
         // Query with channel, channel can be ether channel id or slug
-        //if ($this->channel)
-        //    $db = $this->filterByChannel($db, $tableName, $this->channel);
+        if ($this->channel)
+            $db = $this->filterByChannel($db, $tableName, $this->channel);
 
         //if($this->cType && $this->cId){
         //    $db = $this->filterByCommentAble($db, $tableName, $this->cType, $this->cId);
