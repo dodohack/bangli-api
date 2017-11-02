@@ -70,7 +70,7 @@ class BatchReqController extends FeController
             // If we need to get relations with the request
             $relations = null;
             if (isset($group->inputs['relations']))
-                $relations = $this->setupRelations($group->inputs['relations']);
+                $relations = $this->getRelations($group->inputs['relations']);
 
             // Always count number of offers of a gopic
             $relCount = null;

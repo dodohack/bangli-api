@@ -36,7 +36,7 @@ class TopicController extends FeController
         $relations = null;
 
         if (isset($inputs['relations']))
-            $relations = $this->setupRelations($inputs['relations']);
+            $relations = $this->getRelations($inputs['relations']);
 
         $topics = $this->getEntitiesByKey($inputs, $relations,
             $this->relationCount, null, 'full');

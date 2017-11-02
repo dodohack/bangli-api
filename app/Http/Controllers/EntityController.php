@@ -467,9 +467,11 @@ class EntityController extends Controller
         if ($this->pagination == 'full') $total = $db->count();
         else                             $total = 0;
 
-        // Ordering
+        // Ordering by columns or random
         if ($this->orderBy && $this->order)
             $db = $db->orderBy($this->orderBy, $this->order);
+        else if ($this->orderBy == 'rand')
+            $db = $db->inRandomOrder();
         else
             $db = $db->orderBy('updated_at', 'desc');
 

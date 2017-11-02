@@ -94,7 +94,7 @@ class FeController extends EntityController
      * @param $relationString
      * @return array
      */
-    protected function setupRelations($relationString) {
+    protected function getRelations($relationString) {
         $relations = [];
         if (!$relationString) return null;
 
