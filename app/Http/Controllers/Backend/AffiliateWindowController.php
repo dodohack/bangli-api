@@ -146,7 +146,7 @@ class AffiliateWindowController extends AffiliateController
             if (!$topic->logo)         $input['logo'] = $metadata[2];
             if (!$topic->aff_id)       $input['aff_id'] = $metadata[0];
             if (!$topic->aff_platform) $input['aff_platform'] = AWIN;
-            if (!$topic->tracking_url) $input['tracking_url'] = $metadata[7];
+            if (!$topic->tracking_url) $input['tracking_url'] = $metadata[7] . '&clickref=topic';
             if (!$topic->display_url)  $input['display_url'] = $metadata[14];
 
             // Update tracking/display_url only when them are empty
@@ -178,7 +178,7 @@ class AffiliateWindowController extends AffiliateController
                 'logo' => $metadata[2],
                 'aff_id' => $metadata[0],
                 'aff_platform' => AWIN,
-                'tracking_url' => $metadata[7],
+                'tracking_url' => $metadata[7] . '&clickref=topic',
                 'display_url' => $metadata[14],
 
                 'description' => $metadata[5],
@@ -282,7 +282,7 @@ class AffiliateWindowController extends AffiliateController
             'aff_offer_id' => $offer[0],
             'starts'     => $this->AWinDate2MySQLDate($offer[6]),
             'ends'       => $this->AWinDate2MySQLDate($offer[7]),
-            'tracking_url' => $offer[11],
+            'tracking_url' => $offer[11] . '&clickref=deal',
             'display_url'  => $offer[12]
         ];
 

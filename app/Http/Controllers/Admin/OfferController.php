@@ -147,6 +147,7 @@ class OfferController extends EntityController
                 case AWIN:
                     return 'http://www.awin1.com/cread.php?awinaffid='
                     . env('AWIN_ID') . '&awinmid=' . $record['aff_id']
+                    . '&clickref=deal'
                     . '&p=' . urlencode($display_url);
                 case LINKSHARE:
                 case WEBGAIN:
