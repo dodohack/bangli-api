@@ -16,7 +16,8 @@ class FeTopic extends Topic
     {
         return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'topics.description', 'updated_at'];
+            'title', 'title_cn', 'topics.description', 'image_idx',
+            'updated_at'];
     }
 
     /*
@@ -28,8 +29,8 @@ class FeTopic extends Topic
     {
         return ['topics.id', 'topics.channel_id',
             'location_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'topics.description', 'content', 'published_at',
-            'updated_at'];
+            'title', 'title_cn', 'topics.description', 'content',
+            'image_idx', 'published_at', 'updated_at'];
     }
 
     public function simpleRelations()

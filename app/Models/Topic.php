@@ -10,7 +10,7 @@ class Topic extends EntityModel
         'type_id', 'location_id', 'lock', 'logo', 'ranking', 'featured',
         'status', 'guid', 'aff_id', 'aff_platform', 'display_url',
         'tracking_url', 'title', 'title_cn', 'description', 'content',
-        'published_at'];
+        'image_idx', 'published_at'];
 
     protected $hidden = ['pivot'];
 
@@ -18,7 +18,8 @@ class Topic extends EntityModel
     {
         return ['topics.id', 'topics.channel_id', 'status', 'featured', 'editor_id',
             'type_id', 'ranking', 'guid', 'logo', 'display_url', 'tracking_url',
-            'title', 'title_cn', 'topics.description', 'published_at', 'updated_at'];
+            'title', 'title_cn', 'topics.description', 'image_idx',
+            'published_at', 'updated_at'];
     }
 
     public function fullColumns()
