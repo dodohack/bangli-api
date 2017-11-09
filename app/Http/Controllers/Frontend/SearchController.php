@@ -28,8 +28,12 @@ class SearchController extends FeController
      * @param string $text - search text
      * @return json - search result
      */
-    public function get(Request $request, string $text)
+    public function search(Request $request)
     {
+	$text = $request->get('text'); // Query text
+	$from = $request->get('from', 0);  // offset of searched items
+	$size = $request->get('size', 20); // number of searched items
+
         if (!$this->es)
             return $this->error("No backend search engine available");
 
@@ -38,13 +42,22 @@ class SearchController extends FeController
 
         $search_api = $this->es . '/_search';
 
+	// Always double qoute $text
+	if ($text[0] != '"') $text = '"' . $text . '"';
+
         $client = new Client();
 
+	// Construct the body:
+	// * Query if 'url', 'title', 'content' matches given text.
+	// * Highlight matched txt with <tag1>, <tag2>...
+	// * Only return 'url' and 'title' for matched entries
         $body = '
             {
+              "from": ' . $from . ', 
+	      "size": ' . $size . ',
               "query" : { "query_string": {
                               "fields": ["url", "title", "content"],
-                              "query": "' . $text . '"
+                              "query": ' . $text . '
                            }
                },
               "highlight" : {
@@ -53,7 +66,8 @@ class SearchController extends FeController
                        "fields" : {
                            "content" : {}
                        }
-              }
+              },
+              "_source" : ["url", "title"]
             }
             ';
 
@@ -63,6 +77,28 @@ class SearchController extends FeController
             return $this->error("Search engine exception");
         }
 
-        return json_decode($res->getBody()->read(1024*1024));
+	// Decode to json
+        $res = json_decode($res->getBody()->read(1024*1024));
+
+	// Get result
+	if($res->hits->total) {
+	    $entities = [];
+	    $hits = $res->hits->hits;
+	    $length = count($hits);
+	    for($i = 0; $i < $length; $i++) {
+		$entities[] = ["url" => $hits[$i]->_source->url,
+			      "title" => $hits[$i]->_source->title,
+			      "content" => $hits[$i]->highlight->content[0]];
+	    }
+
+	    $results = ['entities' => $entities,
+			'from'     => $from,
+			'size'     => $size,
+			'total'    => $res->hits->total];
+
+	    return $this->success($results);
+	} else {
+	    return $this->error("No result found");
+	}
     }
 }

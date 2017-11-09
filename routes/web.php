@@ -19,7 +19,7 @@ $router->group(
     ['namespace' => '\App\Http\Controllers\Frontend'], function () use ($router) {
 
     // Search endpoint
-    $router->get('/search/{text}',  'SearchController@get');
+    $router->get('/search',          'SearchController@search');
 
     // Topic
     $router->get('/topics',         'TopicController@getTopics');
