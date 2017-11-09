@@ -14,7 +14,6 @@ use App\Models\FePost;
 use App\Models\FePage;
 use App\Models\FeOffer;
 use App\Models\FeAdvertise;
-use App\Models\FeComment;
 
 class FeController extends EntityController
 {
@@ -139,6 +138,7 @@ class FeController extends EntityController
             case ETYPE_POST:        return new FePost;
             case ETYPE_OFFER:       return new FeOffer;
             case ETYPE_PAGE:        return new FePage;
+            case ETYPE_ADVERTISE:   return new FeAdvertise;
             default:
                 return parent::getEntityTable();
         }

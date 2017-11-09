@@ -49,4 +49,14 @@ class Advertise extends EntityModel
         return $query->where('status', 'publish');
     }
 
+    /**
+     * Advertise is started and is not expired
+     * @param $query
+     */
+    public function scopeValid($query)
+    {
+        $now = date('Y-m-d H:i:s');
+        return $query->where('starts', '<=', $now)->where('ends', '>=', $now);
+    }
+
 }
