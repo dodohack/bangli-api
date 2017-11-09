@@ -31,8 +31,8 @@ class SearchController extends FeController
     public function search(Request $request)
     {
 	$text = $request->get('text'); // Query text
-	$from = $request->get('from', 0);  // offset of searched items
-	$size = $request->get('size', 20); // number of searched items
+	$from = (int) $request->get('from', 0);  // offset of searched items
+	$size = (int) $request->get('size', 20); // number of searched items
 
         if (!$this->es)
             return $this->error("No backend search engine available");
