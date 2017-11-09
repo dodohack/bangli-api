@@ -48,7 +48,7 @@ class SearchController extends FeController
         $client = new Client();
 
 	// Construct the body:
-	// * Query if 'url', 'title', 'content' matches given text.
+	// * Query if 'title', 'content' matches given text.
 	// * Highlight matched txt with <tag1>, <tag2>...
 	// * Only return 'url' and 'title' for matched entries
         $body = '
@@ -56,7 +56,7 @@ class SearchController extends FeController
               "from": ' . $from . ', 
 	      "size": ' . $size . ',
               "query" : { "query_string": {
-                              "fields": ["url", "title", "content"],
+                              "fields": ["title", "content"],
                               "query": ' . $text . '
                            }
                },
@@ -86,9 +86,13 @@ class SearchController extends FeController
 	    $hits = $res->hits->hits;
 	    $length = count($hits);
 	    for($i = 0; $i < $length; $i++) {
-		$entities[] = ["url" => $hits[$i]->_source->url,
-			      "title" => $hits[$i]->_source->title,
-			      "content" => $hits[$i]->highlight->content[0]];
+		// TODO: Need to fill out some content when hightlight is empty
+		// Skip entity with empty highlights
+		if (property_exists($hits[$i], 'highlight')) {
+		    $entities[] = ["url" => $hits[$i]->_source->url,
+				   "title" => $hits[$i]->_source->title,
+				   "content" => $hits[$i]->highlight->content[0]];
+		}
 	    }
 
 	    $results = ['entities' => $entities,
