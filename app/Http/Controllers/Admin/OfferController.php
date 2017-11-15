@@ -14,9 +14,17 @@ use App\Models\Offer;
 
 class OfferController extends EntityController
 {
+    protected $awin_deeplink_base;
+    protected $linkshare_deeplink_base;
+    protected $awin_id;
+    protected $linkshare_link_id;
     public function __construct(Request $request)
     {
         parent::__construct($request);
+        $this->awin_deeplink_base = env('AWIN_DEEPLINK_URL');
+        $this->linkshare_deeplink_base = env('LINKSHARE_DEEPLINK_URL');
+        $this->awin_id = env('AWIN_ID');
+        $this->linkshare_link_id = env('LINKSHARE_LINK_ID');
     }
 
     /**
@@ -145,11 +153,19 @@ class OfferController extends EntityController
         if ($record) {
             switch ($record['aff_platform']) {
                 case AWIN:
-                    return 'http://www.awin1.com/cread.php?awinaffid='
-                    . env('AWIN_ID') . '&awinmid=' . $record['aff_id']
-                    . '&clickref=deal'
-                    . '&p=' . urlencode($display_url);
+                    return $this->awin_deeplink_base .
+                    '?awinaffid=' . $this->awin_id .
+                    '&awinmid=' . $record['aff_id'] .
+                    '&clickref=deal' .
+                    '&p=' . urlencode($display_url);
+
                 case LINKSHARE:
+                    return $this->linkshare_deeplink_base .
+                    '?id=' . $this->linkshare_link_id .
+                    '&mid=' . $record['aff_id'] .
+                    '&u1=deal' .
+                    '&murl=' . urlencode($display_url);
+
                 case WEBGAIN:
                 default:
                     return false;
