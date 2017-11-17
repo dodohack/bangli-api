@@ -165,10 +165,10 @@ class ProductController extends FeController
 
 		// TODO: Replace 'full' to 'thumbs/small' etc.
 		if ($product->images)
-		    $product->thumbs = $this->cdn . '/' .
+		    $product->thumbs = $this->cdn .
 				       $product->images[0]->path;
 
-		$product->images = $this->cdn . '/' .
+		$product->images = $this->cdn .
 				   $product->images[0]->path;
                 $products[] = $product;
             }
