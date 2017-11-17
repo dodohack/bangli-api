@@ -757,7 +757,7 @@ class EntityController extends Controller
     /**
      *
      */
-    protected function buildTrackingUrl($url, $topicId = null, $domain = null)
+    protected function buildTrackingUrl($url, $clickref='auto', $topicId = null, $domain = null)
     {
         if ($topicId) {
             // Get topic by topic id
@@ -786,7 +786,7 @@ class EntityController extends Controller
                 return $awin_deeplink_base .
                 '?awinaffid=' . $awin_id .
                 '&awinmid=' . $record['aff_id'] .
-                '&clickref=deal' .
+                '&clickref=' . $clickref .
                 '&p=' . urlencode($url);
 
             case LINKSHARE:
@@ -796,7 +796,7 @@ class EntityController extends Controller
                 return $linkshare_deeplink_base .
                 '?id=' . $linkshare_link_id .
                 '&mid=' . $record['aff_id'] .
-                '&u1=deal' .
+                '&u1=' . $clickref .
                 '&murl=' . urlencode($url);
 
             // TODO: Add support to baobella.com

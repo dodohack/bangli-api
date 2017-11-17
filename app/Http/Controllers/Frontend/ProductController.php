@@ -13,11 +13,13 @@ class ProductController extends FeController
 {
     // ElasticSearch affiliated product endpoint
     protected $es;
+    protected $cdn;
 
     public function __construct(Request $request)
     {
         parent::__construct($request);
         $this->es = env('ES_ENDPOINT') . '/' . env('ES_PRODUCT');
+	$this->cdn = env('PRODUCT_IMG_SERVER');
     }
 
     /**
@@ -141,7 +143,7 @@ class ProductController extends FeController
                 }
             }
         }';
-	
+
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -158,7 +160,16 @@ class ProductController extends FeController
             $length = count($buckets);
             for ($i = 0; $i < $length; $i++) {
                 $product = $buckets[$i]->tops->hits->hits[0]->_source;
-                $product->url = $this->buildTrackingUrl($product->url, $product->domain);
+                $product->url = $this->buildTrackingUrl($product->url,
+				'product-card', null, $product->domain);
+
+		// TODO: Replace 'full' to 'thumbs/small' etc.
+		if ($product->images)
+		    $product->thumbs = $this->cdn . '/' .
+				       $product->images[0]->path;
+
+		$product->images = $this->cdn . '/' .
+				   $product->images[0]->path;
                 $products[] = $product;
             }
 
