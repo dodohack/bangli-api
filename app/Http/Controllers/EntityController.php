@@ -757,9 +757,52 @@ class EntityController extends Controller
     /**
      *
      */
-    protected function buildTrackingUrl($url, $domain = null,
-                                        $aff_platform = null, $aff_id = null)
+    protected function buildTrackingUrl($url, $topicId = null, $domain = null)
     {
-        // TODO: Merge this with autoTrackingUrl
+        if ($topicId) {
+            // Get topic by topic id
+            $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
+        } else if ($domain) {
+            // Get topic by display_url
+            $record = Topic::where('display_url', 'like', '%'.$domain.'%')
+                ->first(['aff_platform', 'aff_id']);
+        } else {
+            $record = null;
+        }
+
+        // No record
+        if (!$record)
+            return $url;
+
+        // Baobella
+        if ($record->id == 283005)
+            return $url . '?aff=12';
+
+        // General affiliates
+        switch ($record['aff_platform']) {
+            case AWIN:
+                $awin_deeplink_base = env('AWIN_DEEPLINK_URL');
+                $awin_id = env('AWIN_ID');
+                return $awin_deeplink_base .
+                '?awinaffid=' . $awin_id .
+                '&awinmid=' . $record['aff_id'] .
+                '&clickref=deal' .
+                '&p=' . urlencode($url);
+
+            case LINKSHARE:
+                $linkshare_deeplink_base = env('LINKSHARE_DEEPLINK_URL');
+                $linkshare_link_id = env('LINKSHARE_LINK_ID');
+
+                return $linkshare_deeplink_base .
+                '?id=' . $linkshare_link_id .
+                '&mid=' . $record['aff_id'] .
+                '&u1=deal' .
+                '&murl=' . urlencode($url);
+
+            // TODO: Add support to baobella.com
+            case WEBGAIN:
+            default:
+                return $url;
+        }
     }
 }

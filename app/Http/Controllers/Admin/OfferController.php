@@ -86,8 +86,8 @@ class OfferController extends EntityController
             // Trim white space
             $inputs['display_url'] = trim($inputs['display_url']);
 
-            // Generate trcking link
-            $tracking_url = $this->autoTrackingUrl(
+            // Generate tracking link
+            $tracking_url = $this->buildTrackingUrl(
                 $inputs['display_url'], $inputs['topics'][0]);
 
             if ($tracking_url)
@@ -111,7 +111,7 @@ class OfferController extends EntityController
 
         // Update tracking_url automatically
         if (isset($inputs['display_url']) && isset($inputs['topics'])) {
-            $tracking_url = $this->autoTrackingUrl(
+            $tracking_url = $this->buildTrackingUrl(
                 $inputs['display_url'], $inputs['topics'][0]);
 
             if ($tracking_url)
@@ -134,43 +134,5 @@ class OfferController extends EntityController
         $deleted = $this->deleteEntity('id', $id);
 
         return $this->response($deleted, 'trash offer error');
-    }
-
-    /**
-     * Update offer's tracking_url automatically
-     */
-    private function autoTrackingUrl($display_url, $topicId)
-    {
-
-        $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
-        if ($record) {
-            switch ($record['aff_platform']) {
-                case AWIN:
-                    $awin_deeplink_base = env('AWIN_DEEPLINK_URL');
-                    $awin_id = env('AWIN_ID');
-                    return $awin_deeplink_base .
-                    '?awinaffid=' . $awin_id .
-                    '&awinmid=' . $record['aff_id'] .
-                    '&clickref=deal' .
-                    '&p=' . urlencode($display_url);
-
-                case LINKSHARE:
-                    $linkshare_deeplink_base = env('LINKSHARE_DEEPLINK_URL');
-                    $linkshare_link_id = env('LINKSHARE_LINK_ID');
-
-                    return $linkshare_deeplink_base .
-                    '?id=' . $linkshare_link_id .
-                    '&mid=' . $record['aff_id'] .
-                    '&u1=deal' .
-                    '&murl=' . urlencode($display_url);
-
-                // TODO: Add support to baobella.com
-                case WEBGAIN:
-                default:
-                    return false;
-            }
-        }
-
-        return false;
     }
 }
