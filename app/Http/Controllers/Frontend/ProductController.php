@@ -131,17 +131,17 @@ class ProductController extends FeController
                     "aggs": {
                         "tops": {
                             "top_hits": { 
-                                "size": 1 
+                                "size": 1,
+                                "_source": ["domain", "url", "brand", "categories", "name",
+                                            "price", "RRP", "discount", "offer_info", "spec",
+                                            "unit", "images", "rating", "review_count"]
                             }
                         }
                     }
                 }
-            },
-            "_source": ["domain", "url", "brand", "categories", "name", 
-                        "price", "RRP", "discount", "offer_info", 
-                        "spec", "unit", "images", "rating", "review_count"]  
+            }
         }';
-
+	
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -158,7 +158,7 @@ class ProductController extends FeController
             $length = count($buckets);
             for ($i = 0; $i < $length; $i++) {
                 $product = $buckets[$i]->tops->hits->hits[0]->_source;
-                $product['url'] = $this->buildTrackingUrl($product['url'], $product['domain']);
+                $product->url = $this->buildTrackingUrl($product->url, $product->domain);
                 $products[] = $product;
             }
 
