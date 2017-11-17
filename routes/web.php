@@ -21,6 +21,9 @@ $router->group(
     // Search endpoint
     $router->get('/search',          'SearchController@search');
 
+    // Affiliated products
+    $router->get('/products',        'ProductController@get');
+
     // Topic
     $router->get('/topics',         'TopicController@getTopics');
     $router->get('/topics/group',   'TopicController@getGroupTopics');

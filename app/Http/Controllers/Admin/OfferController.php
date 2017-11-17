@@ -14,17 +14,9 @@ use App\Models\Offer;
 
 class OfferController extends EntityController
 {
-    protected $awin_deeplink_base;
-    protected $linkshare_deeplink_base;
-    protected $awin_id;
-    protected $linkshare_link_id;
     public function __construct(Request $request)
     {
         parent::__construct($request);
-        $this->awin_deeplink_base = env('AWIN_DEEPLINK_URL');
-        $this->linkshare_deeplink_base = env('LINKSHARE_DEEPLINK_URL');
-        $this->awin_id = env('AWIN_ID');
-        $this->linkshare_link_id = env('LINKSHARE_LINK_ID');
     }
 
     /**
@@ -149,23 +141,30 @@ class OfferController extends EntityController
      */
     private function autoTrackingUrl($display_url, $topicId)
     {
+
         $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
         if ($record) {
             switch ($record['aff_platform']) {
                 case AWIN:
-                    return $this->awin_deeplink_base .
-                    '?awinaffid=' . $this->awin_id .
+                    $awin_deeplink_base = env('AWIN_DEEPLINK_URL');
+                    $awin_id = env('AWIN_ID');
+                    return $awin_deeplink_base .
+                    '?awinaffid=' . $awin_id .
                     '&awinmid=' . $record['aff_id'] .
                     '&clickref=deal' .
                     '&p=' . urlencode($display_url);
 
                 case LINKSHARE:
-                    return $this->linkshare_deeplink_base .
-                    '?id=' . $this->linkshare_link_id .
+                    $linkshare_deeplink_base = env('LINKSHARE_DEEPLINK_URL');
+                    $linkshare_link_id = env('LINKSHARE_LINK_ID');
+
+                    return $linkshare_deeplink_base .
+                    '?id=' . $linkshare_link_id .
                     '&mid=' . $record['aff_id'] .
                     '&u1=deal' .
                     '&murl=' . urlencode($display_url);
 
+                // TODO: Add support to baobella.com
                 case WEBGAIN:
                 default:
                     return false;

@@ -753,4 +753,13 @@ class EntityController extends Controller
                 return false;
         }
     }
+
+    /**
+     *
+     */
+    protected function buildTrackingUrl($url, $domain = null,
+                                        $aff_platform = null, $aff_id = null)
+    {
+        // TODO: Merge this with autoTrackingUrl
+    }
 }
