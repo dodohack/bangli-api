@@ -164,12 +164,13 @@ class ProductController extends FeController
 				'product-card', null, $product->domain);
 
 		// TODO: Replace 'full' to 'thumbs/small' etc.
-		if ($product->images)
+		if ($product->images) {
 		    $product->thumbs = $this->cdn . '/' .
 				       $product->images[0]->path;
 
-		$product->images = $this->cdn . '/' .
-				   $product->images[0]->path;
+		    $product->images = $this->cdn . '/' .
+				       $product->images[0]->path;
+		}
                 $products[] = $product;
             }
 
