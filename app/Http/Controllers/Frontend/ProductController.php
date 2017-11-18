@@ -47,6 +47,50 @@ class ProductController extends FeController
     }'
     */
 
+    /**
+     Modes:
+
+     # 1. Get multiple products from single website
+     <products
+     mode="multiple"
+     name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing|la mer"
+     domain="boots"/>
+
+    # 2. Get multiple products from different website
+    <products
+     mode="multiple"
+     name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing"
+     domain="lookfantastic|boots|allbeauty"/>
+
+    <products
+    mode="multiple"
+    name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing"
+    brand="rodial|nip fab|holland barrett"/>
+
+    # 3. Compare single product cross different websites
+    <products
+     mode="compare"
+     name="skin tonic"
+     brand="liz earle"/>
+
+    # 4. Compare single product cross websites as specified
+    <products
+    mode="compare"
+    name="skin tonic" brand="liz earle"
+    domain="boots|lookfantastic|allbeauty|harrods"/>
+
+    # 5. Optional: Compare similar product cross different brand cross different websites
+    <products
+    mode="compare"
+    name="face cream" brand="liz earle|the body shop|la mer|..."/>
+
+    # 6. Get single product from single website
+    <products
+     mode="single"
+     name="liz earle skin tonic"
+     domain="boots"/>
+     */
+
     /*
      * Return a list of published advertisements
      * Request example:
@@ -68,7 +112,7 @@ class ProductController extends FeController
      */
     public function get(Request $request)
     {
-	$mode     = $request->get('mode'); // Request mode
+        $mode     = $request->get('mode'); // Request mode
         $name     = $request->get('name'); // Product name, required
         $brand    = $request->get('brand'); // Optional
         $category = $request->get('category'); // Optional
@@ -80,69 +124,12 @@ class ProductController extends FeController
         if (!$name || !$mode)
             return $this->error("Product card mode or product name are missing");
 
-	switch($mode)
-	{
-	    case 'multiple':
-	    break;
-	    case 'compare':
-	    break;
-	    case 'single':
-	    break;
-	    default:
-	    break;
-	}
-
-	// Name is array of product names
-	$tmp = $name.split('|');
-	if (count($tmp) > 1)
-	    $name = $tmp;
-
-        if ($brand || $category || $domain) {
-            $extra_match = '';
-
-            if ($brand)
-                $extra_match = ',{ "match": { "brand": "'. $brand .'" } }';
-
-            if ($category)
-                $extra_match .= ',{ "match": { "categories": "'. $category .'" } }';
-
-            if ($domain)
-                $extra_match .= ',{ "match": { "domain": "'. $domain .'" } }';
-
-            $query = '
-            "query": {
-                "bool": {
-                    "must:" [
-                        { 
-                            "match": {
-                                "name": {
-                                    "operator": "and",
-                                    "query": "'. $name .'"
-                                }
-                            }
-                            ' . $extra_match . '
-                        }
-                    ]
-                }
-            }
-            ';
-        } else {
-            $query = '
-            "query": {
-                "match": {
-                    "name": {
-                        "operator": "and",
-                        "query": "'. $name .'"
-                    }
-                }
-            }
-            ';
-        }
+        $query = $this->getProductsQueryBody($name, $brand, $domain, $category);
 
         // Request body with aggregate by domain with top 1 result of each domain
         $body = '
         {
-            ' . $query . ',
+            "query": ' . $query . ',
             "size": 0,
             "aggs": {
                 "by_domain": {
@@ -162,6 +149,7 @@ class ProductController extends FeController
                 }
             }
         }';
+
 
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
@@ -200,4 +188,192 @@ class ProductController extends FeController
             return $this->error('No result found');
         }
     }
+
+
+    /**
+     * Get ElasticSearch query string of single product.
+     * @param $name
+     * @param $brand
+     * @param $category
+     * @param $domain
+     * @return string
+     */
+    /*
+    private function getSingleProductQueryBody($name, $brand, $category, $domain)
+    {
+        $match_name = '{
+            "match": {
+                "name": {
+                    "operator": "and",
+                    "query": "'. $name .'"
+                }
+            }
+        }';
+
+        if ($brand || $category || $domain) {
+            $extra_match = '';
+
+            if ($brand)
+                $extra_match = ',{ "match": { "brand": "'. $brand .'" } }';
+
+            if ($category)
+                $extra_match .= ',{ "match": { "categories": "'. $category .'" } }';
+
+            if ($domain)
+                $extra_match .= ',{ "match": { "domain": "'. $domain .'" } }';
+
+            $query = '
+            "query": {
+                "bool": {
+                    "must": [
+                        { 
+                            ' . $match_name . '
+                            ' . $extra_match . '
+                        }
+                    ]
+                }
+            }
+            ';
+        } else {
+            $query = '
+            "query": 
+                 '. $match_name .'
+            ';
+        }
+
+        return $query;
+    }
+    */
+
+    /**
+     * * Get ElasticSearch query string of single/multiple products.
+     * @param $name
+     * @param $brand
+     * @param $category
+     * @param $domain
+     */
+    private function getProductsQueryBody($name, $brand, $domain, $category)
+    {
+        $tmp = explode('|', $name);
+        if (count($tmp) > 1)
+            $name = $tmp;
+
+        // Always explode domain and brand into array
+
+        if ($domain)
+            $domain = explode('|', $domain);
+
+        if ($brand)
+            $brand = explode('|', $brand);
+
+        // Single product name case, mode 3, 4, 5, 6
+        if (!is_array($name)) {
+            $match_name = '{
+                "match": {
+                    "name": {
+                        "operator": "and",
+                        "query": "' . $name . '"
+                    }
+                }
+            }';
+
+            $query_domain = '';
+            if ($domain) {
+                if (count($domain) > 1) {
+                    // Mode 4
+                    $query = [];
+                    foreach ($domain as $d)
+                        $query [] = '{ "term": { "domain": "' . $d . '"} }';
+                    $query_domain = '{
+                        "bool": {
+                            "should": [ '. join(',', $query) .' ]
+                        }
+                    }';
+                } else {
+                    $query_domain = '{ "term": { "domain": "' . $domain . '" }';
+                }
+            }
+
+            $query_brand = '';
+            if ($brand) {
+                if (count($brand) > 1) {
+                    // Mode 5
+                    $query = [];
+                    // FIXME: brand may not be a normalized keywords in ES
+                    foreach ($brand as $b)
+                        $query [] = '{ "term": { "brand": "' . $b . '"} }';
+                    $query_brand = '{
+                        "bool": {
+                            "should": [ '. join(',', $query) .' ]
+                        }
+                    }';
+                } else {
+                    $query_brand = '{ "term": { "brand": "' . $domain . '" }';
+                }
+            }
+
+            $extra_query = '';
+            if ($query_domain)
+                $extra_query .= ',' . $query_domain;
+            if ($query_brand)
+                $extra_query .= ',' . $query_brand;
+
+            if ($extra_query) {
+                // Mode 4/5: single name, multiple domains/brand
+                return '{
+                    "bool": {
+                        "must": [
+                             '. $match_name . $extra_query . '
+                        ]
+                    }
+                }';
+            } else {
+                // Single name, no domain or brand
+                return $match_name;
+            }
+        } else {
+            // Mode 1, 2: multiple names, single/multi brand/domain
+
+            $query = [];
+            $length = count($name);
+            $domain_length = count($domain);
+            $brand_length = count($brand);
+
+            for ($i = 0; $i < $length; $i++) {
+                $tmp = '"name": {
+                     "query": "'. $name[$i]. '",
+                     "operator": "and"
+                }';
+
+                if ($i < $domain_length)
+                    // 1:1 mapping domains
+                    $tmp .= ',"domain": "'. $domain[$i] .'"';
+                else
+                    // single domain, or partial name:domain mapping
+                    $tmp .= ',"domain": "'. $domain[$domain_length - 1] .'"';
+
+                if ($i < $brand_length)
+                    // 1:1 mapping brands
+                    $tmp .= ',"brand": "'. $brand[$i] .'"';
+                else
+                    // single brand, or partial name:brand mapping
+                    $tmp .= ',"brand": "'. $brand[$brand_length - 1] .'"';
+
+                $query[] = '{ 
+                    "match": {
+                        '. $tmp .'
+                    } 
+                }';
+            }
+
+            return '{
+                "bool": {
+                     "should": [
+                         '.join(',', $query).'
+                     ]
+                }
+            }';
+        }
+    }
 }
+
