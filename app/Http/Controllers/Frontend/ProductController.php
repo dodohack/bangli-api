@@ -77,13 +77,11 @@ class ProductController extends FeController
 
     # 5. Optional: Compare similar product cross different brand cross different websites
     <products
-     mode="compare"
      name="face cream" 
      brand="liz earle|the body shop|la mer|..."/>
 
     # 6. Get single product from single website
     <products
-     mode="single"
      name="liz earle skin tonic"
      domain="boots"/>
      */
@@ -92,7 +90,7 @@ class ProductController extends FeController
      * Return a list of published advertisements
      * Request example:
      * <endpoint>/products?
-     *  <mode=multiple|compare|single>
+     *  <mode=multiple|compare|single>[DEPRECATED]
      *  <name=product name string, multiple name separated by '|'>
      *  [brand=brand name string]
      *  [category=category string]
@@ -102,14 +100,12 @@ class ProductController extends FeController
      *  [discount=0-1 floating point, only get products whose discount
      *     is better then this(the lower of the number, the better), default 1]
      *  [size=number of products]
-     *  [mode=<lowest price products|related products on same website>]
      *
      * @param Request $request
      * @return object
      */
     public function get(Request $request)
     {
-        $mode     = $request->get('mode'); // Request mode
         $name     = $request->get('name'); // Product name, required
         $brand    = $request->get('brand'); // Optional
         $category = $request->get('category'); // Optional
@@ -118,8 +114,8 @@ class ProductController extends FeController
         $client = new Client();
         $search_api = $this->es . '/_search';
 
-        if (!$name || !$mode)
-            return $this->error("Product card mode or product name are missing");
+        if (!$name)
+            return $this->error("Product name is missing");
 
         $query = $this->getProductsQueryBody($name, $brand, $domain, $category);
 
@@ -164,9 +160,10 @@ class ProductController extends FeController
 
         // Decode to json
         $res = json_decode($res->getBody()->read(1024*1024));
-	
+
         // Get result
         if ($res->hits->total) {
+	    $total = 0;
             $products = [];
             $buckets = $res->aggregations->by_domain->buckets;
             $length = count($buckets);
@@ -174,7 +171,7 @@ class ProductController extends FeController
             for ($i = 0; $i < $length; $i++) {
 
 		// Decide how many documents per domain we should take
-		$size = $size_per_domain[$buckets[$i]->key];
+		$size = min($size_per_domain[$buckets[$i]->key], $buckets[$i]->doc_count);
 		$docs = $buckets[$i]->tops->hits->hits;
 		
 		// Loop over documents per domain
@@ -194,10 +191,11 @@ class ProductController extends FeController
 		    }
 		    
                     $products[] = $product;
+		    $total++;
 		}
             }
 
-            $results = ['products' => $products, 'total' => $length];
+            $results = ['products' => $products, 'total' => $total];
             return $this->success($results);
         } else {
             return $this->error('No result found');
@@ -249,7 +247,7 @@ class ProductController extends FeController
                         }
                     }';
                 } else {
-                    $query_domain = '{ "term": { "domain": "' . $domain . '" }';
+                    $query_domain = '{ "term": { "domain": "' . $domain[0] . '" } }';
                 }
             }
 
@@ -267,7 +265,7 @@ class ProductController extends FeController
                         }
                     }';
                 } else {
-                    $query_brand = '{ "term": { "brand": "' . $domain . '" }';
+                    $query_brand = '{ "term": { "brand": "' . $brand[0] . '" } }';
                 }
             }
 
