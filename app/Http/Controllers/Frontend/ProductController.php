@@ -51,7 +51,8 @@ class ProductController extends FeController
      * Return a list of published advertisements
      * Request example:
      * <endpoint>/products?
-     *  <name=product name string>
+     *  <mode=multiple|compare|single>
+     *  <name=product name string, multiple name separated by '|'>
      *  [brand=brand name string]
      *  [category=category string]
      *  [domain=website root domain]
@@ -67,6 +68,7 @@ class ProductController extends FeController
      */
     public function get(Request $request)
     {
+	$mode     = $request->get('mode'); // Request mode
         $name     = $request->get('name'); // Product name, required
         $brand    = $request->get('brand'); // Optional
         $category = $request->get('category'); // Optional
@@ -75,8 +77,25 @@ class ProductController extends FeController
         $client = new Client();
         $search_api = $this->es . '/_search';
 
-        if (!$name)
-            return $this->error("Product name is missing");
+        if (!$name || !$mode)
+            return $this->error("Product card mode or product name are missing");
+
+	switch($mode)
+	{
+	    case 'multiple':
+	    break;
+	    case 'compare':
+	    break;
+	    case 'single':
+	    break;
+	    default:
+	    break;
+	}
+
+	// Name is array of product names
+	$tmp = $name.split('|');
+	if (count($tmp) > 1)
+	    $name = $tmp;
 
         if ($brand || $category || $domain) {
             $extra_match = '';
