@@ -52,37 +52,34 @@ class ProductController extends FeController
 
      # 1. Get multiple products from single website
      <products
-     mode="multiple"
      name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing|la mer"
      domain="boots"/>
 
     # 2. Get multiple products from different website
     <products
-     mode="multiple"
      name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing"
      domain="lookfantastic|boots|allbeauty"/>
 
     <products
-    mode="multiple"
-    name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing"
-    brand="rodial|nip fab|holland barrett"/>
+     name="liz earle skin tonic|no 7 smooth gentle|simple kind to skin soothing"
+     brand="rodial|nip fab|holland barrett"/>
 
     # 3. Compare single product cross different websites
     <products
-     mode="compare"
      name="skin tonic"
      brand="liz earle"/>
 
     # 4. Compare single product cross websites as specified
     <products
-    mode="compare"
-    name="skin tonic" brand="liz earle"
-    domain="boots|lookfantastic|allbeauty|harrods"/>
+     name="skin tonic"
+     brand="liz earle"
+     domain="boots|lookfantastic|allbeauty|harrods"/>
 
     # 5. Optional: Compare similar product cross different brand cross different websites
     <products
-    mode="compare"
-    name="face cream" brand="liz earle|the body shop|la mer|..."/>
+     mode="compare"
+     name="face cream" 
+     brand="liz earle|the body shop|la mer|..."/>
 
     # 6. Get single product from single website
     <products
@@ -126,6 +123,15 @@ class ProductController extends FeController
 
         $query = $this->getProductsQueryBody($name, $brand, $domain, $category);
 
+	$size_per_domain = $this->getSizePerDomain($name, $domain);
+	$size = 1;
+	if ($size_per_domain) {
+	    // Get max size from $size_per_domain;
+	    foreach($size_per_domain as $k => $v) {
+		if ($v > $size) $size = $v;
+	    }
+	}
+
         // Request body with aggregate by domain with top 1 result of each domain
         $body = '
         {
@@ -139,7 +145,7 @@ class ProductController extends FeController
                     "aggs": {
                         "tops": {
                             "top_hits": { 
-                                "size": 1,
+                                "size": '. $size .',
                                 "_source": ["domain", "url", "brand", "categories", "name",
                                             "price", "RRP", "discount", "offer_info", "spec",
                                             "unit", "images", "rating", "review_count"]
@@ -150,7 +156,6 @@ class ProductController extends FeController
             }
         }';
 
-
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -159,27 +164,37 @@ class ProductController extends FeController
 
         // Decode to json
         $res = json_decode($res->getBody()->read(1024*1024));
-
+	
         // Get result
         if ($res->hits->total) {
             $products = [];
             $buckets = $res->aggregations->by_domain->buckets;
             $length = count($buckets);
+	    // Loop over buckets(by_domain)
             for ($i = 0; $i < $length; $i++) {
-                $product = $buckets[$i]->tops->hits->hits[0]->_source;
-                $product->url = $this->buildTrackingUrl($product->url,
-				'product-card', null, $product->domain);
 
-		// TODO: Replace 'full' to 'thumbs/small' etc.
-		if ($product->images) {
-		    $product->thumbs = $this->cdn .
-				       $product->images[0]->path;
+		// Decide how many documents per domain we should take
+		$size = $size_per_domain[$buckets[$i]->key];
+		$docs = $buckets[$i]->tops->hits->hits;
+		
+		// Loop over documents per domain
+		for ($j = 0; $j < $size; $j++) {
+		    
+                    $product = $docs[$j]->_source;
+                    $product->url = $this->buildTrackingUrl($product->url,
+				    'product-card', null, $product->domain);
 
-		    $product->images = $this->cdn .
-				       $product->images[0]->path;
+		    // TODO: Replace 'full' to 'thumbs/small' etc.
+		    if ($product->images) {
+			$product->thumbs = $this->cdn .
+					   $product->images[0]->path;
+			
+			$product->images = $this->cdn .
+					   $product->images[0]->path;
+		    }
+		    
+                    $products[] = $product;
 		}
-
-                $products[] = $product;
             }
 
             $results = ['products' => $products, 'total' => $length];
@@ -188,62 +203,6 @@ class ProductController extends FeController
             return $this->error('No result found');
         }
     }
-
-
-    /**
-     * Get ElasticSearch query string of single product.
-     * @param $name
-     * @param $brand
-     * @param $category
-     * @param $domain
-     * @return string
-     */
-    /*
-    private function getSingleProductQueryBody($name, $brand, $category, $domain)
-    {
-        $match_name = '{
-            "match": {
-                "name": {
-                    "operator": "and",
-                    "query": "'. $name .'"
-                }
-            }
-        }';
-
-        if ($brand || $category || $domain) {
-            $extra_match = '';
-
-            if ($brand)
-                $extra_match = ',{ "match": { "brand": "'. $brand .'" } }';
-
-            if ($category)
-                $extra_match .= ',{ "match": { "categories": "'. $category .'" } }';
-
-            if ($domain)
-                $extra_match .= ',{ "match": { "domain": "'. $domain .'" } }';
-
-            $query = '
-            "query": {
-                "bool": {
-                    "must": [
-                        { 
-                            ' . $match_name . '
-                            ' . $extra_match . '
-                        }
-                    ]
-                }
-            }
-            ';
-        } else {
-            $query = '
-            "query": 
-                 '. $match_name .'
-            ';
-        }
-
-        return $query;
-    }
-    */
 
     /**
      * * Get ElasticSearch query string of single/multiple products.
@@ -339,31 +298,42 @@ class ProductController extends FeController
             $domain_length = count($domain);
             $brand_length = count($brand);
 
+
             for ($i = 0; $i < $length; $i++) {
-                $tmp = '"name": {
-                     "query": "'. $name[$i]. '",
-                     "operator": "and"
-                }';
+		$tmp = [];
+                $tmp[] = '{"match": { "name": { "query": "'. $name[$i]. '", "operator": "and" } } }';
 
-                if ($i < $domain_length)
-                    // 1:1 mapping domains
-                    $tmp .= ',"domain": "'. $domain[$i] .'"';
-                else
-                    // single domain, or partial name:domain mapping
-                    $tmp .= ',"domain": "'. $domain[$domain_length - 1] .'"';
+		if ($domain_length) {
+                    if ($i < $domain_length)
+			// 1:1 mapping domains
+			$tmp[] = ',{"term": { "domain": "'. $domain[$i] .'" } }';
+                    else
+			// single domain, or partial name:domain mapping
+			$tmp[] = ',{"term": { "domain": "'. $domain[$domain_length - 1] .'" } }';
+		}
 
-                if ($i < $brand_length)
-                    // 1:1 mapping brands
-                    $tmp .= ',"brand": "'. $brand[$i] .'"';
-                else
-                    // single brand, or partial name:brand mapping
-                    $tmp .= ',"brand": "'. $brand[$brand_length - 1] .'"';
+		if ($brand_length) {
+                    if ($i < $brand_length)
+			// 1:1 mapping brands
+			$tmp[] = ',{"term": { "brand": "'. $brand[$i] .'" } }';
+                    else
+			// single brand, or partial name:brand mapping
+			$tmp[] = ',{"term": { "brand": "'. $brand[$brand_length - 1] .'" } }';
+		}
 
-                $query[] = '{ 
-                    "match": {
-                        '. $tmp .'
-                    } 
-                }';
+		$inner_query = '';
+		if (count($tmp) > 1) {
+		    $inner_query = '{
+                        "bool": {
+                             "must": [
+                                 '. join(' ', $tmp) .'
+                             ]
+                        }
+                    }';
+		    $query[] = $inner_query;
+                } else {
+                    $query[] = join(' ', $tmp);
+		}
             }
 
             return '{
@@ -374,6 +344,33 @@ class ProductController extends FeController
                 }
             }';
         }
+    }
+
+    private function getSizePerDomain($name, $domain)
+    {
+	if (!$domain) return null;
+
+	$domain       = explode('|', $domain);
+	$name_count   = count(explode('|', $name));
+	$domain_count = count($domain);
+
+	// Count how many size per domain
+	// name:   abc|xyz|uvw|qwe|iop
+	// domain:  A | I | O | A | B
+	// per domain: A:2, I:1, O:1: B:1
+	$size_per_domain = array_count_values($domain);
+
+	// Patch the count of last domain depends on how many are missing
+	if ($name_count > $domain_count) {
+	    // name:   abc|xyz|uvw|qwe|iop|jkl
+	    // domain:  A | A | C |
+	    // per domain: A:2, C:4
+	    $diff = $name_count - $domain_count;
+	    $key  = $domain[$domain_count - 1];
+	    $size_per_domain[$key] += $diff;
+	}
+
+	return $size_per_domain;
     }
 }
 
