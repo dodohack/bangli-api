@@ -761,11 +761,11 @@ class EntityController extends Controller
     {
         if ($topicId) {
             // Get topic by topic id
-            $record = Topic::where('id', $topicId)->first(['aff_platform', 'aff_id']);
+            $record = Topic::where('id', $topicId)->first(['id', 'aff_platform', 'aff_id']);
         } else if ($domain) {
             // Get topic by display_url
             $record = Topic::where('display_url', 'like', '%'.$domain.'%')
-                ->first(['aff_platform', 'aff_id']);
+                ->first(['id', 'aff_platform', 'aff_id']);
         } else {
             $record = null;
         }
