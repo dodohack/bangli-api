@@ -106,6 +106,7 @@ class ProductController extends FeController
      */
     public function get(Request $request)
     {
+	$id       = $request->get('id');   // html tag id, requried
         $name     = $request->get('name'); // Product name, required
         $brand    = $request->get('brand'); // Optional
         $category = $request->get('category'); // Optional
@@ -114,8 +115,8 @@ class ProductController extends FeController
         $client = new Client();
         $search_api = $this->es . '/_search';
 
-        if (!$name)
-            return $this->error("Product name is missing");
+        if (!$name || !$id)
+            return $this->error("Product id or name is missing");
 
         $query = $this->getProductsQueryBody($name, $brand, $domain, $category);
 
@@ -181,13 +182,16 @@ class ProductController extends FeController
                     $product->url = $this->buildTrackingUrl($product->url,
 				    'product-card', null, $product->domain);
 
-		    // TODO: Replace 'full' to 'thumbs/small' etc.
+		    // TODO: Replace 'full' to 'thumbs/medium' etc.
 		    if ($product->images) {
-			$product->thumbs = $this->cdn .
-					   $product->images[0]->path;
+			$product->thumbs = $this->cdn . 'thumbs/medium/' .
+					   basename($product->images[0]->path);
 			
 			$product->images = $this->cdn .
 					   $product->images[0]->path;
+		    } else {
+			$product->thumbs = '';
+			$product->images = '';
 		    }
 		    
                     $products[] = $product;
@@ -195,7 +199,7 @@ class ProductController extends FeController
 		}
             }
 
-            $results = ['products' => $products, 'total' => $total];
+            $results = ['id' => $id, 'products' => $products, 'total' => $total];
             return $this->success($results);
         } else {
             return $this->error('No result found');
