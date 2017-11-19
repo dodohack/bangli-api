@@ -182,13 +182,12 @@ class ProductController extends FeController
                     $product->url = $this->buildTrackingUrl($product->url,
 				    'product-card', null, $product->domain);
 
-		    // TODO: Replace 'full' to 'thumbs/medium' etc.
 		    if ($product->images) {
 			$product->thumbs = $this->cdn . 'thumbs/medium/' .
 					   basename($product->images[0]->path);
 			
-			$product->images = $this->cdn .
-					   $product->images[0]->path;
+			$product->images = $this->cdn . 'thumbs/big/' .
+					   basename($product->images[0]->path);
 		    } else {
 			$product->thumbs = '';
 			$product->images = '';
