@@ -15,11 +15,32 @@ class ProductController extends FeController
     protected $es;
     protected $cdn;
 
+    // _msearch or _search mode
+    protected $mode;
+
+    // product card arguments
+    protected $id;
+    protected $name;
+    protected $brand;
+    protected $domain;
+    protected $count;
+    protected $order;
+
+    // How many name, brand, domain in their array
+    protected $length_name;
+    protected $length_brand;
+    protected $length_domain;
+
+
     public function __construct(Request $request)
     {
         parent::__construct($request);
         $this->es = env('ES_ENDPOINT') . '/' . env('ES_PRODUCT');
         $this->cdn = env('PRODUCT_IMG_SERVER');
+        $this->mode          = 's'; // Single search
+        $this->length_name   = 0;
+        $this->length_brand  = 0;
+        $this->length_domain = 0;
     }
 
     /**
@@ -38,27 +59,59 @@ class ProductController extends FeController
 
     /**
      * We use _msearch instead of _search here
+     * Type of search we support:
+     * We can support unaligned number of name, brand, domain as previous  version.
+     * [products name="..."]
+     * [products name="..." domain="..."]
+     * [products name="..." brand="..." domain="..."]
+     * [products name="..." domain="...|...|..."]
+     * [products name="..." brand="..." domain="...|...|..."]
+     * [products name="..." brand="...|...|..." domain="...|...|..."]
+     * [products name="...|...|..." domain="...|...|..."]
+     * [products name="...|...|..." brand="...|...|..." domain="...|...|..."]
+     *
+     * [products brand="..." count=""]
+     *
+     * [products domain="..." count=""]
+     * [products domain="..." count="" order=""]
+     * [products domain="..." name="...|...|..."]
+     * [products domain="..." name="...|...|..." brand="..."]
+     * [products domain="..." name="...|...|..." brand="...|...|..."]
+     * [products domain="..." brand="..." count=""]
+     * [products domain="..." brand="..." count="" order=""]
+     * [products domain="..." brand="...|...|..." count=""]
+     * [products domain="..." brand="...|...|..." count="" order=""]
+     *
+     * When query product by name, we use _msearch api.
+     * When query product by brand or domain, we use _search api with aggragate
+     * so that we can sort the result by 'rating' or 'discount rate'.
      * @param Request $request
      */
     public function get(Request $request)
     {
-        $id       = $request->get('id');   // html tag id, requried
-        $name     = $request->get('name'); // Optional, Product name,
-        $brand    = $request->get('brand'); // Optional
-        $domain   = $request->get('domain'); // Optional
-        $count    = $request->get('count');  // Number of cards
-        $order    = $request->get('order'); // Optional, sorting
+        if (!$this->initialize($request))
+            return $this->error("Product card parameter error");
 
         $client = new Client();
-        $search_api = $this->es . '/_msearch';
 
-        if (!$id || !$count)
-            return $this->error("Product card id or count is missing");
+        if ($this->mode == 'm') {
+            // Multiple name and single/multi domain[s]
+            $search_api = $this->es . '/_msearch';
+            $body = $this->getMultiSearchQueryBody();
+        } else {
+            // All other case:
 
-        if (!($name || $brand))
-            return $this->error("Missing product name or brand");
+            // 1. No name is given, domain should be given, brand is optionally given
+            // We sort products from given domain by given order(rating default)
 
-        $body = $this->getMSearchQueryBody($name, $brand, $domain, $count, $order);
+            // 2. Single name from single domain or multiple domains
+            // Get 1 product from single domain if count = 1
+            // Get n products from single domain if count > 1
+            // Get 1 product from each domain if count = 1 and domain > 1
+            $search_api = $this->es . '/_search';
+            $body = $this->getSingleSearchQueryBody();
+            $body = $this->getAggregateQueryBody($body);
+        }
 
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
@@ -69,32 +122,45 @@ class ProductController extends FeController
         // Decode to json
         $res = json_decode($res->getBody()->read(1024*1024));
 
-        // We got an array of object in "responses": [{}, {}] for _msearch
-        $length = count($res->responses);
-
         $products = [];
+        $length   = 0;
 
-        for ($i = 0; $i < $length; $i++) {
-            $product = $res->responses[$i]->hits->hits->_source;
-            $product->url = $this->buildTrackingUrl($product->url,
-                'product-card', null, $product->domain);
+        if ($this->mode == 'm') {
+            // We got an array of object in "responses": [{}, {}] from _msearch
+            $length = count($res->responses);
 
-            if ($product->images) {
-                $product->thumbs = $this->cdn . 'thumbs/medium/' .
-                    basename($product->images[0]->path);
-
-                $product->images = $this->cdn . 'thumbs/big/' .
-                    basename($product->images[0]->path);
-            } else {
-                $product->thumbs = '';
-                $product->images = '';
+            for ($i = 0; $i < $length; $i++) {
+                $product = $res->responses[$i]->hits->hits->_source;
+                $this->updateProduct($product);
+                $products[] = $product;
             }
+        } else {
+            // Get result as aggregate from _search
+            if ($res->hits->total) {
+                $buckets = $res->aggregations->by_domain->buckets;
+                $bucket_count = count($buckets);
+                // Loop over buckets(by_domain)
+                for ($i = 0; $i < $bucket_count; $i++) {
 
-            $products[] = $product;
+                    $docs = $buckets[$i]->tops->hits->hits;
+
+                    // Loop over documents per domain
+                    for ($j = 0; $j < $this->count; $j++) {
+                        $product = $docs[$j]->_source;
+                        $this->updateProduct($product);
+                        $products[] = $product;
+                        $length++;
+                    }
+                }
+            }
         }
 
         if ($length) {
-            $results = ['id' => $id, 'products' => $products, 'total' => $length];
+            $results = [
+                'id' => $this->id,
+                'products' => $products,
+                'total' => $length
+            ];
             return $this->success($results);
         } else {
             return $this->error('No result found');
@@ -102,67 +168,47 @@ class ProductController extends FeController
 
     }
 
-    private function getMSearchQueryBody($name, $brand, $domain, $count, $order)
+    /**
+     * In this case, we have more than one names or more than one brands
+     * @return string
+     */
+    private function getMultiSearchQueryBody()
     {
-        $length_name   = 0;
-        $length_brand  = 0;
-        $length_domain = 0;
-        // We use $count as the max number of products
-        if ($name) {
-            $name     = explode('|', $name);
-            $length_name = count($name);
-        }
-        if ($brand) {
-            $brand   = explode('|', $brand);
-            $length_brand = count($brand);
-        }
-        if ($domain) {
-            $domain = explode('|', $domain);
-            $length_domain = count($domain);
-        }
-
         $body = '';
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $i < $this->count; $i++) {
             $query_name = '';
-            if ($length_name) {
-                $idx = max($i, $length_name - 1);
-                $query_name = '{"match" : { "name": { "query" : "'. $name[$idx] .'", "operator" : "and" } } }';
+            if ($this->length_name) {
+                $idx = max($i, $this->length_name - 1);
+                $query_name = '{"match" : { "name": { "query" : "'. $this->name[$idx] .'", "operator" : "and" } } }';
             }
 
             $query_brand = '';
-            if ($length_brand) {
-                $idx = max($i, $length_brand - 1);
-                $query_brand = '{"term": {"brand": "'. $brand[$idx] .'"} }';
+            if ($this->length_brand) {
+                $idx = max($i, $this->length_brand - 1);
+                $query_brand = '{"term": {"brand": "'. $this->brand[$idx] .'"} }';
             }
 
             $query_domain = '';
-            if ($length_domain) {
-                $idx = max($i, $length_domain - 1);
-                $query_domain= '{"term": {"domain": "'. $domain[$idx] .'"} }';
+            if ($this->length_domain) {
+                $idx = max($i, $this->length_domain - 1);
+                $query_domain= '{"term": {"domain": "'. $this->domain[$idx] .'"} }';
             }
 
-            $query = '';
-            if (($query_name != '' && $query_brand != '') ||
-                ($query_name != '' && $query_domain != '') ||
-                ($query_brand != '' && $query_domain != '')) {
-
-                $query_inner = '';
-                if ($query_name != '')
-                    $query_inner = $query_name;
-
-                if ($query_brand != '') {
-                    if ($query_inner == '') $query_inner = $query_brand;
-                    else $query_inner = $query_inner . ', ' . $query_brand;
-                }
-
-                if ($query_domain != '') {
-                    if ($query_inner == '') $query_inner = $query_domain;
-                    else $query_inner = $query_inner . ', ' . $query_domain;
-                }
-
-                $query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, "size": 1 }';
-
+            $tmp = [];
+            if ($query_name)
+                $tmp [] = $query_name;
+            if ($query_brand)
+                $tmp [] = $query_brand;
+            if ($query_domain)
+                $tmp [] = $query_domain;
+            $conditions = count($tmp);
+            assert($conditions > 0 && "At least 1 query should be given");
+            if ($conditions > 1) {
+                $query_inner = implode(',', $tmp);
+            } else {
+                $query_inner = $tmp[0];
             }
+            $query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, "size": 1 }';
 
             // Append to body
             $body .= '{}' . PHP_EOL . $query . PHP_EOL;
@@ -170,5 +216,190 @@ class ProductController extends FeController
 
         return $body;
     }
+
+    /**
+     * In this case, name is single item or not given
+     */
+    private function getSingleSearchQueryBody()
+    {
+        $query_name  = '';
+        $query_brand = '';
+        $query_domain = '';
+
+        if ($this->length_name == 1) {
+            $name = $this->name[0];
+            $query_name = '{
+                "match": {
+                    "name": {
+                        "operator": "and",
+                        "query": "' . $name . '"
+                    }
+                }
+            }';
+        }
+
+        // Brand can be only 1 string within this case, otherwise it is
+        // processed by _msearch
+        if ($this->length_brand == 1) {
+            $query_brand = '{"term": {"brand": "' . $this->brand[0] .'"}';
+        }
+
+        if ($this->length_domain) {
+            if ($this->length_domain == 1) {
+                // Get 1 product or 1 series of products from single domain
+                $query_domain = '{ "term": { "domain": "' . $this->domain[0] . '" } }';
+            } else {
+                // Get price comparison of 1 product from multiple domains
+                $tmp = [];
+                foreach ($this->domain as $d)
+                    $tmp [] = '{ "term": { "domain": "' . $d . '"} }';
+                $query_domain = '{
+                        "bool": {
+                            "should": [ '. join(',', $tmp) .' ]
+                        }
+                    }';
+            }
+        }
+
+        $tmp = [];
+        if ($query_name)
+            $tmp [] = $query_name;
+        if ($query_brand)
+            $tmp [] = $query_brand;
+        if ($query_domain)
+            $tmp [] = $query_domain;
+
+        $conditions = count($tmp);
+        assert($conditions > 0 && "At least 1 query should be given");
+
+        if ($conditions > 1) {
+            $query = implode(',', $tmp);
+            return '{
+                    "bool": {
+                        "must": [
+                             '. $query . '
+                        ]
+                    }
+                }';
+        } else {
+            $query = $tmp[0];
+            return $query;
+        }
+    }
+
+    /**
+     * Construct aggregate query with given query body
+     * @param $body
+     * @return mixed
+     */
+    private function getAggregateQueryBody($body)
+    {
+        $sort = '';
+        if ($this->order == 'rating')
+            $sort = '"sort": [{"rating": {"order": "desc"}],';
+        if ($this->order == 'discount')
+            $sort = '"sort": [{"discount": {"order": "asc"}],';
+
+        $new_body = '{
+            "query": ' . $body . ',
+            "size": 0,
+            "aggs": {
+                "by_domain": {
+                    "terms": { 
+                        "field": "domain" 
+                    },
+                    "aggs": {
+                        "tops": {
+                            "top_hits": {
+                                "size": '. $this->count .',
+                                ' . $sort . '
+                                "_source": ["domain", "url", "brand", "categories", "name",
+                                            "price", "RRP", "discount", "offer_info", "spec",
+                                            "unit", "images", "rating", "review_count"]
+                            }
+                        }
+                    }
+                }
+            }
+
+        }';
+        return $new_body;
+    }
+
+    private function initialize(Request $request)
+    {
+        $this->id       = $request->get('id');   // html tag id, required
+        $this->name     = $request->get('name'); // Optional, Product name,
+        $this->brand    = $request->get('brand'); // Optional
+        $this->domain   = $request->get('domain'); // Optional
+        $this->count    = $request->get('count', 1);  // Number of cards
+        $this->order    = $request->get('order'); // Optional, sorting
+
+        // We use $count as the max number of products
+        if ($this->name) {
+            $this->name     = explode('|', $this->name);
+            $this->length_name = count($this->name);
+        }
+
+        if ($this->brand) {
+            $this->brand   = explode('|', $this->brand);
+            $this->length_brand = count($this->brand);
+        }
+
+        if ($this->domain) {
+            $this->domain = explode('|', $this->domain);
+            $this->length_domain = count($this->domain);
+        }
+
+        // We must have id and one of name/brand/domain
+        if (!$this->id && !($this->name || $this->brand || $this->domain))
+            return false;
+        // When name is not given, domain must be specified
+        if (!$this->name && !$this->domain)
+            return false;
+
+        // There is no meaning to get a serial of products from multiple
+        // websites
+        if ($this->length_name == 1 &&
+            $this->length_domain > 1 && $this->count > 1)
+            return false;
+
+        // Domain must be specified if name is more than 1
+        if ($this->length_name > 1 && $this->length_domain == 0)
+            return false;
+
+        // Domain must be specified if brand is more than 1
+        if ($this->length_brand > 1 && $this->length_domain == 0)
+            return false;
+
+        // When count is not given or we have larger number of elements in
+        // array of name/brand/domain, we should keep the max number as count
+        $this->count = max($this->count, $this->length_name,
+            $this->length_brand, $this->length_domain);
+
+        // _msearch mode
+        if ($this->length_name > 1 || $this->length_brand > 1)
+            $this->mode = 'm';
+
+        return true;
+    }
+
+    private function updateProduct(&$product)
+    {
+        $product->url = $this->buildTrackingUrl($product->url,
+            'product-card', null, $product->domain);
+
+        if ($product->images) {
+            $product->thumbs = $this->cdn . 'thumbs/medium/' .
+                basename($product->images[0]->path);
+
+            $product->images = $this->cdn . 'thumbs/big/' .
+                basename($product->images[0]->path);
+        } else {
+            $product->thumbs = '';
+            $product->images = '';
+        }
+    }
+
 }
 
