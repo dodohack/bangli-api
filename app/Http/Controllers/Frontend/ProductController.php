@@ -129,13 +129,13 @@ class ProductController extends FeController
             // We got an array of object in "responses": [{}, {}] from _msearch
             $response_length = count($res->responses);
             for ($i = 0; $i < $response_length; $i++) {
-		$hits = $res->responses[$i]->hits;
-	        if ($hits->total) {
+                $hits = $res->responses[$i]->hits;
+                if ($hits->total) {
                     $product = $hits->hits[0]->_source;
                     $this->updateProduct($product);
                     $products[] = $product;
-		    $length++;
-		}
+                    $length++;
+                }
             }
         } else {
             // Get result as aggregate from _search
@@ -146,7 +146,7 @@ class ProductController extends FeController
                 for ($i = 0; $i < $bucket_count; $i++) {
 
                     $docs = $buckets[$i]->tops->hits->hits;
-		    $size = min($this->count, $buckets[$i]->tops->hits->total);
+                    $size = min($this->count, $buckets[$i]->tops->hits->total);
 
                     // Loop over documents per domain
                     for ($j = 0; $j < $size; $j++) {
@@ -178,46 +178,47 @@ class ProductController extends FeController
      */
     private function getMultiSearchQueryBody()
     {
+        assert($this->length_domain && "Domain should be given");
+
         $body = '';
         $max_name_idx   = $this->length_name - 1;
         $max_brand_idx  = $this->length_brand - 1;
         $max_domain_idx = $this->length_domain - 1;
-        for ($i = 0; $i < $this->count; $i++) {
+
+        $sort = $this->getSortString();
+        $max = max($this->length_name, $this->length_brand);
+
+        // Use the max number of name or brand as max step
+        if ($this->length_domain > $max)
+            $steps = $max;
+        else
+            $steps = (int) ($max / $this->length_domain);
+
+        for($i = 0; $i < $steps; $i++) {
             $query_name = '';
             if ($this->length_name) {
                 $idx = $i > $max_name_idx ? $max_name_idx : $i;
-                $query_name = '{"match" : { "name": { "query" : "'. $this->name[$idx] .'", "operator" : "and" } } }';
+                $query_name = '{"match" : { "name": { "query" : "' . $this->name[$idx] . '", "operator" : "and" } } }';
             }
 
             $query_brand = '';
             if ($this->length_brand) {
                 $idx = $i > $max_brand_idx ? $max_brand_idx : $i;
-                $query_brand = '{"term": {"brand": "'. $this->brand[$idx] .'"} }';
+                $query_brand = '{"term": {"brand": "' . $this->brand[$idx] . '"} }';
             }
 
-            $query_domain = '';
-            if ($this->length_domain) {
-                $idx = $i > $max_domain_idx ? $max_domain_idx : $i;
-                $query_domain= '{"term": {"domain": "'. $this->domain[$idx] .'"} }';
-            }
+            $idx = $i > $max_domain_idx ? $max_domain_idx : $i;
+            $query_domain = '{"term": {"domain": "' . $this->domain[$idx] . '"} }';
 
             $tmp = [];
             if ($query_name)
                 $tmp [] = $query_name;
             if ($query_brand)
                 $tmp [] = $query_brand;
-            if ($query_domain)
-                $tmp [] = $query_domain;
-            $conditions = count($tmp);
-            assert($conditions > 0 && "At least 1 query should be given");
-            if ($conditions > 1) {
-                $query_inner = implode(',', $tmp);
-            } else {
-                $query_inner = $tmp[0];
-            }
-            $query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, "size": 1 }';
+            $tmp [] = $query_domain;
+            $query_inner = implode(',', $tmp);
 
-            // Append to body
+            $query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, '. $sort .' "size": ' . $this->count . '}';
             $body .= '{}' . PHP_EOL . $query . PHP_EOL;
         }
 
@@ -301,11 +302,7 @@ class ProductController extends FeController
      */
     private function getAggregateQueryBody($body)
     {
-        $sort = '';
-        if ($this->order == 'rating')
-            $sort = '"sort": [{"rating": {"order": "desc"}}],';
-        if ($this->order == 'discount')
-            $sort = '"sort": [{"discount": {"order": "asc"}}],';
+        $sort = $this->getSortString();
 
         $new_body = '{
             "query": ' . $body . ',
@@ -400,6 +397,16 @@ class ProductController extends FeController
             $product->thumbs = '';
             $product->images = '';
         }
+    }
+
+    private function getSortString()
+    {
+        $sort = '';
+        if ($this->order == 'rating')
+            $sort = '"sort": [{"rating": {"order": "desc"}}],';
+        if ($this->order == 'discount')
+            $sort = '"sort": [{"discount": {"order": "asc"}}],';
+        return $sort;
     }
 
 }
