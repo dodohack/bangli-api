@@ -128,13 +128,16 @@ class ProductController extends FeController
         if ($this->mode == 'm') {
             // We got an array of object in "responses": [{}, {}] from _msearch
             $response_length = count($res->responses);
+	    //dd($res->responses);
             for ($i = 0; $i < $response_length; $i++) {
                 $hits = $res->responses[$i]->hits;
                 if ($hits->total) {
-                    $product = $hits->hits[0]->_source;
-                    $this->updateProduct($product);
-                    $products[] = $product;
-                    $length++;
+		    foreach($hits->hits as $hit) {
+			$product = $hit->_source;
+			$this->updateProduct($product);
+			$products[] = $product;
+			$length++;
+		    }
                 }
             }
         } else {
@@ -194,32 +197,45 @@ class ProductController extends FeController
         else
             $steps = (int) ($max / $this->length_domain);
 
-        for($i = 0; $i < $steps; $i++) {
-            $query_name = '';
-            if ($this->length_name) {
-                $idx = $i > $max_name_idx ? $max_name_idx : $i;
-                $query_name = '{"match" : { "name": { "query" : "' . $this->name[$idx] . '", "operator" : "and" } } }';
-            }
+	// Size per group of a subset of domain
+	$size = (int) ($this->count / $steps);
 
-            $query_brand = '';
-            if ($this->length_brand) {
-                $idx = $i > $max_brand_idx ? $max_brand_idx : $i;
-                $query_brand = '{"term": {"brand": "' . $this->brand[$idx] . '"} }';
-            }
+	$outer = $this->length_domain;
+	$inner = $steps;
+	
+	if ($steps == $size && $steps = $this->count && $steps == 1) {
+	    $outer = 1;
+	    $inner = $this->length_domain;
+	}
+	
+        for($i = 0; $i < $outer; $i++) {
+	    for ($j = 0; $j < $inner; $j++) {
+		$query_name = '';
+		if ($this->length_name) {
+                    $idx = $j > $max_name_idx ? $max_name_idx : $j;
+                    $query_name = '{"match" : { "name": { "query" : "' . $this->name[$idx] . '", "operator" : "and" } } }';
+		}
 
-            $idx = $i > $max_domain_idx ? $max_domain_idx : $i;
-            $query_domain = '{"term": {"domain": "' . $this->domain[$idx] . '"} }';
-
-            $tmp = [];
-            if ($query_name)
-                $tmp [] = $query_name;
-            if ($query_brand)
-                $tmp [] = $query_brand;
-            $tmp [] = $query_domain;
-            $query_inner = implode(',', $tmp);
-
-            $query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, '. $sort .' "size": ' . $this->count . '}';
-            $body .= '{}' . PHP_EOL . $query . PHP_EOL;
+		$query_brand = '';
+		if ($this->length_brand) {
+                    $idx = $j > $max_brand_idx ? $max_brand_idx : $j;
+                    $query_brand = '{"term": {"brand": "' . $this->brand[$idx] . '"} }';
+		}
+		
+		$idx = $j > $max_domain_idx ? $max_domain_idx : $j;
+		$query_domain = '{"term": {"domain": "' . $this->domain[$idx] . '"} }';
+		
+		$tmp = [];
+		if ($query_name)
+                    $tmp [] = $query_name;
+		if ($query_brand)
+                    $tmp [] = $query_brand;
+		$tmp [] = $query_domain;
+		$query_inner = implode(',', $tmp);
+		
+		$query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, '. $sort .' "size": ' . $size . '}';
+		$body .= '{}' . PHP_EOL . $query . PHP_EOL;
+	    }
         }
 
         return $body;
@@ -369,11 +385,6 @@ class ProductController extends FeController
         // Domain must be specified if brand is more than 1
         if ($this->length_brand > 1 && $this->length_domain == 0)
             return false;
-
-        // When count is not given or we have larger number of elements in
-        // array of name/brand/domain, we should keep the max number as count
-        $this->count = max($this->count, $this->length_name,
-            $this->length_brand, $this->length_domain);
 
         // _msearch mode
         if ($this->length_name > 1 || $this->length_brand > 1)
