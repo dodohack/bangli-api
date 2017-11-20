@@ -113,6 +113,8 @@ class ProductController extends FeController
             $body = $this->getAggregateQueryBody($body);
         }
 
+	//dd($body);
+
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -128,9 +130,8 @@ class ProductController extends FeController
         if ($this->mode == 'm') {
             // We got an array of object in "responses": [{}, {}] from _msearch
             $length = count($res->responses);
-
             for ($i = 0; $i < $length; $i++) {
-                $product = $res->responses[$i]->hits->hits->_source;
+                $product = $res->responses[$i]->hits->hits[0]->_source;
                 $this->updateProduct($product);
                 $products[] = $product;
             }
@@ -175,22 +176,25 @@ class ProductController extends FeController
     private function getMultiSearchQueryBody()
     {
         $body = '';
+        $max_name_idx   = $this->length_name - 1;
+        $max_brand_idx  = $this->length_brand - 1;
+        $max_domain_idx = $this->length_domain - 1;
         for ($i = 0; $i < $this->count; $i++) {
             $query_name = '';
             if ($this->length_name) {
-                $idx = max($i, $this->length_name - 1);
+                $idx = $i > $max_name_idx ? $max_name_idx : $i;
                 $query_name = '{"match" : { "name": { "query" : "'. $this->name[$idx] .'", "operator" : "and" } } }';
             }
 
             $query_brand = '';
             if ($this->length_brand) {
-                $idx = max($i, $this->length_brand - 1);
+                $idx = $i > $max_brand_idx ? $max_brand_idx : $i;
                 $query_brand = '{"term": {"brand": "'. $this->brand[$idx] .'"} }';
             }
 
             $query_domain = '';
             if ($this->length_domain) {
-                $idx = max($i, $this->length_domain - 1);
+                $idx = $i > $max_domain_idx ? $max_domain_idx : $i;
                 $query_domain= '{"term": {"domain": "'. $this->domain[$idx] .'"} }';
             }
 
@@ -241,7 +245,7 @@ class ProductController extends FeController
         // Brand can be only 1 string within this case, otherwise it is
         // processed by _msearch
         if ($this->length_brand == 1) {
-            $query_brand = '{"term": {"brand": "' . $this->brand[0] .'"}';
+            $query_brand = '{"term": {"brand": "' . $this->brand[0] .'"} }';
         }
 
         if ($this->length_domain) {
@@ -296,9 +300,9 @@ class ProductController extends FeController
     {
         $sort = '';
         if ($this->order == 'rating')
-            $sort = '"sort": [{"rating": {"order": "desc"}],';
+            $sort = '"sort": [{"rating": {"order": "desc"}}],';
         if ($this->order == 'discount')
-            $sort = '"sort": [{"discount": {"order": "asc"}],';
+            $sort = '"sort": [{"discount": {"order": "asc"}}],';
 
         $new_body = '{
             "query": ' . $body . ',
