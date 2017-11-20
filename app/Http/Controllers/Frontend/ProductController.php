@@ -113,6 +113,8 @@ class ProductController extends FeController
             $body = $this->getAggregateQueryBody($body);
         }
 
+	//dd($body);
+
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -198,7 +200,10 @@ class ProductController extends FeController
             $steps = (int) ($max / $this->length_domain);
 
 	// Size per group of a subset of domain
-	$size = (int) ($this->count / $steps);
+	if ($this->count > $steps)
+	    $size = (int) ($this->count / $steps);
+	else
+	    $size = $this->count;
 
 	$outer = $this->length_domain;
 	$inner = $steps;
