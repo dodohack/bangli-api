@@ -113,8 +113,6 @@ class ProductController extends FeController
             $body = $this->getAggregateQueryBody($body);
         }
 
-	//dd($body);
-
         try {
             $res = $client->request('POST', $search_api, ['body' => $body]);
         } catch (ServerException $e) {
@@ -129,11 +127,15 @@ class ProductController extends FeController
 
         if ($this->mode == 'm') {
             // We got an array of object in "responses": [{}, {}] from _msearch
-            $length = count($res->responses);
-            for ($i = 0; $i < $length; $i++) {
-                $product = $res->responses[$i]->hits->hits[0]->_source;
-                $this->updateProduct($product);
-                $products[] = $product;
+            $response_length = count($res->responses);
+            for ($i = 0; $i < $response_length; $i++) {
+		$hits = $res->responses[$i]->hits;
+	        if ($hits->total) {
+                    $product = $hits->hits[0]->_source;
+                    $this->updateProduct($product);
+                    $products[] = $product;
+		    $length++;
+		}
             }
         } else {
             // Get result as aggregate from _search
@@ -144,9 +146,10 @@ class ProductController extends FeController
                 for ($i = 0; $i < $bucket_count; $i++) {
 
                     $docs = $buckets[$i]->tops->hits->hits;
+		    $size = min($this->count, $buckets[$i]->tops->hits->total);
 
                     // Loop over documents per domain
-                    for ($j = 0; $j < $this->count; $j++) {
+                    for ($j = 0; $j < $size; $j++) {
                         $product = $docs[$j]->_source;
                         $this->updateProduct($product);
                         $products[] = $product;
@@ -360,12 +363,6 @@ class ProductController extends FeController
             return false;
         // When name is not given, domain must be specified
         if (!$this->name && !$this->domain)
-            return false;
-
-        // There is no meaning to get a serial of products from multiple
-        // websites
-        if ($this->length_name == 1 &&
-            $this->length_domain > 1 && $this->count > 1)
             return false;
 
         // Domain must be specified if name is more than 1
