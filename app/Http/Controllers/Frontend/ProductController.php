@@ -194,27 +194,29 @@ class ProductController extends FeController
         $max = max($this->length_name, $this->length_brand);
 
         // Use the max number of name or brand as max step
-        if ($this->length_domain > $max)
-            $steps = $max;
-        else
-            $steps = (int) ($max / $this->length_domain);
+        $steps = $max;
+	$size  = $this->count;
 
-	// Size per group of a subset of domain
-	if ($this->count > $steps)
-	    $size = (int) ($this->count / $steps);
-	else
-	    $size = $this->count;
+	if ($this->length_domain == 1 && $max > 1 && $this->count > $max) {
+	    $size  = $this->count / $max;
+	}
 
 	$outer = $this->length_domain;
 	$inner = $steps;
 	
-	if ($steps == $size && $steps = $this->count && $steps == 1) {
+	if ($steps == $size && $steps == 1) {
 	    $outer = 1;
 	    $inner = $this->length_domain;
 	}
-	
+
+	$inner_starts = 0;
         for($i = 0; $i < $outer; $i++) {
-	    for ($j = 0; $j < $inner; $j++) {
+
+	    // If we have same count of name/brand and domain
+	    if ($outer == $inner)
+		$inner_starts = $i;
+	    
+	    for ($j = $inner_starts; $j < $inner; $j++) {
 		$query_name = '';
 		if ($this->length_name) {
                     $idx = $j > $max_name_idx ? $max_name_idx : $j;
@@ -240,6 +242,10 @@ class ProductController extends FeController
 		
 		$query = '{"query": {"bool": { "must": [' . $query_inner . '] } }, '. $sort .' "size": ' . $size . '}';
 		$body .= '{}' . PHP_EOL . $query . PHP_EOL;
+
+		// Only iterate once if name/brand count equals domain
+		if ($outer == $inner)
+		    break;
 	    }
         }
 
