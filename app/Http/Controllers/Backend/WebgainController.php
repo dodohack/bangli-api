@@ -101,7 +101,7 @@ class WebgainController extends AffiliateController
             if (!$this->contentFilter($offer['title'])) continue;
 
             dd("TODO");
-            
+
             $input = [
                 'channel_id' => 1,
                 'status'     => 'publish',
