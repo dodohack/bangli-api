@@ -31,10 +31,18 @@ class AffiliateWindowController extends AffiliateController
         assert($this->awin_id && $this->awin_pro_id && $this->awin_ads_pwd &&
             'Incorrect AWIN setting in .env');
 
+        //$promotionType = 'promotionType=';
+        //$categoryIds  = 'categoryIds=';
+        //$regionIds = 'regionIds=';
+        //$advertiserIds = 'advertiserIds=';
+        //$promotionStatus = 'promotionStatus=';
+        $membershipStatus = 'membershipStatus=joined';
+
+
         // TODO: Get offers from all merchants even we are not joined.
         $this->awin_pro_api = env('AWIN_PROMOTION_API') . '/' .
-            $this->awin_id . '/' . $this->awin_pro_id .
-            '?promotionType=&categoryIds=&regionIds=&advertiserIds=&membershipStatus=joined&promotionStatus=';
+            $this->awin_id . '/' . $this->awin_pro_id . '?' .
+            $membershipStatus;
 
         $this->awin_ads_api = env('AWIN_ADVERTISER_API') . '?user=' .
             $this->awin_id . '&password=' . $this->awin_ads_pwd .
@@ -199,7 +207,7 @@ class AffiliateWindowController extends AffiliateController
      * Loop the list of offers received from API endpoint, store them into
      * database.
      *
-     * @param $res - http reponse from API endpoint
+     * @param $res - http response from API endpoint
      * @return int - number of offer updated
      */
     private function putOffers($res)

@@ -41,7 +41,7 @@ class LinkShareController extends AffiliateController
             && $this->ls_password && $this->ls_auth_api && $this->ls_ads_api
             && $this->ls_pro_api && "Incorrect linkshare setting in .env");
 
-        // Renew token
+        // Renew linkshare token
         $this->token = $this->getAuthToken();
     }
 
