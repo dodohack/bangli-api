@@ -86,7 +86,13 @@ class WebgainController extends AffiliateController
         $countOk  = 0;
         $countBad = 0;
 
+        $logOk  = fopen('/tmp/webgain_offers_not_added.log', 'w');
+        $logBad = fopen('/tmp/webgain_offers_added.log', 'w');
+
         foreach ($res as $offer) {
+
+            // Offer merchant id
+            $offerMerchantId = $offer['program']['id'];
 
             //
             // Validate offer quality
@@ -96,11 +102,9 @@ class WebgainController extends AffiliateController
             // end date
             if (!$this->dateFilter($offer['ends'], false)) continue;
             // offer merchant id
-            if (!$this->merchantIdFilter(WEBGAIN, $offer['program']['id'])) continue;
+            if (!$this->merchantIdFilter(WEBGAIN, $offerMerchantId)) continue;
             // offer title
             if (!$this->contentFilter($offer['title'])) continue;
-
-            dd("TODO");
 
             $input = [
                 'channel_id' => 1,
@@ -114,7 +118,22 @@ class WebgainController extends AffiliateController
                 'display_url'  => $offer['destinationURL']['destination_url'],
                 'tracking_url' => $this->getTrackingUrl($offer),
             ];
+
+            if ($this->updateOfferInternally($input, WEBGAIN)) {
+                $countOk++;
+                fwrite($logOk, $offer . PHP_EOL);
+            } else {
+                $countBad++;
+                fwrite($logBad, $offer . PHP_EOL);
+            }
         }
+
+        fwrite($logOk, 'Total: ' . $countOk);
+        fwrite($logBad, 'Total: ' . $countBad);
+        fclose($logOk);
+        fclose($logBad);
+
+        return $countOk;
     }
 
     private function getVoucherCode($offer)

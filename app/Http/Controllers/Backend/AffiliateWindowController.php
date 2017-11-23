@@ -294,56 +294,7 @@ class AffiliateWindowController extends AffiliateController
             'display_url'  => $offer[12]
         ];
 
-        $topicTable = new Topic;
-        $merchant = $topicTable->where('aff_id', $offer[2])
-            ->where('aff_platform', AWIN)
-            ->with(['categories', 'offers'])->first();
-
-        // We may not able to find the merchant if merchant table is relative old.
-        if (!$merchant) return false;
-
-        // If we can find the same offer
-        $found = false;
-        // If the offer we found can be updated automatically, if it is
-        // already modified by user, we will not overwrite it
-        $canUpdate = true;
-        $offerId = 0;
-
-        if ($merchant->offers->count()) {
-            foreach($merchant->offers as $o) {
-                if ($o->aff_offer_id == $offer[0]) {
-                    $found = true;
-                    $offerId = $o->id;
-                    if ($o->author_id)
-                        $canUpdate = false;
-                    break;
-                }
-            }
-        }
-
-        // Get offer table
-        $table = new Offer;
-
-        // Do not update the same offer if it is modified
-        if ($found && !$canUpdate) return false;
-
-        // Remove old offer we just found if we can update it
-        if ($found && $canUpdate) {
-            $table->find($offerId)->delete();
-        }
-
-        // Create the offer
-        $record = $table->create($input);
-        if (!$record) return false;
-
-        // Update the pivot table
-        $record->topics()->sync([$merchant->id]);
-        // FIXME: Some merchants have empty categories!
-        // Update offer category
-        if(count($merchant->categories))
-            $record->categories()->sync([$merchant->categories[0]->id]);
-
-        return true;
+        return $this->updateOfferInternally($input, AWIN);
     }
 
     private function AWinDate2MySQLDate($date)

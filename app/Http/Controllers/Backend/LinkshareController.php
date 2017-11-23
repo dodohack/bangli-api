@@ -349,51 +349,7 @@ class LinkShareController extends AffiliateController
             'published_at' => date('Y-m-d H:i:s'),
         ]);
 
-        $topic = new Topic;
-        $merchant = $topic->where('aff_id', $aff_id)
-            ->where('aff_platform', LINKSHARE)
-            ->with(['categories', 'offers'])->first();
-
-        if (!$merchant) return false;
-
-        // If we can find the same offer
-        // Linkshare doesn't provide offer id, we use tracking url to identical
-        // if the offers are same
-        $found = false;
-        $canBeUpdated = true;
-        $offerId = 0;
-        if ($merchant->offers->count()) {
-            foreach($merchant->offers as $o) {
-                if ($o->tracking_url == $offer['tracking_url']) {
-                    $found = true;
-                    $offerId = $o->id;
-                    if ($o->author_id)
-                        $canBeUpdated = false;
-                    break;
-                }
-            }
-        }
-
-        // Get offer table
-        $table = new Offer;
-
-        // Do not update the same offer
-        if ($found && !$canBeUpdated) return false;
-
-        if ($found && $canBeUpdated) {
-            $table->find($offerId)->delete();
-        }
-
-        // Create the offer
-        $record = $table->create($input);
-        if (!$record) return false;
-
-        // Update the pivot table
-        $record->topics()->sync($merchant->id);
-        // FIXME: Some merchants has empty categories
-        if (count($merchant->categories))
-            $record->categories()->sync([$merchant->categories[0]->id]);
-        return true;
+        return $this->updateOfferInternally($input, LINKSHARE);
     }
 
 
