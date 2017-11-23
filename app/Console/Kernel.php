@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PurgeExpiredOffers::class,
         \App\Console\Commands\UpdateAWINOffers::class,
         \App\Console\Commands\UpdateLinkshareOffers::class,
+        \App\Console\Commands\UpdateWebgainOffers::class,
         \App\Console\Commands\UpdateAWINMerchants::class,
         \App\Console\Commands\UpdateLinkshareMerchants::class
     ];
@@ -38,9 +39,10 @@ class Kernel extends ConsoleKernel
         // Update offer daily
         $schedule->command('offer:update-awin')->dailyAt('2:10');
         $schedule->command('offer:update-linkshare')->dailyAt('2:30');
+        $schedule->command('offer:update-webgain')->dailyAt('2:40');
 
-        // Update merchant weekly
-        $schedule->command('merchant:update-awin')->weekly();
-        $schedule->command('merchant:update-linkshare')->weekly();
+        // Update merchant monthly
+        $schedule->command('merchant:update-awin')->monthly();
+        $schedule->command('merchant:update-linkshare')->monthly();
     }
 }

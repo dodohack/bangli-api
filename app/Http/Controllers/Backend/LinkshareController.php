@@ -6,13 +6,10 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Exception\ServerException;
 Use GuzzleHttp\Client;
 
-use App\Models\Category;
 use App\Models\Topic;
-use App\Models\Offer;
 
 class LinkShareController extends AffiliateController
 {

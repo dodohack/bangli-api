@@ -5,12 +5,7 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\Support\Facades\Storage;
-
-use App\Models\Category;
 use App\Models\Topic;
-use App\Models\Offer;
-
 
 class AffiliateWindowController extends AffiliateController
 {
