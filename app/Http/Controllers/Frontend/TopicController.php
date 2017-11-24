@@ -64,7 +64,7 @@ class TopicController extends FeController
      * @param $guid
      * @return mixed
      */
-    // FIXME: Merge FeToic::topic_relations/topic_columns with
+    // FIXME: Merge FeTopic::topic_relations/topic_columns with
     // the definition relations/columns of data member.
     public function getTopic(Request $request, $guid)
     {

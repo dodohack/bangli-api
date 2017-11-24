@@ -24,6 +24,11 @@ $router->group(
     // Affiliated products
     $router->get('/products',        'ProductController@get');
 
+    // Post
+    $router->get('posts',            'PostController@getPosts');
+    $router->get('posts/group',      'PostController@getGroupPosts');
+    $router->get('posts/{id}',       'PostController@getPost');
+
     // Topic
     $router->get('/topics',         'TopicController@getTopics');
     $router->get('/topics/group',   'TopicController@getGroupTopics');
